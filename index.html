@@ -3,119 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SmartAlgo Pro v2.1 - Battle Mode</title>
+<title>SmartAlgo Pro v3.0 - Institutional Warfare</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-body { font-family:'Inter',sans-serif;background:#050709;color:#d1d4dc;overflow:hidden;}
-.mono{font-family:'Roboto Mono',monospace;}
-.bg-sidebar{background:#0c0e14;}
-.bg-card{background:#131722;}
-.border-stockbit{border-color:#1e222d;}
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-thumb{background:#333;}
-input{background:#000!important;color:#00ff00!important;border:1px solid #222!important;text-align:center;}
-.zone-box{position:absolute;left:0;width:100%;pointer-events:none;opacity:.08}
+body{font-family:'Inter',sans-serif;background:#050709;color:#d1d4dc;overflow:hidden}
+.mono{font-family:'Roboto Mono',monospace}
+.bg-sidebar{background:#0c0e14}
+.zone{position:absolute;left:0;width:100%;opacity:.08;pointer-events:none}
+.heatbar{height:6px;border-radius:4px;transition:.3s}
 </style>
 </head>
 <body class="flex h-screen w-screen text-[13px]">
 
-<aside class="w-14 bg-sidebar border-r border-stockbit flex flex-col items-center py-4 space-y-8">
-<div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white">S</div>
+<aside class="w-14 bg-sidebar border-r border-gray-800 flex flex-col items-center py-4">
+<div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold">S</div>
 </aside>
 
 <main class="flex-1 flex flex-col">
-<header class="h-14 bg-sidebar border-b border-stockbit flex items-center px-6 justify-between">
 
-<div class="flex items-center space-x-8">
+<header class="h-16 bg-sidebar border-b border-gray-800 flex items-center px-6 justify-between">
+
+<div class="flex space-x-6 items-center">
+
 <div>
-<span class="text-gray-500 text-[10px] block uppercase">Ticker</span>
-<span class="font-bold text-lg text-white">$BBCA</span>
+<div class="text-[10px] text-gray-500">PRICE</div>
+<div id="live-price" class="text-xl font-bold mono text-green-400">9,850</div>
 </div>
 
 <div>
-<span class="text-gray-500 text-[10px] block uppercase">Last Price</span>
-<div class="text-green-500 font-bold mono text-xl" id="live-price">9,850</div>
+<div class="text-[10px] text-gray-500">BALANCE</div>
+<div id="balance" class="mono text-yellow-400">1,000,000,000</div>
 </div>
 
 <div>
-<span class="text-gray-500 text-[10px] block uppercase">Net Position</span>
-<div class="text-white font-bold mono" id="my-pos">0 LOT</div>
+<div class="text-[10px] text-gray-500">EQUITY</div>
+<div id="equity" class="mono text-white">1,000,000,000</div>
 </div>
 
 <div>
-<span class="text-gray-500 text-[10px] block uppercase">Avg Price</span>
-<div class="text-blue-400 font-bold mono" id="avg-price">0</div>
+<div class="text-[10px] text-gray-500">REALIZED</div>
+<div id="realized" class="mono">0</div>
 </div>
 
 <div>
-<span class="text-gray-500 text-[10px] block uppercase">Balance</span>
-<div class="text-yellow-400 font-bold mono" id="balance">IDR 1,000,000,000</div>
+<div class="text-[10px] text-gray-500">FLOATING</div>
+<div id="floating" class="mono">0</div>
 </div>
 
 <div>
-<span class="text-gray-500 text-[10px] block uppercase">Equity</span>
-<div class="text-white font-bold mono" id="equity">IDR 1,000,000,000</div>
+<div class="text-[10px] text-gray-500">POSITION</div>
+<div id="position" class="mono">0 LOT</div>
 </div>
 
-<div>
-<span class="text-gray-500 text-[10px] block uppercase">Realized P/L</span>
-<div class="font-bold mono" id="realized-pl">0</div>
-</div>
 </div>
 
 <div class="flex items-center space-x-4">
-<select id="market-mode" onchange="changeMode()" class="bg-black text-yellow-400 font-bold px-3 py-1">
+
+<select id="mode" class="bg-black text-yellow-400 px-2 py-1">
 <option value="normal">NORMAL</option>
-<option value="hard">HARD (Battle Zone)</option>
+<option value="hard">HARD</option>
 </select>
-<div>
-<span class="text-gray-500 text-[10px] block uppercase">Floating</span>
-<div class="font-bold mono" id="floating-pl">0</div>
+
+<div class="w-32">
+<div class="text-[9px] text-gray-500 mb-1">PSYCHOLOGY</div>
+<div class="bg-gray-800 w-full">
+<div id="heat" class="heatbar bg-green-500 w-[50%]"></div>
 </div>
+</div>
+
+<button onclick="toggleReplay()" class="bg-purple-600 px-3 py-1 text-white text-xs rounded">REPLAY</button>
+
 </div>
 </header>
 
-<div class="flex-1 flex overflow-hidden">
+<div class="flex-1 flex">
 
-<div class="flex-1 relative bg-[#050709] overflow-hidden">
-<canvas id="mainChart" class="w-full h-full"></canvas>
-<div id="supplyZone" class="zone-box bg-red-500"></div>
-<div id="demandZone" class="zone-box bg-green-500"></div>
+<div class="flex-1 relative">
+<canvas id="chart" class="w-full h-full"></canvas>
+<div id="supply" class="zone bg-red-500"></div>
+<div id="demand" class="zone bg-green-500"></div>
 </div>
 
-<div class="w-[380px] bg-sidebar border-l border-stockbit flex flex-col">
-<div class="p-3 flex-1 overflow-y-auto mono text-[11px]" id="order-book-list"></div>
+<div class="w-80 bg-sidebar border-l border-gray-800 p-4 space-y-3">
 
-<div class="p-4 bg-card border-t border-stockbit space-y-3">
-<input type="number" id="order-size" value="1000" class="w-full p-2 rounded font-bold">
-<input type="number" id="algo-speed" value="150" class="w-full p-2 rounded font-bold">
+<input id="lot" type="number" value="1000" class="w-full p-2 bg-black text-green-400">
+<input id="speed" type="number" value="150" class="w-full p-2 bg-black text-green-400">
 
 <div class="grid grid-cols-2 gap-2">
-<button onclick="startAlgo('accum')" class="bg-green-600 py-2 rounded font-bold">Haka Accum</button>
-<button onclick="startAlgo('distrib')" class="bg-red-600 py-2 rounded font-bold">Haki Distrib</button>
+<button onclick="startAlgo('buy')" class="bg-green-600 py-2 rounded text-xs">ACCUM</button>
+<button onclick="startAlgo('sell')" class="bg-red-600 py-2 rounded text-xs">DISTRIB</button>
 </div>
-<button onclick="stopAlgos()" class="bg-gray-700 w-full py-2 rounded font-bold">STOP</button>
+
+<button onclick="stopAlgo()" class="bg-gray-700 w-full py-2 rounded text-xs">STOP</button>
+
+<div id="orderbook" class="mono text-[11px] mt-4 h-64 overflow-y-auto"></div>
+
 </div>
-</div>
+
 </div>
 </main>
 
 <script>
-let currentPrice=9850;
-let myPos=0,myAvg=0,myCost=0;
+let price=9850;
 let balance=1000000000;
-let realizedPL=0;
-let totalVol=0;
+let equity=balance;
+let realized=0;
+let floating=0;
+let position=0;
+let avg=0;
 let history=[];
-let bookData={asks:[],bids:[]};
-let algoInterval=null,marketInterval=null;
-let mode='normal';
-let supplyZone=10000;
-let demandZone=9600;
-let fearIndex=0;
+let replay=false;
+let psychology=50;
+let supply=10000;
+let demand=9600;
+let algo=null;
+let market=null;
+let adaptiveBias=0;
 
-const canvas=document.getElementById('mainChart');
+const canvas=document.getElementById('chart');
 const ctx=canvas.getContext('2d');
 
 function resize(){
@@ -124,186 +130,157 @@ canvas.height=canvas.parentElement.clientHeight;
 }
 window.onresize=resize;
 
-function initChart(){
+function init(){
 let p=9800;
-for(let i=0;i<80;i++){
-let close=p+(Math.random()-0.5)*20;
-history.push({open:p,close,high:close+5,low:close-5});
-p=close;
+for(let i=0;i<100;i++){
+let c=p+(Math.random()-0.5)*30;
+history.push({o:p,c,h:c+10,l:c-10});
+p=c;
 }
 resize();
 animate();
+startMarket();
 }
 
 function animate(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
-const pad=60;
-const w=(canvas.width-pad*2)/history.length;
-let prices=history.map(h=>[h.high,h.low]).flat();
-let max=Math.max(...prices)+5;
-let min=Math.min(...prices)-5;
+let pad=60;
+let w=(canvas.width-pad*2)/history.length;
+let prices=history.flatMap(x=>[x.h,x.l]);
+let max=Math.max(...prices)+10;
+let min=Math.min(...prices)-10;
 let range=max-min;
-const getY=p=>canvas.height-pad-((p-min)/range)*(canvas.height-pad*2);
+let getY=p=>canvas.height-pad-((p-min)/range)*(canvas.height-pad*2);
 
 history.forEach((c,i)=>{
-const x=pad+i*w;
-const color=c.close>=c.open?'#22c55e':'#ef4444';
-ctx.strokeStyle=color;
+let x=pad+i*w;
+let col=c.c>=c.o?'#22c55e':'#ef4444';
+ctx.strokeStyle=col;
 ctx.beginPath();
-ctx.moveTo(x+w/2,getY(c.high));
-ctx.lineTo(x+w/2,getY(c.low));
+ctx.moveTo(x+w/2,getY(c.h));
+ctx.lineTo(x+w/2,getY(c.l));
 ctx.stroke();
-ctx.fillStyle=color;
-ctx.fillRect(x+2,getY(Math.max(c.open,c.close)),w-4,Math.max(Math.abs(getY(c.open)-getY(c.close)),1));
+ctx.fillStyle=col;
+ctx.fillRect(x+2,getY(Math.max(c.o,c.c)),w-4,Math.max(Math.abs(getY(c.o)-getY(c.c)),1));
 });
+
 drawZones(getY);
 requestAnimationFrame(animate);
 }
 
 function drawZones(getY){
-let sY=getY(supplyZone);
-let dY=getY(demandZone);
-let h=30;
-document.getElementById('supplyZone').style.top=sY+'px';
-document.getElementById('supplyZone').style.height=h+'px';
-document.getElementById('demandZone').style.top=dY-h+'px';
-document.getElementById('demandZone').style.height=h+'px';
+let sY=getY(supply);
+let dY=getY(demand);
+document.getElementById('supply').style.top=sY+'px';
+document.getElementById('supply').style.height='40px';
+document.getElementById('demand').style.top=(dY-40)+'px';
+document.getElementById('demand').style.height='40px';
 }
 
-function initMarket(){
-for(let i=0;i<15;i++){
-bookData.asks.push({price:currentPrice+(i+1)*2,vol:randVol()});
-bookData.bids.push({price:currentPrice-(i*2),vol:randVol()});
-}
-runMarketEngine();
+function startMarket(){
+market=setInterval(()=>{
+if(replay)return;
+
+liquidityTrap();
+stopHunt();
+fearGreed();
+adaptiveAI();
+updateCandle();
+updatePortfolioUI();
+},150);
 }
 
-const randVol=()=>Math.floor(Math.random()*8000)+1000;
-
-function runMarketEngine(){
-if(marketInterval)clearInterval(marketInterval);
-marketInterval=setInterval(()=>{
-retailBehavior();
-battleZone();
-renderBook();
-},mode==='hard'?150:600);
+function updateCandle(){
+let move=(Math.random()-0.5)*40+adaptiveBias;
+price+=move;
+history.shift();
+history.push({o:price-move,c:price,h:price+10,l:price-10});
 }
 
-function retailBehavior(){
-let move=Math.random();
-let size=Math.floor(Math.random()*2000);
-
-if(currentPrice<demandZone && move>.3){
-executeTrade('SELL',size,false);
-fearIndex++;
-}
-else if(currentPrice>supplyZone && move>.3){
-executeTrade('BUY',size,false);
-fearIndex++;
-}
-else{
-executeTrade(Math.random()>.5?'BUY':'SELL',size,false);
-fearIndex=Math.max(0,fearIndex-1);
+function liquidityTrap(){
+if(Math.random()>0.98){
+price=supply+50;
+setTimeout(()=>price-=100,200);
 }
 }
 
-function battleZone(){
-if(mode!=='hard')return;
-
-if(Math.abs(currentPrice-supplyZone)<20){
-executeTrade('SELL',3000,true);
-}
-if(Math.abs(currentPrice-demandZone)<20){
-executeTrade('BUY',3000,true);
+function stopHunt(){
+if(position>0 && price<avg-100){
+price-=80;
 }
 }
 
-function executeTrade(side,amount,isSmart){
-if(amount<=0)return;
-totalVol+=amount;
-
-if(side==='BUY'){
-let target=bookData.asks[0];
-currentPrice=target.price;
-if(isSmart)updatePortfolio('BUY',currentPrice,amount);
+function fearGreed(){
+if(price<demand){
+psychology=Math.max(0,psychology-5);
 }
-else{
-let target=bookData.bids[0];
-currentPrice=target.price;
-if(isSmart)updatePortfolio('SELL',currentPrice,amount);
+else if(price>supply){
+psychology=Math.min(100,psychology+5);
+}
+updateHeat();
 }
 
-let last=history[history.length-1];
-last.close=currentPrice;
-last.high=Math.max(last.high,currentPrice);
-last.low=Math.min(last.low,currentPrice);
-
-updateUI();
+function adaptiveAI(){
+adaptiveBias=(psychology-50)/10;
 }
 
-function updatePortfolio(side,price,lot){
+function updateHeat(){
+let bar=document.getElementById('heat');
+bar.style.width=psychology+'%';
+bar.className='heatbar '+(psychology>60?'bg-red-500':psychology<40?'bg-blue-500':'bg-green-500');
+}
+
+function startAlgo(type){
+stopAlgo();
+let lot=parseInt(document.getElementById('lot').value);
+let speed=parseInt(document.getElementById('speed').value);
+algo=setInterval(()=>{
+if(type==='buy')trade('buy',lot);
+if(type==='sell')trade('sell',lot);
+},speed);
+}
+
+function stopAlgo(){clearInterval(algo);}
+
+function trade(side,lot){
 let value=price*lot*100;
-if(side==='BUY'){
+if(side==='buy'){
 if(balance<value)return;
 balance-=value;
-myCost+=value;
-myPos+=lot;
-myAvg=myCost/(myPos*100);
-}else{
-let sellLot=Math.min(lot,myPos);
-let proceeds=price*sellLot*100;
-balance+=proceeds;
-realizedPL+=(price-myAvg)*sellLot*100;
-myPos-=sellLot;
-if(myPos===0){myCost=0;myAvg=0;}
+position+=lot;
+avg=((avg*(position-lot))+price)/position;
+}
+else{
+let sellLot=Math.min(lot,position);
+balance+=price*sellLot*100;
+realized+=(price-avg)*sellLot*100;
+position-=sellLot;
+if(position===0)avg=0;
 }
 }
 
-function renderBook(){
-let html='';
-for(let i=14;i>=0;i--){
-html+=`
-<div class="grid grid-cols-2 border-b border-gray-800 px-2 py-1">
-<div class="text-red-400">${bookData.asks[i].price.toLocaleString()} | ${bookData.asks[i].vol.toLocaleString()}</div>
-<div class="text-green-400 text-right">${bookData.bids[i].vol.toLocaleString()} | ${bookData.bids[i].price.toLocaleString()}</div>
-</div>`;
-}
-document.getElementById('order-book-list').innerHTML=html;
-}
+function updatePortfolioUI(){
+floating=(price-avg)*position*100;
+equity=balance+floating;
+document.getElementById('live-price').innerText=Math.round(price).toLocaleString();
+document.getElementById('balance').innerText=Math.round(balance).toLocaleString();
+document.getElementById('equity').innerText=Math.round(equity).toLocaleString();
+document.getElementById('realized').innerText=Math.round(realized).toLocaleString();
+document.getElementById('floating').innerText=Math.round(floating).toLocaleString();
+document.getElementById('position').innerText=position+" LOT";
 
-function updateUI(){
-document.getElementById('live-price').innerText=currentPrice.toLocaleString();
-document.getElementById('my-pos').innerText=myPos.toLocaleString()+" LOT";
-document.getElementById('avg-price').innerText=Math.round(myAvg).toLocaleString();
-document.getElementById('balance').innerText="IDR "+balance.toLocaleString();
-document.getElementById('realized-pl').innerText=realizedPL.toLocaleString();
-let floating=(currentPrice-myAvg)*myPos*100;
-if(myPos===0)floating=0;
-document.getElementById('floating-pl').innerText=floating.toLocaleString();
-document.getElementById('equity').innerText="IDR "+(balance+floating).toLocaleString();
+if(equity<balance*0.5){
+alert("MARGIN CALL!");
+position=0;
+balance=equity;
+}
 }
 
-function startAlgo(m){
-stopAlgos();
-const s=parseInt(document.getElementById('algo-speed').value);
-const sz=parseInt(document.getElementById('order-size').value);
-algoInterval=setInterval(()=>{
-if(m==='accum')executeTrade('BUY',sz,true);
-if(m==='distrib')executeTrade('SELL',sz,true);
-},s);
+function toggleReplay(){
+replay=!replay;
 }
 
-function stopAlgos(){clearInterval(algoInterval);}
-function changeMode(){mode=document.getElementById('market-mode').value;runMarketEngine();}
-
-setInterval(()=>{
-history.shift();
-history.push({open:currentPrice,close:currentPrice,high:currentPrice,low:currentPrice});
-},15000);
-
-initChart();
-initMarket();
-updateUI();
+init();
 </script>
 </body>
 </html>
