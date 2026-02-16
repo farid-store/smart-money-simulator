@@ -3,544 +3,597 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MM Terminal - Deep Market Simulation</title>
+    <title>MM Pro Terminal - Institutional Grade</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #a1a1aa; overflow: hidden; }
+        :root { --bg-dark: #050505; --panel: #0a0a0a; --border: #1f1f1f; --green: #22c55e; --red: #ef4444; --text-main: #d4d4d8; }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        ::-webkit-scrollbar { width: 4px; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        .glass { background: rgba(10, 10, 10, 0.8); backdrop-filter: blur(8px); border: 1px solid #222; }
-        .scanline { background: linear-gradient(to bottom, rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%; pointer-events: none; }
-        .tf-btn.active { background-color: #2563eb; color: white; border-color: #3b82f6; }
+        ::-webkit-scrollbar-track { background: transparent; }
+
+        /* Utilities */
+        .glass-panel { background: rgba(10, 10, 10, 0.95); border: 1px solid var(--border); }
+        .btn-mm { transition: all 0.1s; active: transform: translateY(1px); }
+        .btn-tf.active { background: #2563eb; color: white; border-color: #3b82f6; }
+        
+        /* Animations */
+        @keyframes pulse-soft { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+        .live-dot { animation: pulse-soft 2s infinite; }
+        
+        /* Canvas Cursor */
+        #chartCanvas { cursor: crosshair; }
     </style>
 </head>
-<body class="flex h-screen w-screen text-[12px] bg-black selection:bg-blue-500 selection:text-white">
+<body class="flex h-screen w-screen text-[11px] select-none">
 
-    <aside class="w-20 bg-[#050505] border-r border-[#1e1e1e] flex flex-col items-center py-4 z-50">
-        <div class="mb-6 font-black text-[10px] text-center text-gray-500">GOD MODE</div>
-        
-        <div class="space-y-3 w-full px-2">
-            <button onmousedown="MarketBrain.inject('PUMP')" onmouseup="MarketBrain.release()" class="w-full aspect-square rounded bg-green-900/20 border border-green-800 hover:bg-green-600 hover:text-white text-green-500 transition-all flex flex-col items-center justify-center group active:scale-95">
-                <span class="font-bold text-[9px]">PUMP</span>
-                <div class="w-2 h-2 mt-1 rounded-full bg-green-500 group-hover:bg-white animate-pulse"></div>
-            </button>
-            <button onmousedown="MarketBrain.inject('DUMP')" onmouseup="MarketBrain.release()" class="w-full aspect-square rounded bg-red-900/20 border border-red-800 hover:bg-red-600 hover:text-white text-red-500 transition-all flex flex-col items-center justify-center group active:scale-95">
-                <span class="font-bold text-[9px]">DUMP</span>
-                <div class="w-2 h-2 mt-1 rounded-full bg-red-500 group-hover:bg-white animate-pulse"></div>
-            </button>
-            <button onclick="MarketBrain.triggerEvent('NEWS')" class="w-full py-2 rounded bg-yellow-900/20 border border-yellow-700 hover:bg-yellow-500 hover:text-black text-yellow-500 transition-all text-[9px] font-bold">
-                ⚠️ NEWS
-            </button>
+    <aside class="w-[72px] bg-black border-r border-[#1f1f1f] flex flex-col items-center py-4 z-50 shadow-xl">
+        <div class="mb-6">
+            <div class="w-10 h-10 bg-blue-600 rounded flex items-center justify-center font-black text-white text-xs shadow-lg shadow-blue-900/40">MM</div>
         </div>
         
+        <div class="space-y-4 w-full px-2 flex flex-col items-center">
+            <button onmousedown="MarketEngine.inject('PUMP')" onmouseup="MarketEngine.release()" class="w-12 h-12 rounded bg-[#0a1f0a] border border-green-900/50 hover:bg-green-600 hover:text-white text-green-500 transition-all flex flex-col items-center justify-center group btn-mm">
+                <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+                <span class="font-bold text-[8px]">PUMP</span>
+            </button>
+            
+            <button onmousedown="MarketEngine.inject('DUMP')" onmouseup="MarketEngine.release()" class="w-12 h-12 rounded bg-[#1f0a0a] border border-red-900/50 hover:bg-red-600 hover:text-white text-red-500 transition-all flex flex-col items-center justify-center group btn-mm">
+                <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>
+                <span class="font-bold text-[8px]">DUMP</span>
+            </button>
+
+            <button onclick="MarketEngine.triggerNews()" class="w-12 h-12 rounded bg-[#1f1a0a] border border-yellow-900/50 hover:bg-yellow-500 hover:text-black text-yellow-500 transition-all flex flex-col items-center justify-center group btn-mm">
+                <svg class="w-4 h-4 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path></svg>
+                <span class="font-bold text-[8px]">NEWS</span>
+            </button>
+        </div>
+
         <div class="flex-1"></div>
-        <div class="text-[9px] text-gray-600 rotate-180 py-4" style="writing-mode: vertical-rl;">SYSTEM: ONLINE</div>
+        <div class="py-4 text-[9px] font-mono text-gray-600 rotate-180 vertical-text" style="writing-mode: vertical-rl;">CONNECTED: SERVER_HK_01</div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative">
-        <header class="h-14 bg-[#080808] border-b border-[#1e1e1e] flex items-center px-4 justify-between shrink-0">
+    <main class="flex-1 flex flex-col min-w-0 bg-[#020202]">
+        
+        <header class="h-12 bg-[#080808] border-b border-[#1f1f1f] flex items-center px-4 justify-between shrink-0">
             <div class="flex items-center gap-6">
                 <div>
-                    <div class="text-[10px] font-bold text-gray-500">ASSET</div>
-                    <div class="text-xl font-black text-white tracking-tighter">$GOLD <span class="text-yellow-500 text-sm">FUTURES</span></div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg font-black text-white tracking-tight">$XAUUSD</span>
+                        <span class="text-[9px] bg-[#1a1a1a] px-1.5 py-0.5 rounded text-gray-400 border border-[#333]">FUTURES</span>
+                    </div>
                 </div>
                 
-                <div class="h-8 w-[1px] bg-[#222]"></div>
+                <div class="h-6 w-[1px] bg-[#222]"></div>
                 
-                <div class="flex bg-[#111] rounded p-1 gap-1">
-                    <button onclick="Chart.setTF(1)" id="btn-m1" class="tf-btn active px-3 py-1 rounded text-[10px] font-bold text-gray-400 hover:bg-gray-800 transition-colors">M1</button>
-                    <button onclick="Chart.setTF(5)" id="btn-m5" class="tf-btn px-3 py-1 rounded text-[10px] font-bold text-gray-400 hover:bg-gray-800 transition-colors">M5</button>
-                    <button onclick="Chart.setTF(15)" id="btn-m15" class="tf-btn px-3 py-1 rounded text-[10px] font-bold text-gray-400 hover:bg-gray-800 transition-colors">M15</button>
-                    <button onclick="Chart.setTF(60)" id="btn-h1" class="tf-btn px-3 py-1 rounded text-[10px] font-bold text-gray-400 hover:bg-gray-800 transition-colors">H1</button>
+                <div class="flex bg-[#111] p-0.5 rounded border border-[#222]">
+                    <button onclick="Chart.setTF(1)" id="btn-m1" class="btn-tf active px-3 py-1 rounded-[2px] text-[10px] font-bold text-gray-400 hover:bg-[#222]">M1</button>
+                    <button onclick="Chart.setTF(5)" id="btn-m5" class="btn-tf px-3 py-1 rounded-[2px] text-[10px] font-bold text-gray-400 hover:bg-[#222]">M5</button>
+                    <button onclick="Chart.setTF(15)" id="btn-m15" class="btn-tf px-3 py-1 rounded-[2px] text-[10px] font-bold text-gray-400 hover:bg-[#222]">M15</button>
+                    <button onclick="Chart.setTF(60)" id="btn-h1" class="btn-tf px-3 py-1 rounded-[2px] text-[10px] font-bold text-gray-400 hover:bg-[#222]">H1</button>
                 </div>
 
-                <div class="flex flex-col">
-                    <span class="text-[9px] font-bold text-gray-500 uppercase">Market Structure</span>
-                    <span id="market-phase" class="text-blue-400 font-bold mono text-xs">ACCUMULATION</span>
+                <div>
+                    <div class="text-[8px] text-gray-500 uppercase font-bold tracking-wider">Structure</div>
+                    <div id="market-phase" class="text-blue-400 font-bold text-xs mono">ACCUMULATION</div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="text-right">
-                    <div class="text-[9px] font-bold text-gray-500 uppercase">Retail Sentiment</div>
-                    <div id="sentiment-text" class="font-bold text-xs text-white">NEUTRAL</div>
+            <div class="flex items-center gap-6">
+                <div class="flex flex-col w-40">
+                    <div class="flex justify-between text-[9px] font-bold mb-1">
+                        <span class="text-red-500">BEARISH</span>
+                        <span id="sentiment-val" class="text-white">50%</span>
+                        <span class="text-green-500">BULLISH</span>
+                    </div>
+                    <div class="h-1.5 bg-[#222] rounded-full overflow-hidden relative">
+                        <div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-white z-10 -ml-[1px]"></div> <div id="sentiment-bar" class="h-full bg-gray-500 transition-all duration-300 w-1/2 ml-[25%] rounded-full"></div>
+                    </div>
                 </div>
-                <div class="w-32 h-2 bg-gray-800 rounded-full overflow-hidden relative">
-                    <div class="absolute left-1/2 top-0 bottom-0 w-[1px] bg-white z-10"></div>
-                    <div id="sentiment-bar" class="h-full bg-gray-500 transition-all duration-300 w-1/2 ml-[25%]"></div>
-                </div>
-                <div class="pl-4 border-l border-[#222]">
-                    <div class="text-[9px] font-bold text-gray-500 uppercase">MM PnL</div>
-                    <div id="mm-pnl" class="font-mono text-lg font-black text-white">$0.00</div>
+
+                <div class="text-right pl-4 border-l border-[#222]">
+                    <div class="text-[8px] text-gray-500 uppercase font-bold">Total PnL</div>
+                    <div id="total-pnl" class="text-base font-black text-white mono tracking-tight">$0.00</div>
                 </div>
             </div>
         </header>
 
         <div class="flex-1 flex overflow-hidden">
-            <div class="flex-1 relative bg-[#020202] group">
-                <div class="absolute inset-0 scanline z-0"></div>
-                <canvas id="chartCanvas" class="w-full h-full block relative z-10 cursor-crosshair"></canvas>
-                
-                <div class="absolute top-4 left-4 z-20 pointer-events-none space-y-1">
-                    <div class="text-[10px] text-gray-500 mono">PRICE: <span id="cur-price" class="text-white font-bold">2030.00</span></div>
-                    <div class="text-[10px] text-gray-500 mono">VOLATILITY: <span id="vol-stat" class="text-white">LOW</span></div>
+            
+            <div class="flex-1 relative flex flex-col min-w-0">
+                <div class="relative flex-1 bg-[#050505] overflow-hidden">
+                    <canvas id="chartCanvas" class="block w-full h-full"></canvas>
+                    
+                    <div class="absolute top-3 left-3 pointer-events-none space-y-1 z-20">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 rounded-full bg-green-500 live-dot"></div>
+                            <span class="text-[10px] font-bold text-white mono" id="price-display">2030.00</span>
+                        </div>
+                        <div class="text-[9px] text-gray-500 mono">VOL: <span id="vol-display" class="text-white">LOW</span></div>
+                    </div>
+
+                    <div class="absolute bottom-4 left-4 right-4 pointer-events-none">
+                         <div id="news-feed" class="text-[10px] font-mono text-yellow-500 opacity-0 transition-opacity duration-500 bg-black/50 backdrop-blur px-2 py-1 rounded inline-block border border-yellow-900/30">
+                            Waiting for news...
+                         </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="w-[300px] bg-[#080808] border-l border-[#1e1e1e] flex flex-col z-20">
-                <div class="flex-1 flex flex-col min-h-0">
-                    <div class="px-3 py-2 border-b border-[#1e1e1e] bg-[#0c0c0c] flex justify-between">
-                        <span class="font-bold text-[10px]">DEPTH OF MARKET</span>
-                        <span class="text-[9px] text-gray-600 mono">L2 DATA</span>
-                    </div>
-                    <div id="dom-container" class="flex-1 overflow-hidden relative font-mono text-[10px]"></div>
-                </div>
-
-                <div class="h-auto p-4 bg-[#0a0a0a] border-t border-[#1e1e1e] shadow-2xl">
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div class="bg-black border border-[#222] p-2 rounded">
-                            <span class="block text-[9px] text-gray-500 mb-1">POS SIZE (LOT)</span>
-                            <input type="number" id="lot-size" value="1.0" class="w-full bg-transparent text-white font-bold outline-none text-right mono">
-                        </div>
-                        <div class="bg-black border border-[#222] p-2 rounded text-right flex flex-col justify-center">
-                            <span class="block text-[9px] text-gray-500">NET EXPOSURE</span>
-                            <span id="net-pos" class="font-bold text-white mono">0.00</span>
-                        </div>
+            <div class="w-[280px] bg-[#0a0a0a] border-l border-[#1f1f1f] flex flex-col shrink-0 z-30">
+                
+                <div class="flex-1 flex flex-col min-h-0 bg-[#050505]">
+                    <div class="px-3 py-1.5 border-b border-[#1f1f1f] bg-[#0f0f0f] flex justify-between items-center">
+                        <span class="font-bold text-[9px] text-gray-400">ORDER BOOK</span>
+                        <span class="text-[8px] font-mono text-blue-500">L2: CONNECTED</span>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="Trader.execute('BUY')" class="py-3 bg-[#051805] border border-green-900 text-green-500 hover:bg-green-600 hover:text-white font-bold rounded text-xs transition-all active:scale-95">LONG</button>
-                        <button onclick="Trader.execute('SELL')" class="py-3 bg-[#180505] border border-red-900 text-red-500 hover:bg-red-600 hover:text-white font-bold rounded text-xs transition-all active:scale-95">SHORT</button>
+                    <div class="grid grid-cols-3 text-[8px] text-gray-600 px-2 py-1 font-bold bg-[#080808] border-b border-[#1f1f1f]">
+                        <span>VOL</span>
+                        <span class="text-center">PRICE</span>
+                        <span class="text-right">VOL</span>
                     </div>
-                    <button onclick="Trader.closeAll()" class="w-full mt-2 py-1 bg-[#111] border border-[#222] text-gray-400 hover:text-white text-[10px] rounded">CLOSE ALL POSITIONS</button>
+
+                    <div id="dom-container" class="flex-1 overflow-hidden relative font-mono text-[9px]">
+                        </div>
+                </div>
+
+                <div class="bg-[#0f0f0f] border-t border-[#1f1f1f] p-3 shadow-[0_-5px_15px_rgba(0,0,0,0.5)]">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[9px] font-bold text-gray-500 uppercase">Volume (Lot)</span>
+                        <div class="flex items-center bg-black border border-[#333] rounded px-2 py-1 w-24">
+                            <input type="number" id="lot-size" value="1.0" step="0.1" class="bg-transparent text-white font-mono font-bold w-full text-right outline-none text-xs">
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-3 pb-2 border-b border-[#222]">
+                        <span class="text-[9px] font-bold text-gray-500 uppercase">Net Exposure</span>
+                        <span id="net-pos" class="font-bold font-mono text-white text-xs">0.00</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <button onclick="Trader.execute('BUY')" class="py-3 bg-[#0a1f0a] border border-green-900 hover:bg-green-600 hover:text-white text-green-500 rounded font-bold text-xs transition-all active:scale-95 flex flex-col items-center leading-none gap-1">
+                            <span>BID</span>
+                            <span class="text-[9px] opacity-70" id="btn-bid-price">2029.90</span>
+                        </button>
+                        <button onclick="Trader.execute('SELL')" class="py-3 bg-[#1f0a0a] border border-red-900 hover:bg-red-600 hover:text-white text-red-500 rounded font-bold text-xs transition-all active:scale-95 flex flex-col items-center leading-none gap-1">
+                            <span>ASK</span>
+                            <span class="text-[9px] opacity-70" id="btn-ask-price">2030.10</span>
+                        </button>
+                    </div>
+
+                    <button onclick="Trader.closeAll()" class="w-full py-1.5 bg-[#1a1a1a] border border-[#333] hover:bg-[#333] text-gray-400 text-[10px] font-bold rounded transition-colors">
+                        FLATTEN ALL POSITIONS
+                    </button>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // --- CONFIG ---
+        // --- CORE CONFIGURATION ---
         const Config = {
             basePrice: 2030.00,
-            tickSpeed: 50, // ms per loop (simulation speed)
-            pointValue: 100 // $ per point per lot
+            tickSpeed: 50,      // ms per update loop (Smooth)
+            pointValue: 100,    // Value per 1.0 point
+            spread: 0.10,       // Fixed spread
+            historyLimit: 5000  // Max candles in memory
         };
 
-        // --- MARKET BRAIN (THE ENGINE) ---
-        const MarketBrain = {
-            // Core Physics
+        // --- MARKET ENGINE (BRAIN) ---
+        const MarketEngine = {
             price: Config.basePrice,
-            ticks: [], // Raw price history (M1 equivalent)
+            ticks: [], // Raw M1 Data: {open, high, low, close, time}
             
-            // Market Logic
-            phase: 'SIDEWAYS', // SIDEWAYS, BULL_TREND, BEAR_TREND, BULL_FLAG, BEAR_FLAG, SPIKE_UP, SPIKE_DOWN
-            phaseTimer: 0,
-            targetBias: 0,     // Directional pressure
-            volatility: 0.5,   // Noise level
+            // Psychology & Mechanics
+            phase: 'ACCUMULATION',
+            sentiment: 0,       // -100 to 100
+            volatility: 0.5,
+            momentum: 0,
             
-            // Retail Psychology
-            retailSentiment: 0, // -100 (Panic) to +100 (FOMO)
-            retailMomentum: 0,  // Acceleration of sentiment
-
-            // Dynamic Levels
-            snr: [], // Support/Resistance arrays
+            // Intervention
+            overrideMode: null,
 
             init() {
-                // Seed initial data (1000 M1 candles)
+                // Seed Data (Generate 24 hours of M1 history)
                 let p = this.price;
-                for(let i=0; i<1000; i++) {
-                    let open = p;
-                    let close = p + (Math.random() - 0.5);
-                    let high = Math.max(open, close) + Math.random();
-                    let low = Math.min(open, close) - Math.random();
-                    this.ticks.push({open, high, low, close, vol: Math.random()*100});
+                const now = Date.now();
+                for(let i=0; i<1440; i++) {
+                    const noise = (Math.random() - 0.5) * 2;
+                    const open = p;
+                    const close = p + noise;
+                    const high = Math.max(open, close) + Math.random();
+                    const low = Math.min(open, close) - Math.random();
+                    this.ticks.push({
+                        open, high, low, close, 
+                        time: now - ((1440 - i) * 60000)
+                    });
                     p = close;
                 }
                 this.price = p;
-                this.changePhase();
-                this.generateSNR();
+                this.updateCycle();
             },
 
-            // The Heartbeat
             update() {
-                // 1. Determine Movement based on Phase + Randomness
-                let noise = (Math.random() - 0.5) * this.volatility;
-                let trend = this.targetBias * 0.1;
+                // 1. Calculate Move
+                let drift = 0;
                 
-                // 2. Retail Effect (FOMO/Panic)
-                // If Sentiment is high positive, price pushes up harder (Irrational Exuberance)
-                let retailPush = (this.retailSentiment / 100) * 0.2; 
+                // Phase Logic
+                switch(this.phase) {
+                    case 'ACCUMULATION': drift = (Math.random() - 0.45) * 0.1; break; // Slight Up drift
+                    case 'DISTRIBUTION': drift = (Math.random() - 0.55) * 0.1; break; // Slight Down drift
+                    case 'BULL_RUN': drift = 0.15; break;
+                    case 'BEAR_RUN': drift = -0.15; break;
+                    case 'MANIPULATION_UP': drift = 1.0; break;
+                    case 'MANIPULATION_DOWN': drift = -1.0; break;
+                }
+
+                // Retail Sentiment Impact (FOMO)
+                const sentimentEffect = (this.sentiment / 100) * 0.1;
                 
-                let move = noise + trend + retailPush;
+                // Physics
+                this.momentum = (this.momentum * 0.9) + (drift + sentimentEffect + (Math.random() - 0.5) * this.volatility);
+                const move = this.momentum * 0.2;
                 
-                // 3. Update Price
                 this.price += move;
 
-                // 4. Update Psychology
-                // If price moves up fast, retail gets FOMO
-                if(move > 0.2) this.retailSentiment += 2; 
-                else if(move < -0.2) this.retailSentiment -= 2;
-                else this.retailSentiment *= 0.98; // Decay to neutral
-                
-                // Cap sentiment
-                this.retailSentiment = Math.max(-100, Math.min(100, this.retailSentiment));
+                // 2. Adjust Sentiment based on price action
+                if (move > 0.2) this.sentiment += 0.5;
+                else if (move < -0.2) this.sentiment -= 0.5;
+                else this.sentiment *= 0.99; // Decay
+                this.sentiment = Math.max(-100, Math.min(100, this.sentiment));
 
-                // 5. Phase Logic
-                this.phaseTimer--;
-                if(this.phaseTimer <= 0) this.changePhase();
+                // 3. Update Candle Data (Simulation of Real-time M1)
+                this.processTick(this.price);
 
-                // 6. Record Tick (Simulate M1 Candle update)
-                this.updateCandles();
-                
-                // 7. Check for SNR bounces
-                this.checkSNR();
+                // 4. Trigger Random Events
+                if(Math.random() < 0.005 && !this.overrideMode) this.changePhase();
 
-                // Update UI
+                // UI Updates
                 Chart.render();
                 DOM.render();
                 Trader.update();
-                this.updateStats();
+                this.updateUI();
+            },
+
+            processTick(price) {
+                const last = this.ticks[this.ticks.length - 1];
+                const now = Date.now();
+                // Simple assumption: 1 second simulation time = 1 real second for smooth chart flow
+                // In real app, check timestamps. Here we force a new candle every X updates or just update last.
+                
+                // Let's say 1 candle = 60 ticks in simulation speed
+                if (Math.random() > 0.98) { // New M1 Candle
+                    this.ticks.push({ open: price, high: price, low: price, close: price, time: now });
+                    if(this.ticks.length > Config.historyLimit) this.ticks.shift();
+                } else {
+                    last.close = price;
+                    if (price > last.high) last.high = price;
+                    if (price < last.low) last.low = price;
+                }
             },
 
             changePhase() {
-                const scenarios = [
-                    { type: 'SIDEWAYS', bias: 0, vol: 0.4, time: 100 },
-                    { type: 'BULL_TREND', bias: 0.8, vol: 0.8, time: 150 },
-                    { type: 'BEAR_TREND', bias: -0.8, vol: 0.8, time: 150 },
-                    { type: 'BULL_FLAG', bias: -0.2, vol: 0.2, time: 60 }, // Slow drift down
-                    { type: 'BEAR_FLAG', bias: 0.2, vol: 0.2, time: 60 },  // Slow drift up
-                    { type: 'SPIKE_UP', bias: 3.0, vol: 2.0, time: 10 },   // Liquidity Hunt
-                    { type: 'SPIKE_DOWN', bias: -3.0, vol: 2.0, time: 10 }
-                ];
-
-                // Weighted random choice based on Retail Sentiment
-                // If Extreme FOMO, higher chance of Dump or Spike Top
-                let choice;
-                if(this.retailSentiment > 80) {
-                     choice = Math.random() > 0.3 ? scenarios[6] : scenarios[5]; // Dump or Blow-off top
-                } else if (this.retailSentiment < -80) {
-                     choice = Math.random() > 0.3 ? scenarios[5] : scenarios[6]; // V-Shape recovery or Crash
-                } else {
-                     choice = scenarios[Math.floor(Math.random() * scenarios.length)];
-                }
-
-                this.phase = choice.type;
-                this.targetBias = choice.bias;
-                this.volatility = choice.vol;
-                this.phaseTimer = choice.time;
+                const phases = ['ACCUMULATION', 'DISTRIBUTION', 'BULL_RUN', 'BEAR_RUN', 'CHOPPY'];
+                // Weighted choice based on sentiment
+                if(this.sentiment > 80) this.phase = Math.random() > 0.5 ? 'BULL_RUN' : 'MANIPULATION_DOWN'; // Bull trap
+                else if(this.sentiment < -80) this.phase = Math.random() > 0.5 ? 'BEAR_RUN' : 'MANIPULATION_UP'; // Bear trap
+                else this.phase = phases[Math.floor(Math.random() * phases.length)];
                 
-                document.getElementById('market-phase').innerText = this.phase.replace('_', ' ');
+                // Update UI
+                const pEl = document.getElementById('market-phase');
+                pEl.innerText = this.phase.replace('_', ' ');
+                pEl.className = "text-xs font-bold mono " + (this.phase.includes('BULL') ? "text-green-500" : this.phase.includes('BEAR') ? "text-red-500" : "text-blue-400");
             },
 
             inject(type) {
-                // MM Manual Intervention
-                this.targetBias = type === 'PUMP' ? 5.0 : -5.0;
-                this.volatility = 3.0;
-                this.phase = 'MM_INTERVENTION';
-                document.getElementById('market-phase').innerText = "!!! MANIPULATION !!!";
-                document.getElementById('market-phase').className = "text-red-500 font-black animate-pulse text-xs";
+                this.overrideMode = type;
+                this.phase = type === 'PUMP' ? 'MANIPULATION_UP' : 'MANIPULATION_DOWN';
+                this.volatility = 2.0;
+                this.triggerNews("INSTITUTIONAL VOLUME DETECTED");
             },
 
             release() {
-                this.changePhase(); // Reset to normal algo
-                document.getElementById('market-phase').className = "text-blue-400 font-bold mono text-xs";
+                this.overrideMode = null;
+                this.volatility = 0.5;
+                this.changePhase();
             },
 
-            triggerEvent(type) {
-                // Flash Crash / News Spike
-                this.price += (Math.random() > 0.5 ? 10 : -10);
-                this.volatility = 10;
-                this.phaseTimer = 20;
-                this.phase = 'NEWS_EVENT';
+            triggerNews(msg = null) {
+                if(!msg) {
+                    const news = ["FED SPEAKER HAWKISH", "GOLDMAN BUY RATING", "RETAIL PANIC SELLING", "LIQUIDITY SWEEP", "BREAKOUT IMMINENT"];
+                    msg = news[Math.floor(Math.random() * news.length)];
+                    this.volatility = 1.5;
+                }
+                const el = document.getElementById('news-feed');
+                el.innerText = ">> NEWS: " + msg;
+                el.style.opacity = 1;
+                setTimeout(() => { el.style.opacity = 0; }, 3000);
             },
 
-            updateCandles() {
-                // Handle M1 array logic
-                // For simulation, we assume 1 tick = fraction of M1. 
-                // Every 20 ticks = 1 new M1 candle for smoothness
-                let last = this.ticks[this.ticks.length-1];
+            updateUI() {
+                document.getElementById('price-display').innerText = this.price.toFixed(2);
+                document.getElementById('vol-display').innerText = this.volatility > 1.0 ? "HIGH" : "NORMAL";
                 
-                // Simple logic: modify last candle or create new
-                if(Math.random() > 0.9) { // New minute probability
-                    this.ticks.push({open: this.price, high: this.price, low: this.price, close: this.price, vol: 0});
-                    if(this.ticks.length > 2000) this.ticks.shift(); // Keep memory manageable
-                } else {
-                    last.close = this.price;
-                    if(this.price > last.high) last.high = this.price;
-                    if(this.price < last.low) last.low = this.price;
-                    last.vol += Math.random();
-                }
-            },
+                // Buttons
+                const bid = (this.price - (Config.spread/2)).toFixed(2);
+                const ask = (this.price + (Config.spread/2)).toFixed(2);
+                document.getElementById('btn-bid-price').innerText = bid;
+                document.getElementById('btn-ask-price').innerText = ask;
 
-            generateSNR() {
-                // Create random Support/Resistance levels around current price
-                this.snr = [];
-                for(let i=0; i<5; i++) {
-                    this.snr.push(this.price + (Math.random() * 40 - 20));
-                }
-            },
-
-            checkSNR() {
-                // If price hits SNR, chance to bounce
-                this.snr.forEach(level => {
-                    if(Math.abs(this.price - level) < 0.5) {
-                        // 60% chance to bounce
-                        if(Math.random() > 0.4) {
-                            this.targetBias = (this.price > level) ? 1.0 : -1.0; // Bounce away
-                        } else {
-                            // Breakout!
-                            this.volatility = 2.0; 
-                        }
-                    }
-                });
-            },
-
-            updateStats() {
-                // Retail Sentiment Meter UI
+                // Sentiment Bar
                 const bar = document.getElementById('sentiment-bar');
-                const text = document.getElementById('sentiment-text');
-                
-                // Map -100 to 100 -> 0% to 100% margin-left (CSS trick)
-                // Center is 50%. 
-                let pct = 50 + (this.retailSentiment / 2);
-                
-                // Visual styling based on sentiment
-                let color = 'bg-gray-500';
-                let label = 'NEUTRAL';
-                
-                if(this.retailSentiment > 50) { color = 'bg-green-500'; label = 'FOMO (GREED)'; }
-                if(this.retailSentiment > 80) { color = 'bg-green-400 animate-pulse'; label = 'EXTREME EUPHORIA'; }
-                if(this.retailSentiment < -50) { color = 'bg-red-500'; label = 'FEAR'; }
-                if(this.retailSentiment < -80) { color = 'bg-red-600 animate-pulse'; label = 'PANIC SELLING'; }
-
-                bar.className = `h-full transition-all duration-300 ${color}`;
-                bar.style.width = `${Math.abs(this.retailSentiment)/2}%`; 
-                bar.style.marginLeft = this.retailSentiment > 0 ? '50%' : `${50 - (Math.abs(this.retailSentiment)/2)}%`;
-                
-                text.innerText = label;
-                text.className = `font-bold text-xs ${this.retailSentiment > 0 ? 'text-green-500' : this.retailSentiment < 0 ? 'text-red-500' : 'text-white'}`;
-                
-                document.getElementById('cur-price').innerText = this.price.toFixed(2);
-                document.getElementById('vol-stat').innerText = this.volatility > 1.5 ? "HIGH" : "LOW";
+                const pct = 50 + (this.sentiment / 2); // Map -100..100 to 0..100
+                bar.style.width = Math.abs(this.sentiment / 2) + "%";
+                bar.style.marginLeft = this.sentiment > 0 ? "50%" : (50 - Math.abs(this.sentiment / 2)) + "%";
+                bar.className = `h-full rounded-full transition-all duration-300 ${this.sentiment > 0 ? 'bg-green-500' : 'bg-red-500'}`;
+                document.getElementById('sentiment-val').innerText = Math.round(Math.abs(this.sentiment)) + "%";
             }
         };
 
-        // --- CHART ENGINE (MULTI-TIMEFRAME RESAMPLING) ---
+        // --- CHARTING ENGINE (THE FIX) ---
         const Chart = {
             canvas: document.getElementById('chartCanvas'),
             ctx: null,
-            timeframe: 1, // 1 = M1, 5 = M5, etc.
-
+            tf: 1, // 1, 5, 15, 60
+            crosshairY: -1,
+            
             init() {
                 this.ctx = this.canvas.getContext('2d');
                 this.resize();
                 window.addEventListener('resize', () => this.resize());
+                
+                // Crosshair Listener
+                this.canvas.addEventListener('mousemove', e => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    this.crosshairY = e.clientY - rect.top;
+                });
+                this.canvas.addEventListener('mouseleave', () => { this.crosshairY = -1; });
             },
 
             resize() {
-                this.canvas.width = this.canvas.parentElement.offsetWidth;
-                this.canvas.height = this.canvas.parentElement.offsetHeight;
+                this.canvas.width = this.canvas.parentElement.clientWidth;
+                this.canvas.height = this.canvas.parentElement.clientHeight;
             },
 
-            setTF(tf) {
-                this.timeframe = tf;
-                // UI update
-                document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-                const map = {1: 'btn-m1', 5: 'btn-m5', 15: 'btn-m15', 60: 'btn-h1'};
-                document.getElementById(map[tf]).classList.add('active');
+            setTF(val) {
+                this.tf = val;
+                // UI Toggle
+                document.querySelectorAll('.btn-tf').forEach(b => b.classList.remove('active'));
+                const map = {1:'btn-m1', 5:'btn-m5', 15:'btn-m15', 60:'btn-h1'};
+                document.getElementById(map[val]).classList.add('active');
+            },
+
+            getResampledData() {
+                // Core Logic: Convert M1 array into TF array
+                const raw = MarketEngine.ticks;
+                if (this.tf === 1) return raw.slice(-100); // Zoom level
+
+                let candles = [];
+                let buffer = [];
+
+                // Simple aggregation: iterate from start and group by count
+                // Real implementation would group by timestamp modulo, but for simulation count is fine
+                for(let i = 0; i < raw.length; i++) {
+                    buffer.push(raw[i]);
+                    if(buffer.length === this.tf) {
+                        candles.push(this.makeCandle(buffer));
+                        buffer = [];
+                    }
+                }
+                // Handle forming candle
+                if(buffer.length > 0) candles.push(this.makeCandle(buffer));
+                
+                return candles.slice(-80); // Return visible count
+            },
+
+            makeCandle(ticks) {
+                const o = ticks[0].open;
+                const c = ticks[ticks.length-1].close;
+                let h = -Infinity, l = Infinity;
+                ticks.forEach(t => {
+                    if(t.high > h) h = t.high;
+                    if(t.low < l) l = t.low;
+                });
+                return { open: o, high: h, low: l, close: c };
             },
 
             render() {
-                // RESAMPLING LOGIC
-                // We take MarketBrain.ticks (M1) and group them
-                const raw = MarketBrain.ticks;
-                let candles = [];
-
-                if (this.timeframe === 1) {
-                    candles = raw.slice(-100); // Show last 100 mins
-                } else {
-                    // Aggregate ticks
-                    let chunk = [];
-                    for (let i = 0; i < raw.length; i++) {
-                        chunk.push(raw[i]);
-                        if (chunk.length === this.timeframe) {
-                            // Create new TF candle
-                            let o = chunk[0].open;
-                            let c = chunk[chunk.length-1].close;
-                            let h = Math.max(...chunk.map(x=>x.high));
-                            let l = Math.min(...chunk.map(x=>x.low));
-                            candles.push({open: o, high: h, low: l, close: c});
-                            chunk = [];
-                        }
-                    }
-                    // Handle partial candle (current building candle)
-                    if(chunk.length > 0) {
-                        let o = chunk[0].open;
-                        let c = chunk[chunk.length-1].close;
-                        let h = Math.max(...chunk.map(x=>x.high));
-                        let l = Math.min(...chunk.map(x=>x.low));
-                        candles.push({open: o, high: h, low: l, close: c});
-                    }
-                    candles = candles.slice(-80); // Zoom level
-                }
-
-                // DRAWING
                 const ctx = this.ctx;
                 const w = this.canvas.width;
                 const h = this.canvas.height;
+                const data = this.getResampledData();
                 
-                // Clear
-                ctx.clearRect(0, 0, w, h);
+                ctx.clearRect(0,0,w,h);
 
                 // Auto Scale
-                let min = Infinity, max = -Infinity;
-                candles.forEach(c => { min = Math.min(min, c.low); max = Math.max(max, c.high); });
+                let max = -Infinity, min = Infinity;
+                data.forEach(c => { if(c.high > max) max = c.high; if(c.low < min) min = c.low; });
+                
+                // Add padding
                 const padding = (max - min) * 0.2;
-                min -= padding; max += padding;
+                max += padding; min -= padding;
                 const range = max - min;
-                const toY = (p) => h - ((p - min) / range * h);
-                const cw = w / candles.length;
+                
+                const toY = (val) => h - ((val - min) / range * h);
+                const toVal = (y) => min + ((h - y) / h * range); // Inverse for crosshair
+                const candleW = w / data.length;
 
-                // Grid
-                ctx.strokeStyle = '#111'; ctx.lineWidth = 1; ctx.beginPath();
-                for(let i=0; i<h; i+=50) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
+                // 1. Grid (Professional Look)
+                ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1; ctx.beginPath();
+                for(let i=0; i<h; i+=h/5) { ctx.moveTo(0, i); ctx.lineTo(w, i); }
+                for(let i=0; i<w; i+=w/10) { ctx.moveTo(i, 0); ctx.lineTo(i, h); }
                 ctx.stroke();
 
-                // Draw SNR Lines
-                MarketBrain.snr.forEach(lvl => {
-                    const y = toY(lvl);
-                    ctx.strokeStyle = 'rgba(255, 255, 0, 0.2)';
-                    ctx.setLineDash([5, 5]);
-                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-                    ctx.fillStyle = 'rgba(255, 255, 0, 0.5)';
-                    ctx.fillText('LIQ LEVEL', w - 60, y - 5);
-                });
-                ctx.setLineDash([]);
+                // 2. Heatmap / SNR Lines (Dynamic)
+                // Draw some static random lines based on range
+                const startP = Math.floor(min / 10) * 10;
+                for(let p = startP; p < max; p+=5) {
+                    const y = toY(p);
+                    ctx.fillStyle = 'rgba(234, 179, 8, 0.05)'; // Gold tint
+                    ctx.fillRect(0, y-1, w, 2);
+                }
 
-                // Draw Candles
-                candles.forEach((c, i) => {
-                    const x = i * cw;
-                    const isGreen = c.close >= c.open;
-                    const color = isGreen ? '#22c55e' : '#ef4444';
+                // 3. Candles
+                data.forEach((c, i) => {
+                    const x = i * candleW;
+                    const cx = x + candleW/2;
+                    const isBull = c.close >= c.open;
+                    const color = isBull ? '#22c55e' : '#ef4444';
                     
                     ctx.strokeStyle = color;
                     ctx.fillStyle = color;
+                    ctx.lineWidth = 1;
                     
                     // Wick
-                    ctx.beginPath(); ctx.moveTo(x + cw/2, toY(c.high)); ctx.lineTo(x + cw/2, toY(c.low)); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(cx, toY(c.high)); ctx.lineTo(cx, toY(c.low)); ctx.stroke();
+                    
                     // Body
-                    const yO = toY(c.open); const yC = toY(c.close);
-                    const hBody = Math.max(Math.abs(yO - yC), 1);
-                    ctx.fillRect(x + 1, Math.min(yO, yC), cw - 2, hBody);
+                    const yO = toY(c.open);
+                    const yC = toY(c.close);
+                    const bodyH = Math.max(Math.abs(yO - yC), 1);
+                    ctx.fillRect(x + 1, Math.min(yO, yC), candleW - 2, bodyH);
                 });
 
-                // Price Line
-                const yP = toY(MarketBrain.price);
-                ctx.strokeStyle = 'white'; ctx.beginPath(); ctx.moveTo(0, yP); ctx.lineTo(w, yP); ctx.stroke();
+                // 4. Current Price Line
+                const currY = toY(MarketEngine.price);
+                ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 4]); ctx.beginPath();
+                ctx.moveTo(0, currY); ctx.lineTo(w, currY); ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Price Label
+                ctx.fillStyle = '#222'; ctx.fillRect(w-45, currY-9, 45, 18);
+                ctx.fillStyle = '#fff'; ctx.font = '9px monospace'; ctx.fillText(MarketEngine.price.toFixed(2), w-40, currY+3);
 
-                // Draw Trader Position Levels
+                // 5. Positions (Entry Lines)
                 Trader.positions.forEach(pos => {
-                    const y = toY(pos.price);
+                    const y = toY(pos.entry);
                     ctx.strokeStyle = pos.type === 'BUY' ? '#22c55e' : '#ef4444';
-                    ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
-                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-                    ctx.fillStyle = 'white'; ctx.font = '9px monospace';
-                    ctx.fillText(`${pos.type} ${pos.lot}`, 5, y - 2);
+                    ctx.setLineDash([4, 2]); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+                    ctx.fillStyle = ctx.strokeStyle;
+                    ctx.fillText(`${pos.type} ${pos.lot}`, 5, y - 4);
                     ctx.setLineDash([]);
                 });
+
+                // 6. Crosshair
+                if(this.crosshairY >= 0) {
+                    ctx.strokeStyle = '#555'; ctx.setLineDash([4, 4]);
+                    ctx.beginPath(); ctx.moveTo(0, this.crosshairY); ctx.lineTo(w, this.crosshairY); ctx.stroke();
+                    ctx.setLineDash([]);
+                    // Label
+                    const val = toVal(this.crosshairY).toFixed(2);
+                    ctx.fillStyle = '#333'; ctx.fillRect(w-45, this.crosshairY-9, 45, 18);
+                    ctx.fillStyle = '#ccc'; ctx.fillText(val, w-40, this.crosshairY+3);
+                }
             }
         };
 
-        // --- DOM / ORDER BOOK ENGINE ---
+        // --- ORDER BOOK (DOM) ---
         const DOM = {
             el: document.getElementById('dom-container'),
             render() {
-                const center = MarketBrain.price;
-                const sentiment = MarketBrain.retailSentiment; // Use this to skew order book
+                const center = MarketEngine.price;
+                const spread = Config.spread;
+                const askStart = center + (spread/2);
+                const bidStart = center - (spread/2);
                 
-                // If Retail FOMO (High +), Ask side gets thin (eaten), Bid side gets fat
-                const askSkew = sentiment > 50 ? 0.3 : 1; 
-                const bidSkew = sentiment < -50 ? 0.3 : 1;
-
                 let html = '';
-                // Asks
-                for(let i=5; i>0; i--) {
-                    let p = center + (i*0.1);
-                    let v = Math.floor(Math.random() * 50 * askSkew) + 5; 
-                    html += this.row(p, v, 'ASK');
+                
+                // Asks (Red) - Reverse Order
+                for(let i=5; i>=0; i--) {
+                    const p = askStart + (i * 0.1);
+                    const vol = Math.floor(Math.random() * 50) + (i*10); // More liquidity further out
+                    const w = Math.min(vol, 100);
+                    html += `
+                        <div class="flex relative justify-between px-2 py-0.5 items-center hover:bg-[#1f0a0a]">
+                            <div class="absolute right-0 top-0 bottom-0 bg-red-900/20" style="width:${w}%"></div>
+                            <span class="text-gray-500 z-10 w-8 text-left">-</span>
+                            <span class="text-red-400 font-bold z-10">${p.toFixed(2)}</span>
+                            <span class="text-gray-400 z-10 w-8 text-right font-bold">${vol}</span>
+                        </div>
+                    `;
                 }
-                // Spread
-                html += `<div class="bg-yellow-900/10 text-center text-[9px] text-yellow-500 py-0.5 border-y border-yellow-900/20">SPREAD</div>`;
-                // Bids
-                for(let i=0; i<5; i++) {
-                    let p = center - (i*0.1);
-                    let v = Math.floor(Math.random() * 50 * bidSkew) + 5;
-                    html += this.row(p, v, 'BID');
+
+                // Spread Gap
+                html += `<div class="bg-[#111] text-center text-[8px] text-gray-600 py-0.5 border-y border-[#222]">SPREAD ${(spread*10).toFixed(0)} PTS</div>`;
+
+                // Bids (Green)
+                for(let i=0; i<=5; i++) {
+                    const p = bidStart - (i * 0.1);
+                    const vol = Math.floor(Math.random() * 50) + (i*10);
+                    const w = Math.min(vol, 100);
+                    html += `
+                        <div class="flex relative justify-between px-2 py-0.5 items-center hover:bg-[#0a1f0a]">
+                            <div class="absolute left-0 top-0 bottom-0 bg-green-900/20" style="width:${w}%"></div>
+                            <span class="text-gray-400 z-10 w-8 text-left font-bold">${vol}</span>
+                            <span class="text-green-400 font-bold z-10">${p.toFixed(2)}</span>
+                            <span class="text-gray-500 z-10 w-8 text-right">-</span>
+                        </div>
+                    `;
                 }
+                
                 this.el.innerHTML = html;
-            },
-            row(price, vol, type) {
-                const w = Math.min(vol*2, 100);
-                const c = type === 'ASK' ? 'bg-red-500' : 'bg-green-500';
-                const tc = type === 'ASK' ? 'text-red-400' : 'text-green-400';
-                return `<div class="relative flex justify-between px-2 py-0.5 hover:bg-white/5 cursor-pointer group">
-                    <div class="absolute top-0 ${type==='ASK'?'right-0':'left-0'} h-full ${c} opacity-10" style="width:${w}%"></div>
-                    <span class="text-gray-500 z-10">${vol}</span>
-                    <span class="${tc} font-bold z-10">${price.toFixed(2)}</span>
-                </div>`
             }
         };
 
-        // --- TRADER LOGIC ---
+        // --- TRADING SYSTEM ---
         const Trader = {
             positions: [],
-            pnl: 0,
             
             execute(type) {
                 const lot = parseFloat(document.getElementById('lot-size').value);
-                this.positions.push({
-                    type: type,
-                    price: MarketBrain.price,
-                    lot: lot
-                });
+                // Slippage simulation
+                const slip = (Math.random() * 0.05);
+                const price = type === 'BUY' ? 
+                    MarketEngine.price + (Config.spread/2) + slip : 
+                    MarketEngine.price - (Config.spread/2) - slip;
+                
+                this.positions.push({ type, lot, entry: price });
+                MarketEngine.triggerNews("ORDER FILLED: " + type);
             },
-            
+
             closeAll() {
-                // Realize PnL
-                this.positions.forEach(p => {
-                    const diff = MarketBrain.price - p.price;
-                    const val = (p.type === 'BUY' ? diff : -diff) * p.lot * Config.pointValue;
-                    this.pnl += val;
-                });
                 this.positions = [];
             },
 
             update() {
-                let floating = 0;
+                let pnl = 0;
                 let netLot = 0;
+                
                 this.positions.forEach(p => {
-                    const diff = MarketBrain.price - p.price;
-                    floating += (p.type === 'BUY' ? diff : -diff) * p.lot * Config.pointValue;
-                    netLot += (p.type === 'BUY' ? p.lot : -p.lot);
+                    const curr = p.type === 'BUY' ? 
+                        MarketEngine.price - (Config.spread/2) : 
+                        MarketEngine.price + (Config.spread/2);
+                    
+                    const diff = p.type === 'BUY' ? (curr - p.entry) : (p.entry - curr);
+                    pnl += diff * p.lot * Config.pointValue;
+                    
+                    netLot += p.type === 'BUY' ? p.lot : -p.lot;
                 });
 
-                const total = this.pnl + floating;
-                const pnlEl = document.getElementById('mm-pnl');
-                pnlEl.innerText = `$${total.toFixed(2)}`;
-                pnlEl.className = `font-mono text-lg font-black ${total>=0 ? 'text-green-500' : 'text-red-500'}`;
+                const pnlEl = document.getElementById('total-pnl');
+                pnlEl.innerText = (pnl >= 0 ? "+$" : "-$") + Math.abs(pnl).toLocaleString('en-US', {minimumFractionDigits: 2});
+                pnlEl.className = "text-base font-black mono tracking-tight " + (pnl >= 0 ? "text-green-500" : "text-red-500");
 
-                document.getElementById('net-pos').innerText = netLot.toFixed(2);
-                document.getElementById('net-pos').className = `font-bold mono ${netLot>0?'text-green-500':netLot<0?'text-red-500':'text-white'}`;
+                const netEl = document.getElementById('net-pos');
+                netEl.innerText = netLot.toFixed(2);
+                netEl.className = "font-bold font-mono text-xs " + (netLot > 0 ? "text-green-500" : netLot < 0 ? "text-red-500" : "text-white");
             }
         };
 
-        // --- INIT ---
+        // --- BOOTSTRAP ---
         window.onload = () => {
-            MarketBrain.init();
+            MarketEngine.init();
             Chart.init();
-            setInterval(() => MarketBrain.update(), Config.tickSpeed);
+            
+            // Core Loop
+            setInterval(() => {
+                MarketEngine.update();
+            }, Config.tickSpeed);
         };
     </script>
 </body>
