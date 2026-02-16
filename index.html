@@ -1,201 +1,205 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MM Terminal: Smart Money Simulator</title>
+    <title>MM TERMINAL: GOD MODE</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-body: #050505; --bg-panel: #0B0E11; --border: #1E2329;
-            --up: #0ECB81; --down: #F6465D; --accent: #F0B90B;
-            --liq: #FF9800;
+            --bg: #050505; --panel: #0E1116; --border: #1F252D;
+            --green: #00FF9D; --red: #FF3B30; --accent: #FFE600;
+            --liq-high: rgba(255, 152, 0, 0.15); --liq-border: #FF9800;
         }
-        body { background: var(--bg-body); color: #EAECEF; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; }
+        body { background: var(--bg); color: #cfd8dc; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        .text-up { color: var(--green); } .text-down { color: var(--red); } .text-warn { color: var(--accent); }
         .border-c { border-color: var(--border); }
-        .text-up { color: var(--up); } .text-down { color: var(--down); } .text-liq { color: var(--liq); }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
+        /* Grid Layout */
+        .layout-grid { display: grid; grid-template-columns: 1fr 340px; height: 100vh; }
+        
+        /* Custom Scroll */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 
         /* Animations */
-        @keyframes flash-green { 0% { background-color: rgba(14, 203, 129, 0.5); } 100% { background-color: transparent; } }
-        @keyframes flash-red { 0% { background-color: rgba(246, 70, 93, 0.5); } 100% { background-color: transparent; } }
-        .flash-up { animation: flash-green 0.3s ease-out; }
-        .flash-down { animation: flash-red 0.3s ease-out; }
+        @keyframes pulse-liq { 0% { opacity: 0.3; } 50% { opacity: 0.6; } 100% { opacity: 0.3; } }
+        .liq-zone { animation: pulse-liq 3s infinite; }
+        .flash-exec { animation: flash-white 0.1s; }
+        @keyframes flash-white { 0% { background: rgba(255,255,255,0.2); } 100% { background: transparent; } }
 
-        /* UI Elements */
-        .btn-mm { @apply w-full py-2 text-[10px] font-bold uppercase tracking-wider border border-c rounded transition hover:brightness-110 active:scale-95; }
-        .bar-vol { height: 100%; position: absolute; opacity: 0.2; transition: width 0.1s; }
+        /* Elements */
+        .btn-action { 
+            @apply px-3 py-2 text-[10px] font-bold uppercase tracking-wider border rounded transition hover:brightness-110 active:scale-95 flex items-center justify-center gap-2; 
+        }
+        .order-row { @apply flex justify-between px-2 py-0.5 text-[10px] relative hover:bg-white/5 cursor-crosshair; }
+        .vol-bar { @apply absolute top-0 bottom-0 opacity-20 transition-all duration-300; }
     </style>
 </head>
-<body class="flex flex-col h-screen w-screen text-[12px]">
+<body class="layout-grid">
 
-    <header class="h-[50px] bg-panel border-b border-c flex items-center justify-between px-4 shrink-0 z-20">
-        <div class="flex items-center gap-4">
-            <div class="flex flex-col">
-                <span class="text-[9px] text-gray-500 font-bold uppercase">MARKET MAKER ID</span>
-                <span class="text-xs font-bold text-accent">CITADEL-ALGO-01</span>
-            </div>
-            <div class="h-6 w-px bg-gray-800"></div>
-            <div class="flex flex-col w-[180px]">
-                <span class="text-[9px] text-gray-500 font-bold uppercase flex justify-between">
-                    <span>RETAIL SENTIMENT</span>
-                    <span id="sentiment-text" class="text-white">Neutral</span>
-                </span>
-                <div class="w-full h-1.5 bg-gray-800 rounded-full mt-1 overflow-hidden">
-                    <div id="sentiment-bar" class="h-full bg-gray-500 transition-all duration-500" style="width: 50%"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-8 text-right">
-            <div>
-                <span class="text-[9px] text-gray-500 block font-bold">NET INVENTORY (RISK)</span>
-                <span class="text-sm font-bold mono" id="head-inv">0 LOT</span>
-            </div>
-            <div>
-                <span class="text-[9px] text-gray-500 block font-bold">REALIZED PNL</span>
-                <span class="text-sm font-bold mono" id="head-pnl">$0.00</span>
-            </div>
-            <div class="text-right">
-                 <span class="text-[9px] text-gray-500 block font-bold">AVAILABLE LIQUIDITY</span>
-                 <span class="text-sm font-bold mono text-accent" id="head-cash">$1,000,000</span>
-            </div>
-        </div>
-    </header>
-
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex flex-col border-r border-c relative bg-[#080a0d]">
         
-        <div class="flex-1 flex flex-col bg-[#000] relative border-r border-c">
-            <div class="absolute top-3 left-3 z-10 flex gap-2 pointer-events-none">
-                <div class="px-2 py-1 bg-panel border border-c rounded text-xs font-bold text-white shadow-lg">
-                    <span class="text-gray-500 mr-1">BTC/USD</span>
-                    <span id="chart-price" class="mono text-lg">0.00</span>
+        <div class="absolute top-4 left-4 z-20 flex gap-4">
+            <div class="bg-panel/90 border border-c p-2 rounded backdrop-blur-sm shadow-lg">
+                <div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Active Pair</div>
+                <div class="text-xl font-bold text-white mono tracking-tight">BTC/USD <span id="price-display" class="text-lg text-up">98,240.50</span></div>
+            </div>
+            <div class="bg-panel/90 border border-c p-2 rounded backdrop-blur-sm shadow-lg min-w-[150px]">
+                <div class="text-[9px] text-gray-500 font-bold uppercase mb-1">Retail Sentiment AI</div>
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-gray-500" id="sentiment-dot"></div>
+                    <span id="sentiment-text" class="text-xs font-bold text-white">NEUTRAL</span>
                 </div>
-                <div class="px-2 py-1 bg-black/60 border border-liq/50 rounded text-[10px] text-liq flex items-center gap-1">
-                    <div class="w-2 h-2 rounded-full bg-liq animate-pulse"></div>
-                    LIQUIDITY POOLS DETECTED
+                <div class="w-full h-1 bg-gray-700 mt-2 rounded overflow-hidden">
+                    <div id="sentiment-bar" class="h-full bg-gray-400 transition-all duration-300" style="width: 50%"></div>
                 </div>
             </div>
-            <canvas id="chartCanvas" class="w-full h-full cursor-crosshair"></canvas>
         </div>
 
-        <div class="w-[380px] flex flex-col bg-panel shrink-0 border-l border-c">
+        <div id="liq-toast" class="absolute top-20 left-1/2 -translate-x-1/2 z-30 opacity-0 transition-opacity duration-300 bg-[#FF9800]/90 text-black px-4 py-2 rounded font-bold text-xs shadow-[0_0_20px_rgba(255,152,0,0.5)]">
+            LIQUIDITY POOL HIT! STOP LOSSES TRIGGERED!
+        </div>
+
+        <canvas id="chart" class="w-full h-full cursor-crosshair"></canvas>
+    </div>
+
+    <div class="flex flex-col bg-panel h-full overflow-hidden">
+        
+        <div class="h-[15%] min-h-[110px] p-3 border-b border-c flex flex-col justify-between bg-[#0b0e13]">
+            <div class="flex justify-between items-center">
+                <span class="text-[9px] text-gray-500 font-bold">MM ACCOUNT: <span class="text-white">CITADEL-01</span></span>
+                <span class="text-[9px] text-green-400 font-bold animate-pulse">● CONNECTED</span>
+            </div>
             
-            <div class="h-[40%] flex flex-col border-b border-c bg-[#050505]">
-                <div class="px-2 py-1 bg-[#161A25] border-b border-c flex justify-between items-center">
-                    <span class="text-[10px] font-bold text-gray-400">ORDER BOOK (L2)</span>
-                    <span class="text-[9px] mono text-gray-600">Active Spoofing: <span id="spoof-status" class="text-gray-500">OFF</span></span>
-                </div>
-                <div id="book-asks" class="flex-1 overflow-hidden flex flex-col-reverse justify-end pb-1"></div>
-                <div class="py-1 border-y border-c bg-[#111] text-center text-[10px] text-gray-500 font-mono flex justify-between px-4">
-                    <span>SPREAD</span><span id="spread-val" class="text-white">0.00</span>
-                </div>
-                <div id="book-bids" class="flex-1 overflow-hidden pt-1"></div>
-            </div>
-
-            <div class="h-[20%] flex flex-col border-b border-c bg-[#050505]">
-                <div class="px-2 py-1 bg-[#161A25] border-b border-c">
-                    <span class="text-[10px] font-bold text-gray-400">TAPE (TIME & SALES)</span>
-                </div>
-                <div id="tape" class="flex-1 overflow-y-hidden font-mono text-[10px]"></div>
-            </div>
-
-            <div class="flex-1 flex flex-col p-3 gap-3 overflow-y-auto bg-panel">
-                
+            <div class="grid grid-cols-2 gap-4 mt-2">
                 <div>
-                    <label class="text-[9px] text-gray-500 font-bold mb-1 block">MANUAL INTERVENTION</label>
-                    <div class="flex gap-2 mb-2">
-                        <input type="number" id="input-qty" value="1.0" class="w-1/3 bg-black border border-c text-white px-2 py-1 text-right mono font-bold rounded focus:border-accent outline-none">
-                        <button onclick="MM.execute('BUY')" class="flex-1 bg-[#0ECB81]/10 border border-[#0ECB81] text-[#0ECB81] hover:bg-[#0ECB81] hover:text-black font-bold rounded transition">BUY</button>
-                        <button onclick="MM.execute('SELL')" class="flex-1 bg-[#F6465D]/10 border border-[#F6465D] text-[#F6465D] hover:bg-[#F6465D] hover:text-white font-bold rounded transition">SELL</button>
-                    </div>
+                    <span class="text-[9px] text-gray-500 block">NET INVENTORY (RISK)</span>
+                    <span id="inv-val" class="text-lg mono font-bold text-gray-300">0.00 BTC</span>
                 </div>
-
-                <div class="space-y-2">
-                    <label class="text-[9px] text-accent font-bold mb-1 block tracking-widest text-center border-b border-c pb-1">--- ALGO STRATEGIES ---</label>
-                    
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onclick="ALGO.toggleSpoof('BID')" id="btn-spoof-bid" class="btn-mm bg-gray-800 text-gray-400 border-gray-700">
-                            🛡️ SPOOF BID WALL
-                        </button>
-                        <button onclick="ALGO.toggleSpoof('ASK')" id="btn-spoof-ask" class="btn-mm bg-gray-800 text-gray-400 border-gray-700">
-                            🛡️ SPOOF ASK WALL
-                        </button>
-                    </div>
-                    <p class="text-[9px] text-gray-600 leading-tight">*Create fake orders to push retail price. Will vanish if hit.</p>
-
-                    <div class="grid grid-cols-2 gap-2 mt-2">
-                        <button onclick="ALGO.triggerIceberg('BUY')" class="btn-mm bg-blue-900/30 border-blue-800 text-blue-400">
-                            🧊 ICEBERG BUY
-                        </button>
-                        <button onclick="ALGO.triggerIceberg('SELL')" class="btn-mm bg-blue-900/30 border-blue-800 text-blue-400">
-                            🧊 ICEBERG SELL
-                        </button>
-                    </div>
-                    
-                    <div class="mt-3">
-                        <button onclick="ALGO.liquidityGrab()" class="btn-mm bg-orange-900/20 border-orange-600 text-orange-500 animate-pulse border-dashed">
-                            🎯 TRIGGER STOP HUNT (GRAB LIQ)
-                        </button>
-                    </div>
-
+                <div class="text-right">
+                    <span class="text-[9px] text-gray-500 block">REALIZED PNL</span>
+                    <span id="pnl-val" class="text-lg mono font-bold text-gray-300">$0.00</span>
                 </div>
             </div>
+            
+            <div class="w-full h-1 bg-gray-800 mt-2 relative rounded overflow-hidden">
+                <div id="inv-bar" class="absolute left-1/2 w-0 h-full bg-blue-500 transition-all duration-300"></div>
+            </div>
+            <div class="flex justify-between text-[8px] text-gray-600 font-mono mt-0.5">
+                <span>SHORT HEAVY</span>
+                <span>NEUTRAL</span>
+                <span>LONG HEAVY</span>
+            </div>
+        </div>
+
+        <div class="h-[35%] flex flex-col border-b border-c relative">
+            <div class="px-2 py-1 bg-[#151920] border-b border-c flex justify-between items-center">
+                <span class="text-[9px] font-bold text-gray-400">ORDER BOOK (L2)</span>
+                <span class="text-[9px] text-gray-500 mono">SPREAD: <span id="spread-val" class="text-white">0.0</span></span>
+            </div>
+            
+            <div id="book-asks" class="flex-1 overflow-hidden flex flex-col-reverse justify-end pb-1 bg-[#050505]"></div>
+            
+            <div class="py-1 bg-[#1F252D] text-center text-xs font-bold text-white mono border-y border-c" id="mid-price">98,240.50</div>
+            
+            <div id="book-bids" class="flex-1 overflow-hidden pt-1 bg-[#050505]"></div>
+
+            <div id="spoof-indicator" class="hidden absolute inset-0 bg-black/50 flex items-center justify-center pointer-events-none z-10">
+                <div class="text-warn font-bold border border-warn px-2 py-1 bg-black text-xs animate-bounce">
+                    ⚠ SPOOF ALGO ACTIVE
+                </div>
+            </div>
+        </div>
+
+        <div class="h-[15%] flex flex-col border-b border-c bg-[#050505]">
+            <div class="px-2 py-1 bg-[#151920] border-b border-c"><span class="text-[9px] font-bold text-gray-400">TAPE</span></div>
+            <div id="tape" class="flex-1 overflow-y-hidden text-[9px] mono font-bold"></div>
+        </div>
+
+        <div class="flex-1 bg-panel p-3 overflow-y-auto flex flex-col gap-3">
+            
+            <div>
+                <div class="flex justify-between text-[9px] text-gray-500 font-bold mb-1">
+                    <span>MANUAL EXECUTION</span>
+                    <span>QTY: <input type="number" id="input-qty" value="5" class="bg-black border border-c text-white text-center w-8 rounded"> BTC</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="MM.execute('BUY')" class="btn-action bg-green-900/20 border-green-800 text-green-400 hover:bg-green-500 hover:text-black">BUY MKT</button>
+                    <button onclick="MM.execute('SELL')" class="btn-action bg-red-900/20 border-red-800 text-red-400 hover:bg-red-500 hover:text-white">SELL MKT</button>
+                </div>
+            </div>
+
+            <div class="pt-2 border-t border-c">
+                <label class="text-[9px] text-warn font-bold block mb-2 text-center tracking-[0.2em]">⚠️ MARKET MANIPULATION ⚠️</label>
+                
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <button onclick="ALGO.spoof('BID')" id="btn-spoof-bid" class="btn-action bg-[#1F252D] border-gray-600 text-gray-300">
+                        🛡️ SPOOF BID
+                    </button>
+                    <button onclick="ALGO.spoof('ASK')" id="btn-spoof-ask" class="btn-action bg-[#1F252D] border-gray-600 text-gray-300">
+                        🛡️ SPOOF ASK
+                    </button>
+                </div>
+                
+                <button onclick="ALGO.stopHunt()" class="w-full btn-action bg-orange-900/20 border-orange-600 text-orange-500 mb-2">
+                    🎯 TRIGGER STOP HUNT (LIQUIDITY GRAB)
+                </button>
+
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <button onclick="ALGO.injectNews('FUD')" class="btn-action border-red-900 text-red-500 text-[9px]">
+                        📰 FUD NEWS<br>(PANIC)
+                    </button>
+                    <button onclick="ALGO.injectNews('PUMP')" class="btn-action border-green-900 text-green-500 text-[9px]">
+                        📰 BULL NEWS<br>(FOMO)
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 
 <script>
 /**
- * MARKET MAKER SIMULATOR CORE
- * Focus: Liquidity, Inventory Management, Manipulation
+ * MARKET MAKER GOD MODE ENGINE
+ * Designed for: Liquidity Hunting, Inventory Management, Psychology Manipulation
  */
 
 const $ = (id) => document.getElementById(id);
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
-// --- CONFIGURATION ---
-const CONFIG = {
-    pair: 'BTC/USD',
-    tickSize: 0.5,
-    initialPrice: 97500.00,
-    lotSize: 100000 // Multiplier for realism
-};
-
-// --- GLOBAL STATE ---
+// --- CONFIG ---
 const STATE = {
-    price: CONFIG.initialPrice,
+    price: 98240.50,
+    tick: 5, // Price moves in $5 increments
+    inventory: 0, // Net position
     cash: 1000000,
-    inventory: 0, // Net position (Positive = Long, Negative = Short)
-    avgEntry: 0,
-    realizedPnL: 0,
+    pnl: 0,
+    sentiment: 50, // 0-100
     
-    // Market Data
-    bids: [], 
-    asks: [],
-    trades: [], // Tape
-    candles: [],
-    liquidityZones: [], // Price levels where stops are
+    // Data
+    bids: [], asks: [], trades: [], candles: [],
     
-    // Algo State
+    // Liquidity Pools (The "Treasure")
+    liqZones: [],
+    
+    // Active Algos
     spoofing: { active: false, side: null, id: null },
-    iceberg: { active: false, remaining: 0, side: null },
-    retailSentiment: 50 // 0 (Fear) - 100 (Greed)
+    stopHunt: false,
+    volatility: 1.0
 };
 
-// --- CHART & VISUALS ---
+// --- CHART ENGINE ---
 const VIEW = {
-    canvas: $('chartCanvas'),
-    ctx: $('chartCanvas').getContext('2d'),
-
+    canvas: $('chart'),
+    ctx: $('chart').getContext('2d'),
+    
     init() {
         this.resize();
         window.onresize = () => this.resize();
-        this.generateHistory();
+        this.genHistory();
         this.renderLoop();
     },
 
@@ -204,341 +208,347 @@ const VIEW = {
         this.canvas.height = this.canvas.parentElement.clientHeight;
     },
 
-    generateHistory() {
+    genHistory() {
         let p = STATE.price;
         let now = Date.now();
+        STATE.candles = [];
         for(let i=100; i>0; i--) {
-            let change = (Math.random()-0.5) * 50;
-            let o = p;
-            let c = p + change;
-            let h = Math.max(o,c) + Math.random()*20;
-            let l = Math.min(o,c) - Math.random()*20;
+            let chg = (Math.random()-0.5) * 50;
+            let o = p; let c = p + chg;
+            let h = Math.max(o,c) + Math.random()*30;
+            let l = Math.min(o,c) - Math.random()*30;
             STATE.candles.push({t: now-(i*60000), o, h, l, c});
             p = c;
         }
         STATE.price = p;
-        // Generate initial Liquidity Pools (Highs/Lows)
-        this.updateLiquidityZones();
+        this.updateLiqZones();
     },
 
-    updateLiquidityZones() {
-        // Simple logic: Local Highs and Lows are Liquidity Pools
-        STATE.liquidityZones = [];
-        const data = STATE.candles.slice(-50);
-        let max = Math.max(...data.map(d=>d.h));
-        let min = Math.min(...data.map(d=>d.l));
-        STATE.liquidityZones.push({price: max + 5, type: 'BUY_STOPS', hit: false});
-        STATE.liquidityZones.push({price: min - 5, type: 'SELL_STOPS', hit: false});
+    updateLiqZones() {
+        // Logic: Create "Liquidity Pools" above recent highs and below recent lows
+        STATE.liqZones = [];
+        let highs = STATE.candles.slice(-50).map(c=>c.h);
+        let lows = STATE.candles.slice(-50).map(c=>c.l);
+        let max = Math.max(...highs);
+        let min = Math.min(...lows);
+
+        // Add zones (Yellow boxes)
+        STATE.liqZones.push({ p: max + 20, type: 'BUY_STOP', size: rand(50,200), hit: false });
+        STATE.liqZones.push({ p: min - 20, type: 'SELL_STOP', size: rand(50,200), hit: false });
     },
 
     renderLoop() {
         const ctx = this.ctx;
         const w = this.canvas.width, h = this.canvas.height;
-        ctx.fillStyle = '#050505'; ctx.fillRect(0,0,w,h);
+        ctx.clearRect(0,0,w,h);
 
-        // Draw Candles
-        const data = STATE.candles.slice(-80); // View last 80
-        if(data.length === 0) return requestAnimationFrame(()=>this.renderLoop());
+        const data = STATE.candles.slice(-70);
+        if(!data.length) return requestAnimationFrame(()=>this.renderLoop());
 
-        let prices = data.map(d=>[d.h,d.l]).flat();
-        let min = Math.min(...prices, ...STATE.liquidityZones.map(z=>z.price));
-        let max = Math.max(...prices, ...STATE.liquidityZones.map(z=>z.price));
-        let pad = (max-min)*0.1; min-=pad; max+=pad;
+        // Scale
+        let vals = data.map(d=>[d.h,d.l]).flat();
+        // Include liq zones in scale
+        vals.push(...STATE.liqZones.map(z=>z.p));
         
-        const getY = p => h - ((p-min)/(max-min))*h;
-        const getX = i => i * (w/80);
-        const barW = (w/80) * 0.7;
+        let min = Math.min(...vals) - 50;
+        let max = Math.max(...vals) + 50;
+        const getY = p => h - ((p-min)/(max-min)) * h;
+        const getX = i => i * (w/70);
+        const barW = (w/70) * 0.6;
 
-        // Grid
-        ctx.strokeStyle = '#1E2329'; ctx.lineWidth = 1;
+        // 1. Draw Liquidity Zones (Heatmap style)
+        STATE.liqZones.forEach(z => {
+            if(z.hit) return; // Don't draw if already hunted
+            let y = getY(z.p);
+            let height = z.type === 'BUY_STOP' ? -20 : 20; // Up or down box
+            
+            // Gradient
+            let grad = ctx.createLinearGradient(0, y, 0, y+height);
+            grad.addColorStop(0, 'rgba(255, 152, 0, 0.4)');
+            grad.addColorStop(1, 'rgba(255, 152, 0, 0)');
+            
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, y, w, height);
+            
+            ctx.fillStyle = '#FF9800';
+            ctx.font = 'bold 10px Inter';
+            ctx.fillText(`LIQ POOL: ${z.size} BTC (${z.type})`, w - 150, y + (z.type==='BUY_STOP'?-5:12));
+            
+            // Dotted line
+            ctx.strokeStyle = '#FF9800'; ctx.setLineDash([4,4]);
+            ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); ctx.setLineDash([]);
+        });
+
+        // 2. Grid
+        ctx.strokeStyle = '#1F252D'; ctx.lineWidth = 1;
         ctx.beginPath();
         for(let p=Math.floor(min/100)*100; p<max; p+=100) {
             let y = getY(p); ctx.moveTo(0,y); ctx.lineTo(w,y);
         }
         ctx.stroke();
 
-        // Liquidity Lines (The Hunter's Targets)
-        STATE.liquidityZones.forEach(z => {
-            if(z.hit) return;
-            let y = getY(z.price);
-            ctx.strokeStyle = '#FF9800'; ctx.lineWidth = 1; ctx.setLineDash([5, 5]);
-            ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
-            ctx.fillStyle = '#FF9800'; ctx.font = '10px Inter';
-            ctx.fillText(z.type === 'BUY_STOPS' ? 'LIQ POOL (BUY STOPS)' : 'LIQ POOL (SELL STOPS)', w-130, y-5);
-        });
-        ctx.setLineDash([]);
-
-        // Candles
+        // 3. Candles
         data.forEach((d, i) => {
             let x = getX(i);
-            let color = d.c >= d.o ? '#0ECB81' : '#F6465D';
-            ctx.fillStyle = color; ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
+            let col = d.c >= d.o ? '#00FF9D' : '#FF3B30';
+            ctx.strokeStyle = col; ctx.fillStyle = col;
             ctx.beginPath(); ctx.moveTo(x+barW/2, getY(d.h)); ctx.lineTo(x+barW/2, getY(d.l)); ctx.stroke();
             ctx.fillRect(x, getY(Math.max(d.o,d.c)), barW, Math.abs(getY(d.o)-getY(d.c))||1);
         });
 
-        // Current Price Line
-        let cy = getY(STATE.price);
+        // 4. Current Price Line
+        let py = getY(STATE.price);
         ctx.strokeStyle = '#fff'; ctx.setLineDash([2,2]);
-        ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(w,cy); ctx.stroke();
-        
+        ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(w,py); ctx.stroke();
+
         requestAnimationFrame(()=>this.renderLoop());
     }
 };
 
-// --- ENGINE: ORDER BOOK & MATCHING ---
+// --- LOGIC ENGINE ---
 const MM = {
     init() {
         this.fillBook();
-        this.uiTicker();
-        setInterval(() => this.marketDynamics(), 500); // Retail Reaction Loop
-        setInterval(() => this.updateCandle(), 1000);
+        this.domLoop();
+        
+        // Heartbeats
+        setInterval(() => this.marketTick(), 300); // Price moves
+        setInterval(() => this.retailAI(), 1000); // Retail reacts
+        setInterval(() => this.candleTick(), 1000);
     },
 
     fillBook() {
         STATE.bids = []; STATE.asks = [];
         for(let i=1; i<=15; i++) {
-            STATE.asks.push({price: STATE.price + (i*CONFIG.tickSize), vol: Math.random()*2});
-            STATE.bids.push({price: STATE.price - (i*CONFIG.tickSize), vol: Math.random()*2});
+            STATE.asks.push({p: STATE.price + (i*STATE.tick), v: rand(1, 10)});
+            STATE.bids.push({p: STATE.price - (i*STATE.tick), v: rand(1, 10)});
         }
     },
 
-    execute(side, qtyOverride=null, isMaker=true) {
-        let qty = qtyOverride || parseFloat($('input-qty').value);
-        if(!qty || qty <= 0) return;
-
+    execute(side, qty=null, isMaker=true) {
+        let q = qty || parseFloat($('input-qty').value);
         let book = side === 'BUY' ? STATE.asks : STATE.bids;
-        let filled = 0;
-        let avgPrice = 0;
-        let totalCost = 0;
-
-        // Matching Logic
-        while(qty > 0 && book.length > 0) {
-            let best = book[0];
+        let filled = 0, cost = 0;
+        
+        while(q > 0 && book.length) {
+            let level = book[0];
             
-            // Check for Spoofing Walls (Fake Liquidity)
+            // Check Spoof
             if(STATE.spoofing.active && ((side==='BUY' && STATE.spoofing.side==='ASK') || (side==='SELL' && STATE.spoofing.side==='BID'))) {
-                // If price hits spoof wall, remove wall instantly (User cancels to avoid fill)
-                if(Math.abs(best.price - STATE.price) < CONFIG.tickSize*3) {
-                    ALGO.toggleSpoof(STATE.spoofing.side); // Turn off
-                    book[0].vol = Math.random(); // Reset to normal
+                // If hitting spoof wall, wall vanishes
+                if(Math.abs(level.p - STATE.price) < STATE.tick*2) {
+                    ALGO.spoof(STATE.spoofing.side); // Toggle off
                 }
             }
 
-            let tradeVol = Math.min(qty, best.vol);
+            let trade = Math.min(q, level.v);
+            level.v -= trade;
+            filled += trade;
+            cost += trade * level.p;
+            q -= trade;
             
-            best.vol -= tradeVol;
-            qty -= tradeVol;
-            filled += tradeVol;
-            totalCost += (best.price * tradeVol);
-
-            // Update Price
-            STATE.price = best.price;
-
-            // Remove empty levels
-            if(best.vol <= 0.01) {
+            STATE.price = level.p; // Price moves
+            if(level.v <= 0.1) {
                 book.shift();
-                // Refill book edge
-                let lastP = book[book.length-1].price;
-                let newP = side === 'BUY' ? lastP + CONFIG.tickSize : lastP - CONFIG.tickSize;
-                book.push({price: newP, vol: Math.random()*2});
+                // Refill end
+                let lp = book[book.length-1].p;
+                book.push({p: side==='BUY'?lp+STATE.tick : lp-STATE.tick, v: rand(1,10)});
             }
         }
 
-        // Update State
         if(filled > 0) {
-            avgPrice = totalCost / filled;
-            
-            // Update Inventory (User Side)
+            let avg = cost/filled;
+            // Maker Logic (You)
             if(isMaker) {
-                if(side === 'BUY') {
-                    STATE.inventory += filled;
-                    STATE.cash -= totalCost;
-                } else {
-                    STATE.inventory -= filled;
-                    STATE.cash += totalCost;
-                }
+                if(side === 'BUY') { STATE.inventory += filled; STATE.cash -= cost; }
+                else { STATE.inventory -= filled; STATE.cash += cost; }
+                
+                // Animation
+                document.body.classList.add('flash-exec');
+                setTimeout(()=>document.body.classList.remove('flash-exec'), 100);
             }
 
-            // Tape Print
-            let time = new Date().toLocaleTimeString().split(' ')[0];
-            STATE.trades.unshift({time, price: avgPrice, vol: filled, side});
+            // Tape
+            STATE.trades.unshift({t: new Date().toLocaleTimeString().split(' ')[0], p: avg, v: filled, s: side});
             if(STATE.trades.length > 20) STATE.trades.pop();
-
-            this.checkLiquidityPools();
-            this.updateUI();
+            
+            this.checkLiquidity();
         }
     },
 
-    checkLiquidityPools() {
-        STATE.liquidityZones.forEach(z => {
+    checkLiquidity() {
+        STATE.liqZones.forEach(z => {
             if(z.hit) return;
-            let hit = (z.type === 'BUY_STOPS' && STATE.price >= z.price) || 
-                      (z.type === 'SELL_STOPS' && STATE.price <= z.price);
+            let hit = (z.type === 'BUY_STOP' && STATE.price >= z.p) || (z.type === 'SELL_STOP' && STATE.price <= z.p);
             
             if(hit) {
                 z.hit = true;
-                // Liquidity Grab Effect! Price accelerates
-                let push = z.type === 'BUY_STOPS' ? 1 : -1;
-                STATE.retailSentiment = z.type === 'BUY_STOPS' ? 90 : 10; // Extreme FOMO/Panic
+                // TOAST
+                let t = $('liq-toast');
+                t.style.opacity = '1';
+                setTimeout(()=>t.style.opacity='0', 3000);
                 
-                // Cascade Effect (Stop Loss triggers more orders)
+                // EFFECT: Massive acceleration (Cascade)
+                STATE.volatility = 5.0;
                 let cascade = setInterval(() => {
-                    this.execute(z.type==='BUY_STOPS'?'BUY':'SELL', 5, false); // Bot orders
+                    this.execute(z.type==='BUY_STOP'?'BUY':'SELL', 10, false); // Bot panic
                 }, 100);
                 setTimeout(() => { 
                     clearInterval(cascade); 
-                    VIEW.updateLiquidityZones(); // Generate new targets
-                }, 1000);
+                    STATE.volatility = 1.0; 
+                    VIEW.updateLiqZones(); // New zones
+                }, 1500);
             }
         });
     },
 
-    updateCandle() {
+    marketTick() {
+        // Random walk based on Sentiment
+        let bias = (STATE.sentiment - 50) / 100; // -0.5 to 0.5
+        let dir = Math.random() < (0.5 + bias) ? 'BUY' : 'SELL';
+        let vol = Math.random() * STATE.volatility;
+        this.execute(dir, vol, false);
+    },
+
+    retailAI() {
+        // Retail reacts to Walls (Spoofing)
+        if(STATE.spoofing.active) {
+            // If Bid Wall exists, Retail Buys (Front run)
+            if(STATE.spoofing.side === 'BID') STATE.sentiment = Math.min(STATE.sentiment+5, 90);
+            else STATE.sentiment = Math.max(STATE.sentiment-5, 10);
+        }
+        
+        // Normalize
+        if(!STATE.spoofing.active) {
+            if(STATE.sentiment > 50) STATE.sentiment--;
+            if(STATE.sentiment < 50) STATE.sentiment++;
+        }
+    },
+
+    candleTick() {
         let last = STATE.candles[STATE.candles.length-1];
+        last.c = STATE.price;
+        if(STATE.price > last.h) last.h = STATE.price;
+        if(STATE.price < last.l) last.l = STATE.price;
+        
         if(Date.now() - last.t > 60000) {
             STATE.candles.push({t: Date.now(), o: STATE.price, h: STATE.price, l: STATE.price, c: STATE.price});
-            if(STATE.candles.length > 100) STATE.candles.shift();
-        } else {
-            last.c = STATE.price;
-            if(STATE.price > last.h) last.h = STATE.price;
-            if(STATE.price < last.l) last.l = STATE.price;
+            STATE.candles.shift();
         }
     },
 
-    marketDynamics() {
-        // 1. Retail Sentiment Reaction
-        // If price moves up fast, retail gets FOMO (Buys)
-        // If Inventory is heavy, Market Maker (User) wants to manipulate price against retail.
+    domLoop() {
+        requestAnimationFrame(() => this.domLoop());
         
-        let retailAction = Math.random();
+        // 1. Stats
+        $('price-display').innerText = STATE.price.toFixed(2);
+        $('price-display').className = `text-lg mono font-bold ${STATE.candles[STATE.candles.length-1].c >= STATE.candles[STATE.candles.length-1].o ? 'text-up' : 'text-down'}`;
         
-        // If Spoof Wall exists, Price tends to move AWAY from it
-        if(STATE.spoofing.active) {
-            if(STATE.spoofing.side === 'BID') {
-                // Fake support -> Retail buys -> Price Up
-                if(Math.random() < 0.7) this.execute('BUY', Math.random()*0.5, false);
-            } else {
-                // Fake resistance -> Retail sells -> Price Down
-                if(Math.random() < 0.7) this.execute('SELL', Math.random()*0.5, false);
-            }
-        } else {
-            // Random Noise
-            if(Math.random() < 0.3) {
-                let side = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                this.execute(side, Math.random()*0.3, false);
-            }
-        }
+        $('inv-val').innerText = STATE.inventory.toFixed(2) + " BTC";
+        $('inv-val').className = `text-lg mono font-bold ${STATE.inventory>0?'text-up':STATE.inventory<0?'text-down':'text-gray-300'}`;
+        
+        // Inventory Bar
+        // Max range +/- 100 BTC
+        let invPct = Math.min(Math.max((STATE.inventory / 100) * 50 + 50, 0), 100);
+        $('inv-bar').style.left = '0'; 
+        $('inv-bar').style.width = invPct + "%";
+        $('inv-bar').className = `absolute h-full transition-all duration-300 ${STATE.inventory>20?'bg-green-500':STATE.inventory<-20?'bg-red-500':'bg-blue-500'}`;
+        
+        // PnL (Simplified: Cash diff + Inventory value diff)
+        let unrealized = STATE.inventory * STATE.price;
+        let totalVal = STATE.cash + unrealized;
+        let pnl = totalVal - 1000000;
+        $('pnl-val').innerText = (pnl>=0?'+':'-') + "$" + Math.abs(pnl).toLocaleString();
+        $('pnl-val').className = `text-lg mono font-bold ${pnl>=0?'text-up':'text-down'}`;
 
-        // Iceberg Execution
-        if(STATE.iceberg.active) {
-            if(STATE.iceberg.remaining > 0) {
-                let chunk = Math.random() * 0.5;
-                this.execute(STATE.iceberg.side, chunk, true);
-                STATE.iceberg.remaining -= chunk;
-            } else {
-                STATE.iceberg.active = false;
-            }
-        }
-    },
+        // Sentiment
+        $('sentiment-bar').style.width = STATE.sentiment + "%";
+        $('sentiment-bar').className = `h-full transition-all duration-300 ${STATE.sentiment>70?'bg-green-500':STATE.sentiment<30?'bg-red-500':'bg-gray-400'}`;
+        $('sentiment-dot').className = `w-2 h-2 rounded-full ${STATE.sentiment>70?'bg-green-500':STATE.sentiment<30?'bg-red-500':'bg-gray-500'}`;
+        $('sentiment-text').innerText = STATE.sentiment > 70 ? "EXTREME GREED (FOMO)" : STATE.sentiment < 30 ? "EXTREME FEAR (PANIC)" : "NEUTRAL";
 
-    uiTicker() {
-        requestAnimationFrame(() => this.uiTicker());
-        
-        // DOM Rendering
-        const renderRow = (item, side) => {
-            let width = Math.min((item.vol / 5) * 100, 100); // 5 BTC max visual
-            let color = side === 'ask' ? 'bg-[#F6465D]' : 'bg-[#0ECB81]';
-            let isSpoof = item.vol > 10; // Visual cue for spoof wall
-            return `<div class="relative flex justify-between px-2 py-0.5 text-[10px] hover:bg-white/5 cursor-pointer" onclick="MM.execute('${side==='ask'?'BUY':'SELL'}', ${item.vol})">
-                <div class="${color} bar-vol" style="width: ${width}%"></div>
-                <span class="z-10 text-gray-400 font-mono">${isSpoof ? '🛡️' : ''} ${item.vol.toFixed(2)}</span>
-                <span class="z-10 font-bold font-mono ${side==='ask'?'text-down':'text-up'}">${item.price.toFixed(1)}</span>
+        // 2. Book
+        const renderRow = (d, s) => {
+            let w = Math.min((d.v/20)*100, 100);
+            let spoof = d.v > 40;
+            return `<div class="order-row" onclick="MM.execute('${s==='ASK'?'BUY':'SELL'}', ${d.v})">
+                <div class="vol-bar ${s==='ASK'?'bg-red-500 right-0':'bg-green-500 left-0'}" style="width:${w}%"></div>
+                <span class="z-10 mono ${s==='ASK'?'text-gray-400':'text-white'}">${d.v.toFixed(2)} ${spoof?'🛡️':''}</span>
+                <span class="z-10 mono font-bold ${s==='ASK'?'text-down':'text-up'}">${d.p.toFixed(1)}</span>
             </div>`;
         }
+        $('book-asks').innerHTML = STATE.asks.slice(0,10).reverse().map(d=>renderRow(d,'ASK')).join('');
+        $('book-bids').innerHTML = STATE.bids.slice(0,10).map(d=>renderRow(d,'BID')).join('');
+        $('mid-price').innerText = STATE.price.toFixed(2);
+        $('spread-val').innerText = (STATE.asks[0].p - STATE.bids[0].p).toFixed(1);
 
-        $('book-asks').innerHTML = STATE.asks.slice(0,8).reverse().map(i => renderRow(i, 'ask')).join('');
-        $('book-bids').innerHTML = STATE.bids.slice(0,8).map(i => renderRow(i, 'bid')).join('');
-        $('spread-val').innerText = (STATE.asks[0].price - STATE.bids[0].price).toFixed(1);
-
-        // Tape Rendering
+        // 3. Tape
         $('tape').innerHTML = STATE.trades.map(t => 
-            `<div class="grid grid-cols-3 px-2 ${t.side==='BUY'?'text-up':'text-down'} border-b border-c/20">
-                <span>${t.time}</span><span class="text-center">${t.price.toFixed(1)}</span><span class="text-right">${t.vol.toFixed(2)}</span>
+            `<div class="flex justify-between px-2 py-0.5 border-b border-c/20 ${t.s==='BUY'?'text-up':'text-down'}">
+                <span>${t.t}</span><span>${t.p.toFixed(1)}</span><span>${t.v.toFixed(2)}</span>
             </div>`
         ).join('');
-
-        // Header Stats
-        $('head-inv').innerText = STATE.inventory.toFixed(2) + " BTC";
-        $('head-inv').className = `text-sm font-bold mono ${STATE.inventory > 0 ? 'text-up' : STATE.inventory < 0 ? 'text-down' : 'text-white'}`;
-        
-        // Sentiment
-        $('sentiment-bar').style.width = STATE.retailSentiment + "%";
-        $('sentiment-text').innerText = STATE.retailSentiment > 70 ? "EXTREME GREED" : STATE.retailSentiment < 30 ? "PANIC SELLING" : "NEUTRAL";
-        
-        // Chart Header
-        $('chart-price').innerText = STATE.price.toFixed(2);
     }
 };
 
-// --- ALGORITHMS (THE WEAPONS) ---
+// --- ALGO CONTROLS ---
 const ALGO = {
-    toggleSpoof(side) {
-        // Toggle Logic
+    spoof(side) {
         if(STATE.spoofing.active && STATE.spoofing.side === side) {
+            // Deactivate
             STATE.spoofing.active = false;
-            $('spoof-status').innerText = "OFF";
-            $('spoof-status').className = "text-gray-500";
-            $('btn-spoof-bid').classList.remove('border-accent', 'text-accent');
-            $('btn-spoof-ask').classList.remove('border-accent', 'text-accent');
-            // Remove fake volume
-            MM.fillBook(); 
-            return;
+            $('spoof-indicator').classList.add('hidden');
+            $('btn-spoof-bid').classList.remove('border-green-500', 'text-green-500');
+            $('btn-spoof-ask').classList.remove('border-red-500', 'text-red-500');
+            MM.fillBook();
+        } else {
+            // Activate
+            if(STATE.spoofing.active) this.spoof(STATE.spoofing.side); // Clear existing
+            STATE.spoofing.active = true;
+            STATE.spoofing.side = side;
+            
+            $('spoof-indicator').classList.remove('hidden');
+            let btn = side === 'BID' ? $('btn-spoof-bid') : $('btn-spoof-ask');
+            btn.classList.add(side==='BID'?'border-green-500':'border-red-500', side==='BID'?'text-green-500':'text-red-500');
+            
+            // Inject fake volume
+            let book = side === 'BID' ? STATE.bids : STATE.asks;
+            book[2].v = 100; // The Wall
         }
-
-        // Activate Spoofing
-        STATE.spoofing.active = true;
-        STATE.spoofing.side = side;
-        $('spoof-status').innerText = `ACTIVE (${side})`;
-        $('spoof-status').className = "text-accent animate-pulse font-bold";
-        
-        // Visual Button Feedback
-        if(side==='BID') $('btn-spoof-bid').classList.add('border-accent', 'text-accent');
-        else $('btn-spoof-ask').classList.add('border-accent', 'text-accent');
-
-        // Inject Fake Volume
-        let book = side === 'BID' ? STATE.bids : STATE.asks;
-        // Add huge volume 3 ticks away
-        book[2].vol = 50 + Math.random()*20; 
-        book[3].vol = 50 + Math.random()*20;
     },
 
-    triggerIceberg(side) {
-        STATE.iceberg.active = true;
-        STATE.iceberg.side = side;
-        STATE.iceberg.remaining = 20.0; // Executing 20 BTC stealthily
-        alert(`🧊 ICEBERG ALGO ACTIVATED: Accumulating 20 BTC (${side})`);
-    },
-
-    liquidityGrab() {
+    stopHunt() {
         // Find nearest zone
-        let target = STATE.liquidityZones.find(z => !z.hit);
-        if(!target) return alert("No Liquidity Pools visible nearby!");
-
-        let side = target.type === 'BUY_STOPS' ? 'BUY' : 'SELL';
-        alert(`🎯 INITIATING STOP HUNT to ${target.price}`);
+        let target = STATE.liqZones.find(z => !z.hit);
+        if(!target) return alert("NO LIQUIDITY POOLS NEARBY!");
         
-        // Aggressive buying/selling to push price
+        let side = target.type === 'BUY_STOP' ? 'BUY' : 'SELL'; // Push price towards stop
+        
+        let i = 0;
         let hunt = setInterval(() => {
-            MM.execute(side, 2.0, true);
-            if(side === 'BUY' && STATE.price >= target.price) clearInterval(hunt);
-            if(side === 'SELL' && STATE.price <= target.price) clearInterval(hunt);
-        }, 100);
+            MM.execute(side, 5, true); // You aggressively push price
+            i++;
+            if(i > 20 || target.hit) clearInterval(hunt);
+        }, 50);
+    },
+    
+    injectNews(type) {
+        let text = type === 'FUD' ? "BREAKING: MAJOR EXCHANGE HACK RUMORS!" : "BREAKING: ETF APPROVAL IMMINENT!";
+        let t = $('liq-toast');
+        t.innerText = text;
+        t.style.backgroundColor = type === 'FUD' ? '#FF3B30' : '#00FF9D';
+        t.style.opacity = '1';
+        setTimeout(()=>t.style.opacity='0', 4000);
+        
+        // Shift Sentiment instantly
+        STATE.sentiment = type === 'FUD' ? 10 : 90;
+        STATE.volatility = 3.0;
+        setTimeout(()=>STATE.volatility=1.0, 5000);
     }
 };
 
 window.onload = () => { VIEW.init(); MM.init(); };
+
 </script>
 </body>
 </html>
