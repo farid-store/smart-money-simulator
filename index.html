@@ -3,339 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAlgo Pro MM - Terminal</title>
+    <title>SmartAlgo Pro v2.0 - Battle Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        [x-cloak] { display: none !important; }
-        body { font-family: 'Inter', sans-serif; background-color: #0b0e11; color: #e1e4e8; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .sb-card { background-color: #151921; border: 1px solid #2a2e39; }
-        .sb-border { border-color: #2a2e39; }
-        .text-buy { color: #26a69a; }
-        .text-sell { color: #ef5350; }
-        .bg-buy { background-color: rgba(38, 166, 154, 0.15); }
-        .bg-sell { background-color: rgba(239, 83, 80, 0.15); }
-        input[type="number"] { background: #000; border: 1px solid #333; color: #00ff00; text-align: center; border-radius: 4px; }
-        .market-depth-bar { height: 100%; position: absolute; right: 0; top: 0; opacity: 0.2; transition: width 0.3s ease; }
+        body { font-family: 'Inter', sans-serif; background-color: #050709; color: #d1d4dc; overflow: hidden; }
+        .mono { font-family: 'Roboto Mono', monospace; }
+        .bg-sidebar { background-color: #0c0e14; }
+        .bg-card { background-color: #131722; }
+        .border-stockbit { border-color: #1e222d; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; }
+        input { background: #000 !important; color: #00ff00 !important; border: 1px solid #222 !important; text-align: center; }
+        .flash-red { animation: flashR 0.2s; }
+        .flash-green { animation: flashG 0.2s; }
+        @keyframes flashR { from { background: rgba(239, 68, 68, 0.3); } to { background: transparent; } }
+        @keyframes flashG { from { background: rgba(34, 197, 94, 0.3); } to { background: transparent; } }
     </style>
 </head>
-<body x-data="mmEngine()" x-init="init()">
+<body class="flex h-screen w-screen text-[13px]">
 
-    <header class="h-14 bg-[#151921] border-b sb-border flex items-center justify-between px-6">
-        <div class="flex items-center space-x-6">
-            <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 bg-green-600 rounded flex items-center justify-center font-bold text-white">S</div>
-                <span class="font-bold tracking-tight">STOCKBIT <span class="text-green-500 italic">MM-PRO</span></span>
-            </div>
-            <div class="h-6 w-[1px] bg-gray-700"></div>
-            <div>
-                <span class="text-[10px] text-gray-500 block uppercase font-bold">Ticker</span>
-                <span class="text-lg font-bold">BBCA <span class="text-xs font-normal text-gray-400">PT Bank Central Asia Tbk.</span></span>
-            </div>
-        </div>
+    <aside class="w-14 bg-sidebar border-r border-stockbit flex flex-col items-center py-4 space-y-8">
+        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg shadow-blue-900/20">S</div>
+        <div class="text-blue-500"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11 7h2v10h-2zm-4 3h2v7H7zm8 3h2v4h-2z"/></svg></div>
+    </aside>
 
-        <div class="flex items-center space-x-10">
-            <div class="text-right">
-                <span class="text-[10px] text-gray-500 block uppercase font-bold">Unrealized P/L</span>
-                <span :class="pnl >= 0 ? 'text-buy' : 'text-sell'" class="text-lg font-bold mono" x-text="formatCurrency(pnl)"></span>
-            </div>
-            <div class="bg-black/40 px-4 py-2 rounded border sb-border">
-                <span class="text-[10px] text-gray-400 mr-2 uppercase">Market:</span>
-                <select x-model="marketMode" class="bg-transparent text-yellow-500 font-bold outline-none text-xs">
-                    <option value="normal">NORMAL VOLATILITY</option>
-                    <option value="chaos">CHAOS MODE (Retail Panic)</option>
-                </select>
-            </div>
-        </div>
-    </header>
-
-    <div class="flex h-[calc(100vh-56px)] overflow-hidden">
-        
-        <div class="flex-1 flex flex-col p-2 space-y-2">
-            <div class="sb-card flex-grow rounded-lg relative overflow-hidden">
-                <div id="chartContainer" class="w-full h-full"></div>
-            </div>
-            
-            <div class="h-40 sb-card rounded-lg p-3 overflow-hidden flex flex-col">
-                <div class="text-[10px] text-gray-500 font-bold uppercase mb-2 flex justify-between">
-                    <span>Engine Activity Logs</span>
-                    <span class="text-green-500">System Live</span>
+    <main class="flex-1 flex flex-col">
+        <header class="h-14 bg-sidebar border-b border-stockbit flex items-center px-6 justify-between">
+            <div class="flex items-center space-x-8">
+                <div>
+                    <span class="text-gray-500 text-[10px] block uppercase">Ticker</span>
+                    <span class="font-bold text-lg text-white">$BBCA</span>
                 </div>
-                <div class="flex-1 overflow-y-auto space-y-1 mono text-[11px] text-gray-400" id="logs">
-                    <template x-for="log in logs">
-                        <div class="flex space-x-2">
-                            <span class="text-gray-600" x-text="log.time"></span>
-                            <span :class="log.color" x-text="log.msg"></span>
+                <div>
+                    <span class="text-gray-500 text-[10px] block uppercase">Last Price</span>
+                    <div class="text-green-500 font-bold mono text-xl transition-all" id="live-price">9,850</div>
+                </div>
+                <div class="border-l border-gray-800 pl-8">
+                    <span class="text-gray-500 text-[10px] block uppercase">Net Position</span>
+                    <div class="text-white font-bold mono" id="my-pos">0 LOT</div>
+                </div>
+                <div class="border-l border-gray-800 pl-8">
+                    <span class="text-gray-500 text-[10px] block uppercase">Avg Price</span>
+                    <div class="text-blue-400 font-bold mono" id="avg-price">0</div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="bg-black/50 px-4 py-2 rounded-md border border-gray-800">
+                    <span class="text-[10px] text-gray-500 mr-2 uppercase">Market Mode:</span>
+                    <select id="market-mode" onchange="changeMode()" class="bg-transparent text-yellow-500 font-bold outline-none cursor-pointer">
+                        <option value="normal">NORMAL (Steady)</option>
+                        <option value="hard">HARD (High Aggressive)</option>
+                    </select>
+                </div>
+                <div class="text-right">
+                    <span class="text-gray-500 text-[10px] block uppercase">Unrealized P/L</span>
+                    <div class="font-bold mono text-sm" id="floating-pl">IDR 0</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 flex overflow-hidden">
+            <div class="flex-1 relative bg-[#050709] overflow-hidden">
+                <canvas id="mainChart" class="w-full h-full"></canvas>
+                <div class="absolute bottom-4 left-4 flex space-x-2">
+                    <div class="bg-black/80 p-2 rounded text-[9px] mono text-gray-500 border border-gray-800">
+                        VOL: <span id="total-vol" class="text-white">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-[380px] bg-sidebar border-l border-stockbit flex flex-col">
+                <div class="p-3 flex-1 overflow-hidden flex flex-col">
+                    <div class="flex justify-between items-center mb-2 px-1">
+                        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[2px]">Market Depth</h3>
+                        <span id="activity-light" class="w-2 h-2 bg-green-500 rounded-full"></span>
+                    </div>
+
+                    <div class="grid grid-cols-4 text-[9px] text-gray-600 mb-2 px-2 font-bold uppercase">
+                        <span>Freq</span><span>Bid Vol</span><span class="text-center">Price</span><span class="text-right">Offer Vol</span>
+                    </div>
+
+                    <div id="order-book-list" class="flex-1 overflow-y-auto space-y-[1px] mono text-[11px]">
                         </div>
-                    </template>
+                </div>
+
+                <div class="p-4 bg-card border-t border-stockbit space-y-4">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-gray-500 uppercase">Algo Lot Size</label>
+                            <input type="number" id="order-size" value="1000" class="w-full p-2 rounded text-sm font-bold">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[9px] text-gray-500 uppercase">Interval (ms)</label>
+                            <input type="number" id="algo-speed" value="100" class="w-full p-2 rounded text-sm font-bold">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="startAlgo('accum')" class="bg-green-600 py-3 rounded text-[10px] font-bold text-white hover:bg-green-500 uppercase">Haka Accum</button>
+                        <button onclick="startAlgo('distrib')" class="bg-red-600 py-3 rounded text-[10px] font-bold text-white hover:bg-red-500 uppercase">Haki Distrib</button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="startAlgo('wash')" class="bg-blue-600/20 border border-blue-600/50 text-blue-400 py-2 rounded text-[10px] font-bold uppercase">Wash Trade</button>
+                        <button onclick="stopAlgos()" class="bg-gray-800 text-white py-2 rounded text-[10px] font-bold uppercase">Emergency Stop</button>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <div class="w-[420px] p-2 flex flex-col space-y-2 overflow-y-auto">
-            
-            <div class="sb-card p-4 rounded-lg grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-[10px] text-gray-500 uppercase font-bold">Net Inventory</p>
-                    <p class="text-xl font-bold mono" :class="inventory > 0 ? 'text-buy' : inventory < 0 ? 'text-sell' : ''" x-text="inventory + ' LOT'"></p>
-                </div>
-                <div>
-                    <p class="text-[10px] text-gray-500 uppercase font-bold">Avg. Price</p>
-                    <p class="text-xl font-bold mono text-blue-400" x-text="Math.round(avgPrice)"></p>
-                </div>
-            </div>
-
-            <div class="sb-card p-4 rounded-lg border-t-4 border-green-500">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="font-bold text-xs uppercase tracking-widest flex items-center">
-                        <i data-lucide="zap" class="w-3 h-3 mr-2 text-yellow-500"></i> Algo Quoting Engine
-                    </h3>
-                    <button @click="toggleAlgo()" 
-                            :class="algoActive ? 'bg-red-600' : 'bg-green-600'"
-                            class="px-4 py-1 rounded text-[10px] font-bold transition-all shadow-lg uppercase"
-                            x-text="algoActive ? 'Stop Engine' : 'Start Engine'">
-                    </button>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3 mb-4">
-                    <div class="flex flex-col">
-                        <label class="text-[9px] text-gray-500 uppercase mb-1">Spread Ticks</label>
-                        <input type="number" x-model="config.spread" min="1">
-                    </div>
-                    <div class="flex flex-col">
-                        <label class="text-[9px] text-gray-500 uppercase mb-1">Lot Size Per Quote</label>
-                        <input type="number" x-model="config.lotSize">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-3 gap-1">
-                    <button @click="config.strategy = 'passive'" :class="config.strategy === 'passive' ? 'bg-blue-600 border-blue-400' : 'bg-gray-800'" class="py-2 rounded text-[9px] font-bold border border-transparent uppercase">Passive</button>
-                    <button @click="config.strategy = 'accum'" :class="config.strategy === 'accum' ? 'bg-green-600 border-green-400' : 'bg-gray-800'" class="py-2 rounded text-[9px] font-bold border border-transparent uppercase">Accum</button>
-                    <button @click="config.strategy = 'distrib'" :class="config.strategy === 'distrib' ? 'bg-red-600 border-red-400' : 'bg-gray-800'" class="py-2 rounded text-[9px] font-bold border border-transparent uppercase">Distrib</button>
-                </div>
-            </div>
-
-            <div class="sb-card flex-grow rounded-lg overflow-hidden flex flex-col min-h-[400px]">
-                <div class="grid grid-cols-4 text-[10px] font-bold text-gray-500 p-2 border-b sb-border uppercase text-center">
-                    <span>Freq</span><span>Bid Vol</span><span>Price</span><span>Offer Vol</span>
-                </div>
-                
-                <div class="flex-grow overflow-y-auto scrollbar-hide">
-                    <div class="flex flex-col-reverse">
-                        <template x-for="(ask, i) in asks" :key="ask.price">
-                            <div class="grid grid-cols-4 py-[3px] px-2 text-[11px] mono relative hover:bg-white/5 cursor-pointer">
-                                <div class="absolute right-0 top-0 bg-sell market-depth-bar" :style="`width: ${calculateBar(ask.vol)}%`"></div>
-                                <span class="text-gray-600 text-[10px]" x-text="ask.freq"></span>
-                                <span></span>
-                                <span class="text-sell font-bold text-center" x-text="ask.price"></span>
-                                <span class="text-right pr-2" x-text="formatVol(ask.vol)"></span>
-                            </div>
-                        </template>
-                    </div>
-
-                    <div class="bg-black/50 py-2 border-y sb-border flex justify-center items-center space-x-4">
-                        <span class="text-lg font-bold" :class="lastPrice > prevPrice ? 'text-buy' : 'text-sell'" x-text="lastPrice"></span>
-                        <span class="text-[10px] text-gray-500">SPREAD: <span class="text-white" x-text="asks[0].price - bids[0].price"></span></span>
-                    </div>
-
-                    <div>
-                        <template x-for="(bid, i) in bids" :key="bid.price">
-                            <div class="grid grid-cols-4 py-[3px] px-2 text-[11px] mono relative hover:bg-white/5 cursor-pointer">
-                                <div class="absolute left-0 top-0 bg-buy market-depth-bar" :style="`width: ${calculateBar(bid.vol)}%`"></div>
-                                <span class="text-left pl-2" x-text="formatVol(bid.vol)"></span>
-                                <span class="text-buy font-bold text-center" x-text="bid.price"></span>
-                                <span></span>
-                                <span class="text-gray-600 text-right text-[10px]" x-text="bid.freq"></span>
-                            </div>
-                        </template>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-2 gap-2">
-                <button @click="manualTrade('BUY')" class="bg-buy border border-buy text-buy py-3 rounded font-bold hover:bg-green-500/20 uppercase text-xs">Haka Market</button>
-                <button @click="manualTrade('SELL')" class="bg-sell border border-sell text-sell py-3 rounded font-bold hover:bg-red-500/20 uppercase text-xs">Haki Market</button>
-            </div>
-        </div>
-    </div>
+    </main>
 
     <script>
-        function mmEngine() {
-            return {
-                lastPrice: 9850,
-                prevPrice: 9850,
-                inventory: 0,
-                avgPrice: 0,
-                totalCost: 0,
-                pnl: 0,
-                marketMode: 'normal',
-                algoActive: false,
-                bids: [],
-                asks: [],
-                logs: [],
-                config: {
-                    spread: 2,
-                    lotSize: 500,
-                    strategy: 'passive', // passive, accum, distrib
-                },
-                chartSeries: null,
+        // --- GLOBAL STATE ---
+        let currentPrice = 9850;
+        let myPos = 0, myAvg = 0, myCost = 0, totalVol = 0;
+        let bookData = { asks: [], bids: [] };
+        let history = [];
+        let algoInterval = null;
+        let marketInterval = null;
+        let mode = 'normal';
 
-                init() {
-                    lucide.createIcons();
-                    this.initChart();
-                    this.generateInitialBook();
-                    this.startMarketSimulation();
-                    this.addLog("Terminal Initialized. Ready for Market Making.", "text-white font-bold");
-                },
+        // --- CHART ENGINE (CANVAS) ---
+        const canvas = document.getElementById('mainChart');
+        const ctx = canvas.getContext('2d');
 
-                initChart() {
-                    const chart = LightweightCharts.createChart(document.getElementById('chartContainer'), {
-                        layout: { backgroundColor: 'transparent', textColor: '#808a9d', fontSize: 10 },
-                        grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
-                        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
-                        rightPriceScale: { borderVisible: false },
-                        timeScale: { borderVisible: false, timeVisible: true },
-                    });
-                    this.chartSeries = chart.addCandlestickSeries({
-                        upColor: '#26a69a', downColor: '#ef5350', borderVisible: false,
-                        wickUpColor: '#26a69a', wickDownColor: '#ef5350'
-                    });
-                    
-                    // Initial Dummy Data
-                    let base = 9800;
-                    let data = [];
-                    for(let i=0; i<50; i++) {
-                        let open = base + Math.random()*20;
-                        let close = open + (Math.random()-0.5)*40;
-                        data.push({ time: Date.now()/1000 - (50-i)*60, open, high: Math.max(open,close)+10, low: Math.min(open,close)-10, close });
-                        base = close;
-                    }
-                    this.chartSeries.setData(data);
-                },
+        function initChart() {
+            let p = 9800;
+            for(let i=0; i<80; i++) {
+                let open = p;
+                let close = p + (Math.random() - 0.5) * 20;
+                history.push({ open, close, high: Math.max(open, close)+5, low: Math.min(open, close)-5 });
+                p = close;
+            }
+            resize();
+            animate();
+        }
 
-                generateInitialBook() {
-                    for(let i=0; i<15; i++) {
-                        this.asks.push({ price: this.lastPrice + (i+1)*25, vol: this.rand(100, 5000), freq: this.rand(1, 20) });
-                        this.bids.push({ price: this.lastPrice - (i)*25, vol: this.rand(100, 5000), freq: this.rand(1, 20) });
-                    }
-                },
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.onresize = resize;
 
-                startMarketSimulation() {
-                    setInterval(() => {
-                        // Retail / Noise Simulation
-                        const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                        const size = this.marketMode === 'chaos' ? this.rand(500, 2000) : this.rand(10, 200);
-                        this.executeTrade(side, size, false);
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const padding = 60;
+            const candleWidth = (canvas.width - padding*2) / history.length;
+            const prices = history.map(h => [h.high, h.low]).flat();
+            const maxP = Math.max(...prices) + 5;
+            const minP = Math.min(...prices) - 5;
+            const range = maxP - minP;
 
-                        // Replenish passive orders
-                        this.bids.forEach(b => b.vol += this.rand(0, 50));
-                        this.asks.forEach(a => a.vol += this.rand(0, 50));
+            const getY = (p) => canvas.height - padding - ((p - minP) / range) * (canvas.height - padding*2);
 
-                        // Algo Cycle
-                        if(this.algoActive) this.runAlgoCycle();
+            history.forEach((c, i) => {
+                const x = padding + i * candleWidth;
+                const color = c.close >= c.open ? '#22c55e' : '#ef4444';
+                
+                // Wick
+                ctx.strokeStyle = color;
+                ctx.beginPath();
+                ctx.moveTo(x + candleWidth/2, getY(c.high));
+                ctx.lineTo(x + candleWidth/2, getY(c.low));
+                ctx.stroke();
 
-                    }, 800);
-                },
+                // Body
+                ctx.fillStyle = color;
+                const h = Math.abs(getY(c.open) - getY(c.close));
+                ctx.fillRect(x + 2, getY(Math.max(c.open, c.close)), candleWidth - 4, Math.max(h, 1));
+            });
+            requestAnimationFrame(animate);
+        }
 
-                runAlgoCycle() {
-                    // MM Logic: Rebalancing & Quoting
-                    this.addLog(`Algo Quoting... Strategy: ${this.config.strategy}`, "text-blue-400");
-                    
-                    if(this.config.strategy === 'passive') {
-                        // Maintain Spread
-                        this.bids[0].vol += parseInt(this.config.lotSize);
-                        this.asks[0].vol += parseInt(this.config.lotSize);
-                    } else if(this.config.strategy === 'accum') {
-                        this.executeTrade('BUY', this.config.lotSize, true);
-                    } else if(this.config.strategy === 'distrib') {
-                        this.executeTrade('SELL', this.config.lotSize, true);
-                    }
-                },
+        // --- MARKET LOGIC (THE BRAIN) ---
+        function initMarket() {
+            bookData.asks = [];
+            bookData.bids = [];
+            for(let i=0; i<15; i++) {
+                bookData.asks.push({ price: currentPrice + ((i+1)*2), vol: randVol(), freq: randFreq() });
+                bookData.bids.push({ price: currentPrice - (i*2), vol: randVol(), freq: randFreq() });
+            }
+            runMarketEngine();
+        }
 
-                executeTrade(side, size, isAlgo) {
-                    this.prevPrice = this.lastPrice;
-                    if(side === 'BUY') {
-                        let target = this.asks[0];
-                        if(size >= target.vol) {
-                            this.lastPrice = target.price;
-                            this.asks.shift();
-                            this.asks.push({ price: this.asks[this.asks.length-1].price + 25, vol: this.rand(500, 5000), freq: 1 });
-                        } else {
-                            target.vol -= size;
-                            this.lastPrice = target.price;
-                        }
-                        if(isAlgo) this.updateInventory('BUY', this.lastPrice, size);
-                    } else {
-                        let target = this.bids[0];
-                        if(size >= target.vol) {
-                            this.lastPrice = target.price;
-                            this.bids.shift();
-                            this.bids.push({ price: this.bids[this.bids.length-1].price - 25, vol: this.rand(500, 5000), freq: 1 });
-                        } else {
-                            target.vol -= size;
-                            this.lastPrice = target.price;
-                        }
-                        if(isAlgo) this.updateInventory('SELL', this.lastPrice, size);
-                    }
-                    this.updatePNL();
-                },
+        const randVol = () => Math.floor(Math.random() * 8000) + 500;
+        const randFreq = () => Math.floor(Math.random() * 40) + 1;
 
-                updateInventory(side, price, lot) {
-                    if(side === 'BUY') {
-                        this.totalCost += (price * lot);
-                        this.inventory += parseInt(lot);
-                    } else {
-                        this.inventory -= parseInt(lot);
-                        if(this.inventory === 0) this.totalCost = 0;
-                    }
-                    this.avgPrice = this.inventory === 0 ? 0 : this.totalCost / this.inventory;
-                },
+        function runMarketEngine() {
+            if(marketInterval) clearInterval(marketInterval);
+            
+            // Kecepatan mesin pasar tergantung mode
+            const speed = mode === 'hard' ? 150 : 600;
 
-                updatePNL() {
-                    if(this.inventory === 0) {
-                        this.pnl = 0;
-                    } else {
-                        this.pnl = (this.lastPrice - this.avgPrice) * this.inventory * 100;
-                    }
-                },
+            marketInterval = setInterval(() => {
+                // Simulasi Retail "Hitting the Bid/Offer" secara acak
+                const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
+                const noiseSize = mode === 'hard' ? Math.random() * 3000 : Math.random() * 500;
+                
+                executeTrade(side, Math.floor(noiseSize), false); // false = bukan smart money
+                
+                // Refresh volume retail yang masuk antrean (passive orders)
+                bookData.asks.forEach(a => a.vol += Math.floor(Math.random()*200));
+                bookData.bids.forEach(b => b.vol += Math.floor(Math.random()*200));
+                
+                renderBook();
+            }, speed);
+        }
 
-                manualTrade(side) {
-                    const size = parseInt(this.config.lotSize);
-                    this.executeTrade(side, size, true);
-                    this.addLog(`MANUAL ${side} EXECUTED: ${size} LOT at ${this.lastPrice}`, side === 'BUY' ? 'text-buy' : 'text-sell');
-                },
+        function executeTrade(side, amount, isSmartMoney) {
+            if(amount <= 0) return;
+            totalVol += amount;
 
-                toggleAlgo() {
-                    this.algoActive = !this.algoActive;
-                    this.addLog(`System: Algo Engine ${this.algoActive ? 'STARTED' : 'STOPPED'}`, this.algoActive ? 'text-green-500' : 'text-red-500');
-                },
+            if(side === 'BUY') {
+                let target = bookData.asks[0];
+                if(amount >= target.vol) {
+                    currentPrice = target.price;
+                    if(isSmartMoney) updatePortfolio('BUY', currentPrice, target.vol);
+                    bookData.asks.shift();
+                    bookData.asks.push({ price: bookData.asks[bookData.asks.length-1].price + 2, vol: randVol(), freq: randFreq() });
+                    bookData.bids.unshift({ price: currentPrice, vol: randVol()/2, freq: 1 });
+                    bookData.bids.pop();
+                } else {
+                    target.vol -= amount;
+                    target.freq = Math.max(1, target.freq + (isSmartMoney ? 5 : 1));
+                    currentPrice = target.price;
+                    if(isSmartMoney) updatePortfolio('BUY', currentPrice, amount);
+                }
+            } else {
+                let target = bookData.bids[0];
+                if(amount >= target.vol) {
+                    currentPrice = target.price;
+                    if(isSmartMoney) updatePortfolio('SELL', currentPrice, target.vol);
+                    bookData.bids.shift();
+                    bookData.bids.push({ price: bookData.bids[bookData.bids.length-1].price - 2, vol: randVol(), freq: randFreq() });
+                    bookData.asks.unshift({ price: currentPrice, vol: randVol()/2, freq: 1 });
+                    bookData.asks.pop();
+                } else {
+                    target.vol -= amount;
+                    target.freq = Math.max(1, target.freq + (isSmartMoney ? 5 : 1));
+                    currentPrice = target.price;
+                    if(isSmartMoney) updatePortfolio('SELL', currentPrice, amount);
+                }
+            }
 
-                addLog(msg, color) {
-                    const time = new Date().toLocaleTimeString([], { hour12: false });
-                    this.logs.unshift({ time, msg, color });
-                    if(this.logs.length > 50) this.logs.pop();
-                },
+            // Sync with Chart
+            let last = history[history.length-1];
+            last.close = currentPrice;
+            last.high = Math.max(last.high, currentPrice);
+            last.low = Math.min(last.low, currentPrice);
+            
+            updateUI();
+        }
 
-                formatCurrency(v) {
-                    return "IDR " + new Intl.NumberFormat('id-ID').format(Math.round(v));
-                },
+        // --- UI & UTILS ---
+        function renderBook() {
+            const list = document.getElementById('order-book-list');
+            let html = '';
+            
+            [...bookData.asks].reverse().forEach(item => {
+                html += `
+                <div class="grid grid-cols-4 px-2 py-[3px] border-r-2 border-red-500/10 hover:bg-red-500/5 transition">
+                    <span class="text-gray-600 text-[10px]">${item.freq}</span>
+                    <span></span>
+                    <span class="text-red-500 font-bold text-center">${item.price.toLocaleString()}</span>
+                    <span class="text-right text-gray-300 font-bold">${item.vol.toLocaleString()}</span>
+                </div>`;
+            });
 
-                formatVol(v) {
-                    return new Intl.NumberFormat('id-ID').format(v);
-                },
+            html += `<div class="bg-blue-600/10 text-white py-1.5 text-center font-bold my-1 border-y border-blue-500/20 shadow-inner">${currentPrice.toLocaleString()}</div>`;
 
-                calculateBar(vol) {
-                    const max = 10000;
-                    return Math.min((vol / max) * 100, 100);
-                },
+            bookData.bids.forEach(item => {
+                html += `
+                <div class="grid grid-cols-4 px-2 py-[3px] border-l-2 border-green-500/10 hover:bg-green-500/5 transition">
+                    <span class="text-gray-300 font-bold">${item.vol.toLocaleString()}</span>
+                    <span class="text-green-500 font-bold text-center">${item.price.toLocaleString()}</span>
+                    <span></span>
+                    <span class="text-gray-600 text-[10px] text-right">${item.freq}</span>
+                </div>`;
+            });
+            list.innerHTML = html;
+            document.getElementById('activity-light').className = `w-2 h-2 rounded-full ${mode === 'hard' ? 'bg-red-500 animate-ping' : 'bg-green-500'}`;
+        }
 
-                rand(min, max) { return Math.floor(Math.random() * (max - min + 1) + min); }
+        function updatePortfolio(side, price, lot) {
+            if(side === 'BUY') {
+                myCost += (price * lot * 100);
+                myPos += lot;
+                myAvg = myCost / (myPos * 100);
+            } else if(myPos > 0) {
+                let sellLot = Math.min(lot, myPos);
+                myPos -= sellLot;
+                if(myPos === 0) { myCost = 0; myAvg = 0; }
+                else myCost = myAvg * myPos * 100;
             }
         }
+
+        function updateUI() {
+            const lp = document.getElementById('live-price');
+            const oldPrice = parseInt(lp.innerText.replace(',',''));
+            lp.innerText = currentPrice.toLocaleString();
+            lp.className = currentPrice > oldPrice ? 'text-green-500 font-bold mono text-xl' : 'text-red-500 font-bold mono text-xl';
+
+            document.getElementById('my-pos').innerText = `${myPos.toLocaleString()} LOT`;
+            document.getElementById('avg-price').innerText = Math.round(myAvg).toLocaleString();
+            document.getElementById('total-vol').innerText = totalVol.toLocaleString();
+            
+            let pl = (currentPrice - myAvg) * myPos * 100;
+            if (myPos === 0) pl = 0;
+            const plEl = document.getElementById('floating-pl');
+            plEl.innerText = `IDR ${Math.round(pl).toLocaleString()}`;
+            plEl.className = `font-bold mono ${pl > 0 ? 'text-green-400' : pl < 0 ? 'text-red-400' : 'text-gray-500'}`;
+        }
+
+        // --- COMMANDS ---
+        function startAlgo(m) {
+            stopAlgos();
+            const s = parseInt(document.getElementById('algo-speed').value);
+            const sz = parseInt(document.getElementById('order-size').value);
+            algoInterval = setInterval(() => {
+                if(m === 'accum') executeTrade('BUY', sz, true);
+                if(m === 'distrib') executeTrade('SELL', sz, true);
+                if(m === 'wash') {
+                    executeTrade('BUY', sz, true);
+                    setTimeout(() => executeTrade('SELL', sz, true), s/2);
+                }
+            }, s);
+        }
+
+        function stopAlgos() { clearInterval(algoInterval); }
+        
+        function changeMode() {
+            mode = document.getElementById('market-mode').value;
+            runMarketEngine();
+        }
+
+        // --- TICKER SIMULATION ---
+        setInterval(() => {
+            history.shift();
+            history.push({ open: currentPrice, close: currentPrice, high: currentPrice, low: currentPrice });
+        }, 15000);
+
+        // INITIALIZE
+        initChart();
+        initMarket();
+        updateUI();
+
     </script>
 </body>
 </html>
