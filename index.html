@@ -74,18 +74,19 @@
                 </div>
             </div>
 
-            <div class="w-[380px] bg-sidebar border-l border-stockbit flex flex-col">
+            <div class="w-[420px] bg-sidebar border-l border-stockbit flex flex-col">
                 <div class="p-3 flex-1 overflow-hidden flex flex-col">
                     <div class="flex justify-between items-center mb-2 px-1">
                         <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[2px]">Market Depth</h3>
                         <span id="activity-light" class="w-2 h-2 bg-green-500 rounded-full"></span>
                     </div>
 
-                    <div class="grid grid-cols-4 text-[9px] text-gray-600 mb-2 px-2 font-bold uppercase">
-                        <span>Freq</span><span>Bid Vol</span><span class="text-center">Price</span><span class="text-right">Offer Vol</span>
+                    <div class="grid grid-cols-6 text-[9px] text-gray-600 mb-2 px-2 font-bold uppercase border-b border-stockbit pb-1">
+                        <span>Freq</span><span>Vol</span><span class="text-right">Bid</span>
+                        <span class="pl-4">Offer</span><span class="text-right">Vol</span><span class="text-right">Freq</span>
                     </div>
 
-                    <div id="order-book-list" class="flex-1 overflow-y-auto space-y-[1px] mono text-[11px]">
+                    <div id="order-book-list" class="flex-1 overflow-y-auto space-y-[0px] mono text-[11px]">
                         </div>
                 </div>
 
@@ -124,7 +125,7 @@
         let marketInterval = null;
         let mode = 'normal';
 
-        // --- CHART ENGINE (CANVAS) ---
+        // --- CHART ENGINE ---
         const canvas = document.getElementById('mainChart');
         const ctx = canvas.getContext('2d');
 
@@ -154,21 +155,16 @@
             const maxP = Math.max(...prices) + 5;
             const minP = Math.min(...prices) - 5;
             const range = maxP - minP;
-
             const getY = (p) => canvas.height - padding - ((p - minP) / range) * (canvas.height - padding*2);
 
             history.forEach((c, i) => {
                 const x = padding + i * candleWidth;
                 const color = c.close >= c.open ? '#22c55e' : '#ef4444';
-                
-                // Wick
                 ctx.strokeStyle = color;
                 ctx.beginPath();
                 ctx.moveTo(x + candleWidth/2, getY(c.high));
                 ctx.lineTo(x + candleWidth/2, getY(c.low));
                 ctx.stroke();
-
-                // Body
                 ctx.fillStyle = color;
                 const h = Math.abs(getY(c.open) - getY(c.close));
                 ctx.fillRect(x + 2, getY(Math.max(c.open, c.close)), candleWidth - 4, Math.max(h, 1));
@@ -176,7 +172,7 @@
             requestAnimationFrame(animate);
         }
 
-        // --- MARKET LOGIC (THE BRAIN) ---
+        // --- MARKET LOGIC ---
         function initMarket() {
             bookData.asks = [];
             bookData.bids = [];
@@ -192,21 +188,13 @@
 
         function runMarketEngine() {
             if(marketInterval) clearInterval(marketInterval);
-            
-            // Kecepatan mesin pasar tergantung mode
             const speed = mode === 'hard' ? 150 : 600;
-
             marketInterval = setInterval(() => {
-                // Simulasi Retail "Hitting the Bid/Offer" secara acak
                 const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
                 const noiseSize = mode === 'hard' ? Math.random() * 3000 : Math.random() * 500;
-                
-                executeTrade(side, Math.floor(noiseSize), false); // false = bukan smart money
-                
-                // Refresh volume retail yang masuk antrean (passive orders)
+                executeTrade(side, Math.floor(noiseSize), false);
                 bookData.asks.forEach(a => a.vol += Math.floor(Math.random()*200));
                 bookData.bids.forEach(b => b.vol += Math.floor(Math.random()*200));
-                
                 renderBook();
             }, speed);
         }
@@ -214,7 +202,6 @@
         function executeTrade(side, amount, isSmartMoney) {
             if(amount <= 0) return;
             totalVol += amount;
-
             if(side === 'BUY') {
                 let target = bookData.asks[0];
                 if(amount >= target.vol) {
@@ -246,42 +233,34 @@
                     if(isSmartMoney) updatePortfolio('SELL', currentPrice, amount);
                 }
             }
-
-            // Sync with Chart
             let last = history[history.length-1];
             last.close = currentPrice;
             last.high = Math.max(last.high, currentPrice);
             last.low = Math.min(last.low, currentPrice);
-            
             updateUI();
         }
 
-        // --- UI & UTILS ---
+        // --- REVISED RENDER BOOK (STOCKBIT STYLE) ---
         function renderBook() {
             const list = document.getElementById('order-book-list');
             let html = '';
             
-            [...bookData.asks].reverse().forEach(item => {
-                html += `
-                <div class="grid grid-cols-4 px-2 py-[3px] border-r-2 border-red-500/10 hover:bg-red-500/5 transition">
-                    <span class="text-gray-600 text-[10px]">${item.freq}</span>
-                    <span></span>
-                    <span class="text-red-500 font-bold text-center">${item.price.toLocaleString()}</span>
-                    <span class="text-right text-gray-300 font-bold">${item.vol.toLocaleString()}</span>
-                </div>`;
-            });
+            for (let i = 0; i < 15; i++) {
+                const bid = bookData.bids[i] || { freq: 0, vol: 0, price: 0 };
+                const ask = bookData.asks[i] || { freq: 0, vol: 0, price: 0 };
 
-            html += `<div class="bg-blue-600/10 text-white py-1.5 text-center font-bold my-1 border-y border-blue-500/20 shadow-inner">${currentPrice.toLocaleString()}</div>`;
-
-            bookData.bids.forEach(item => {
                 html += `
-                <div class="grid grid-cols-4 px-2 py-[3px] border-l-2 border-green-500/10 hover:bg-green-500/5 transition">
-                    <span class="text-gray-300 font-bold">${item.vol.toLocaleString()}</span>
-                    <span class="text-green-500 font-bold text-center">${item.price.toLocaleString()}</span>
-                    <span></span>
-                    <span class="text-gray-600 text-[10px] text-right">${item.freq}</span>
+                <div class="grid grid-cols-6 px-2 py-[4px] hover:bg-white/5 transition border-b border-white/[0.02] items-center">
+                    <span class="text-gray-600 text-[9px]">${bid.freq}</span>
+                    <span class="text-gray-400 font-bold">${bid.vol.toLocaleString()}</span>
+                    <span class="text-green-500 font-bold text-right">${bid.price.toLocaleString()}</span>
+                    
+                    <span class="text-red-500 font-bold pl-4">${ask.price.toLocaleString()}</span>
+                    <span class="text-gray-400 font-bold text-right">${ask.vol.toLocaleString()}</span>
+                    <span class="text-gray-600 text-[9px] text-right">${ask.freq}</span>
                 </div>`;
-            });
+            }
+
             list.innerHTML = html;
             document.getElementById('activity-light').className = `w-2 h-2 rounded-full ${mode === 'hard' ? 'bg-red-500 animate-ping' : 'bg-green-500'}`;
         }
@@ -304,11 +283,9 @@
             const oldPrice = parseInt(lp.innerText.replace(',',''));
             lp.innerText = currentPrice.toLocaleString();
             lp.className = currentPrice > oldPrice ? 'text-green-500 font-bold mono text-xl' : 'text-red-500 font-bold mono text-xl';
-
             document.getElementById('my-pos').innerText = `${myPos.toLocaleString()} LOT`;
             document.getElementById('avg-price').innerText = Math.round(myAvg).toLocaleString();
             document.getElementById('total-vol').innerText = totalVol.toLocaleString();
-            
             let pl = (currentPrice - myAvg) * myPos * 100;
             if (myPos === 0) pl = 0;
             const plEl = document.getElementById('floating-pl');
@@ -316,7 +293,6 @@
             plEl.className = `font-bold mono ${pl > 0 ? 'text-green-400' : pl < 0 ? 'text-red-400' : 'text-gray-500'}`;
         }
 
-        // --- COMMANDS ---
         function startAlgo(m) {
             stopAlgos();
             const s = parseInt(document.getElementById('algo-speed').value);
@@ -332,23 +308,19 @@
         }
 
         function stopAlgos() { clearInterval(algoInterval); }
-        
         function changeMode() {
             mode = document.getElementById('market-mode').value;
             runMarketEngine();
         }
 
-        // --- TICKER SIMULATION ---
         setInterval(() => {
             history.shift();
             history.push({ open: currentPrice, close: currentPrice, high: currentPrice, low: currentPrice });
         }, 15000);
 
-        // INITIALIZE
         initChart();
         initMarket();
         updateUI();
-
     </script>
 </body>
 </html>
