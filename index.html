@@ -1,410 +1,551 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAlgo V11 PRO - Real Market Logic</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --bg-body: #050505; --bg-panel: #111318; --border: #23262F; --up: #0ECB81; --down: #F6465D; --accent: #2962FF; }
-        body { background: var(--bg-body); color: #EAECEF; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .border-c { border-color: var(--border); }
-        .bg-panel { background-color: var(--bg-panel); }
-        .text-up { color: var(--up); } .text-down { color: var(--down); }
-        .bar-ask { position: absolute; left:0; top:0; height:100%; background: rgba(246, 70, 93, 0.12); transition: width 0.2s; }
-        .bar-bid { position: absolute; right:0; top:0; height:100%; background: rgba(14, 203, 129, 0.12); transition: width 0.2s; }
-        .active-tool { border: 1px solid var(--accent) !important; color: var(--accent); box-shadow: 0 0 10px rgba(41, 98, 255, 0.2); }
-        #toast { visibility: hidden; min-width: 250px; background: #222; color: #fff; text-align: center; border-radius: 4px; padding: 12px; position: fixed; z-index: 99; left: 50%; top: 20px; transform: translateX(-50%); font-size: 11px; opacity: 0; transition: 0.3s; border: 1px solid var(--border); }
-        #toast.show { visibility: visible; opacity: 1; top: 70px; }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: #333; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartAlgo V10 - Final Stable</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CONFIG */
+        :root {
+            --bg-body: #050505;
+            --bg-panel: #111318;
+            --border: #23262F;
+            --up: #0ECB81;
+            --down: #F6465D;
+            --accent: #2962FF;
+        }
+        body { background: var(--bg-body); color: #EAECEF; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .border-c { border-color: var(--border); }
+        .bg-panel { background-color: var(--bg-panel); }
+        
+        /* UTILS */
+        .text-up { color: var(--up); } .text-down { color: var(--down); }
+        .bar-ask { position: absolute; left:0; top:0; height:100%; background: rgba(246, 70, 93, 0.15); transition: width 0.1s; }
+        .bar-bid { position: absolute; right:0; top:0; height:100%; background: rgba(14, 203, 129, 0.15); transition: width 0.1s; }
+        
+        /* ANIMATIONS */
+        @keyframes pulse-border { 0% { border-color: #444; } 50% { border-color: var(--accent); } 100% { border-color: #444; } }
+        .active-tool { animation: pulse-border 1s infinite; border: 1px solid var(--accent) !important; color: var(--accent); }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+        /* TOAST */
+        #toast { visibility: hidden; min-width: 200px; background: #333; color: #fff; text-align: center; border-radius: 4px; padding: 10px; position: fixed; z-index: 99; left: 50%; top: 80px; transform: translateX(-50%); font-size: 12px; opacity: 0; transition: opacity 0.3s; border-left: 4px solid var(--accent); }
+        #toast.show { visibility: visible; opacity: 1; }
+    </style>
 </head>
 <body class="flex flex-col h-screen w-screen text-[12px]">
 
-    <header class="h-[55px] bg-panel border-b border-c flex items-center justify-between px-4 shrink-0 z-20">
-        <div class="flex items-center gap-6">
-            <div class="flex flex-col">
-                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Asset</span>
-                <select id="asset-select" onchange="APP.setAsset()" class="bg-transparent text-white font-bold text-sm outline-none cursor-pointer">
-                    <option value="BTC">BTC/USD</option>
-                    <option value="BBCA">BBCA.JK</option>
-                </select>
-            </div>
-            <div class="h-8 w-px bg-gray-800"></div>
-            <div class="flex flex-col w-[180px]">
-                <div class="flex justify-between text-[9px] font-bold mb-1">
-                    <span class="text-down">FEAR</span>
-                    <span class="text-white" id="sentiment-val">50%</span>
-                    <span class="text-up">GREED</span>
-                </div>
-                <div class="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden border border-white/5">
-                    <div id="sentiment-bar" class="h-full bg-yellow-500 transition-all duration-1000" style="width: 50%"></div>
-                </div>
-            </div>
-        </div>
+    <header class="h-[50px] bg-panel border-b border-c flex items-center justify-between px-4 shrink-0 z-20">
+        <div class="flex items-center gap-4">
+            <div class="flex flex-col">
+                <span class="text-[9px] text-gray-500 font-bold uppercase">Active Asset</span>
+                <select id="asset-select" onchange="APP.setAsset()" class="bg-transparent text-white font-bold text-sm outline-none cursor-pointer">
+                    <option value="BTC">BTC/USD (Crypto)</option>
+                    <option value="BBCA">BBCA (Stock)</option>
+                </select>
+            </div>
+            <div class="h-6 w-px bg-gray-700"></div>
+            <div class="flex flex-col w-[200px]">
+                <div class="flex justify-between text-[9px] font-bold uppercase mb-0.5">
+                    <span class="text-down">FEAR</span>
+                    <span class="text-white" id="sentiment-val">Neutral</span>
+                    <span class="text-up">GREED</span>
+                </div>
+                <div class="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden relative">
+                    <div id="sentiment-bar" class="h-full bg-yellow-500 transition-all duration-500" style="width: 50%"></div>
+                </div>
+            </div>
+        </div>
 
-        <div class="flex items-center gap-8">
-            <div class="text-right cursor-pointer" onclick="APP.editBalance()">
-                <span class="text-[9px] text-gray-500 block font-bold">CASH (EDIT)</span>
-                <span class="text-sm font-bold mono text-yellow-500" id="head-cash">0</span>
-            </div>
-            <div class="text-right">
-                <span class="text-[9px] text-gray-500 block font-bold">UNREALIZED PNL</span>
-                <span class="text-sm font-bold mono" id="head-pl">0</span>
-            </div>
-            <div class="bg-black/40 px-4 py-1.5 rounded border border-c min-w-[100px] text-center">
-                <span class="text-[9px] text-gray-500 block font-bold">NET POSITION</span>
-                <span class="text-sm font-bold mono text-blue-400" id="head-pos">0</span>
-            </div>
-        </div>
-    </header>
+        <div class="flex items-center gap-6 text-right">
+             <div class="cursor-pointer hover:bg-gray-800 px-2 py-1 rounded" onclick="APP.editBalance()">
+                <span class="text-[9px] text-gray-500 block font-bold">BALANCE (Click to Edit)</span>
+                <span class="text-sm font-bold mono text-yellow-500" id="head-cash">0</span>
+            </div>
+            <div>
+                <span class="text-[9px] text-gray-500 block font-bold">PNL</span>
+                <span class="text-sm font-bold mono" id="head-pl">0</span>
+            </div>
+            <div>
+                 <span class="text-[9px] text-gray-500 block font-bold">POS</span>
+                 <span class="text-sm font-bold mono text-blue-400" id="head-pos">0</span>
+            </div>
+        </div>
+    </header>
 
-    <div class="flex-1 flex overflow-hidden">
-        <div class="flex-1 flex flex-col min-w-0 bg-[#000] relative border-r border-c">
-            <div class="absolute top-4 left-4 z-10 flex gap-2 items-center">
-                <div class="flex bg-panel border border-c rounded p-0.5 shadow-xl">
-                    <button onclick="CHART.setTF(1)" id="btn-1m" class="px-3 py-1 text-[10px] font-bold rounded bg-gray-700 text-white">1m</button>
-                    <button onclick="CHART.setTF(5)" id="btn-5m" class="px-3 py-1 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400">5m</button>
-                </div>
-                <div class="px-3 py-1 bg-black/80 border border-c rounded text-[11px] text-white backdrop-blur-md">
-                     <span id="chart-price" class="mono font-bold text-lg">0.00</span>
-                </div>
-                <div id="market-phase" class="text-[9px] font-bold px-2 py-1 bg-blue-900/30 border border-blue-500 text-blue-400 rounded uppercase">Stable</div>
-            </div>
-            <canvas id="chartCanvas" class="w-full h-full"></canvas>
-        </div>
+    <div class="flex-1 flex overflow-hidden">
+        
+        <div class="flex-1 flex flex-col min-w-0 bg-[#000] relative border-r border-c group">
+            <div class="absolute top-3 left-3 z-10 flex gap-2">
+                <div class="flex bg-panel border border-c rounded p-0.5">
+                    <button onclick="CHART.setTF(1)" id="btn-1m" class="px-2 py-0.5 text-[10px] font-bold rounded bg-gray-700 text-white">1m</button>
+                    <button onclick="CHART.setTF(5)" id="btn-5m" class="px-2 py-0.5 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400">5m</button>
+                </div>
+                <div class="px-2 py-0.5 bg-black/60 border border-c rounded text-[10px] text-white flex items-center gap-2">
+                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                     <span id="chart-price" class="mono font-bold">0.00</span>
+                </div>
+            </div>
+            <canvas id="chartCanvas" class="w-full h-full cursor-crosshair"></canvas>
+        </div>
 
-        <div class="w-[360px] flex flex-col bg-panel shrink-0">
-            <div class="h-[35%] flex flex-col border-b border-c overflow-hidden">
-                <div class="px-3 py-2 bg-[#161A25] border-b border-c flex justify-between">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase">Order Book</span>
-                    <span id="spread-val" class="text-[10px] font-mono text-gray-500">Spread: 0</span>
-                </div>
-                <div class="grid grid-cols-3 text-[9px] text-gray-500 font-bold px-3 py-1.5 bg-black/20">
-                    <span>BID SIZE</span><span class="text-center">PRICE</span><span class="text-right">ASK SIZE</span>
-                </div>
-                <div id="book-container" class="flex-1 overflow-hidden relative bg-[#050505]"></div>
-            </div>
+        <div class="w-[360px] flex flex-col bg-panel shrink-0 border-l border-c">
+            
+            <div class="h-[35%] flex flex-col border-b border-c min-h-[150px]">
+                <div class="px-3 py-1.5 bg-[#161A25] border-b border-c flex justify-between">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Order Book</span>
+                    <span class="text-[10px] font-mono text-gray-500" id="spread-val">Spread: 0</span>
+                </div>
+                <div class="grid grid-cols-3 text-[9px] text-gray-500 font-bold px-2 py-1 bg-black/20">
+                    <span>BID QTY</span><span class="text-center">PRICE</span><span class="text-right">ASK QTY</span>
+                </div>
+                <div id="book-container" class="flex-1 overflow-y-auto relative bg-[#050505]"></div>
+            </div>
 
-            <div class="h-[25%] flex flex-col border-b border-c overflow-hidden">
-                <div class="px-3 py-2 bg-[#161A25] border-b border-c">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Running Trade</span>
-                </div>
-                <div id="tape-container" class="flex-1 overflow-y-auto font-mono text-[10px] bg-[#050505]"></div>
-            </div>
+            <div class="h-[25%] flex flex-col border-b border-c min-h-[100px]">
+                <div class="px-3 py-1.5 bg-[#161A25] border-b border-c">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Running Trade</span>
+                </div>
+                <div id="tape-container" class="flex-1 overflow-y-auto font-mono text-[10px] bg-[#050505]"></div>
+            </div>
 
-            <div class="h-[40%] flex flex-col p-4 gap-4">
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[9px] text-gray-500 font-bold block mb-1">MODE</label>
-                        <select id="sim-mode" class="w-full bg-[#050505] border border-c text-white text-[11px] p-2 rounded outline-none">
-                            <option value="normal">🟢 Normal</option>
-                            <option value="war">🔴 War Zone</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[9px] text-gray-500 font-bold block mb-1">QUANTITY</label>
-                        <input type="number" id="input-qty" class="w-full bg-[#050505] border border-c text-white p-2 text-right font-bold rounded outline-none">
-                    </div>
-                </div>
+            <div class="h-[40%] flex flex-col bg-panel min-h-[220px]">
+                <div class="px-3 py-1.5 bg-[#161A25] border-b border-c">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Trading Console</span>
+                </div>
+                
+                <div class="p-3 flex flex-col gap-3 overflow-y-auto">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-[9px] text-gray-500 font-bold block mb-1">MARKET MODE</label>
+                            <select id="sim-mode" class="w-full bg-[#050505] border border-c text-white text-[10px] p-2 rounded outline-none">
+                                <option value="normal">🟢 Normal</option>
+                                <option value="volatile">🟡 Volatile</option>
+                                <option value="war">🔴 War Zone</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[9px] text-gray-500 font-bold block mb-1">ORDER SIZE</label>
+                            <input type="number" id="input-qty" class="w-full bg-[#050505] border border-c text-white p-1.5 text-right font-mono font-bold rounded outline-none focus:border-blue-500">
+                        </div>
+                    </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="APP.execute('BUY')" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded text-xs border-b-4 border-green-800 active:border-b-0">BUY</button>
-                    <button onclick="APP.execute('SELL')" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded text-xs border-b-4 border-red-800 active:border-b-0">SELL</button>
-                </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="APP.execute('BUY')" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded text-xs transition border-b-2 border-green-800 active:scale-95">BUY / LONG</button>
+                        <button onclick="APP.execute('SELL')" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-xs transition border-b-2 border-red-800 active:scale-95">SELL / SHORT</button>
+                    </div>
 
-                <div class="border-t border-c pt-4 mt-2">
-                    <div class="grid grid-cols-3 gap-2">
-                        <button id="btn-auto-buy" onclick="APP.toggleTool('auto-buy')" class="bg-[#1a1d23] border border-c text-[9px] py-2 rounded">Auto Buy</button>
-                        <button id="btn-wash" onclick="APP.toggleTool('wash')" class="bg-[#1a1d23] border border-c text-yellow-600 text-[9px] py-2 rounded">Wash</button>
-                        <button id="btn-auto-sell" onclick="APP.toggleTool('auto-sell')" class="bg-[#1a1d23] border border-c text-[9px] py-2 rounded">Auto Sell</button>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 mt-2">
-                        <button onclick="APP.trigger('breakout')" class="bg-blue-900/20 border border-blue-500/50 text-blue-400 text-[9px] py-2 rounded font-bold hover:bg-blue-500 hover:text-white">Breakout</button>
-                        <button onclick="APP.trigger('guyur')" class="bg-red-900/20 border border-red-500/50 text-red-400 text-[9px] py-2 rounded font-bold hover:bg-red-500 hover:text-white">Dumping</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <div class="border-t border-c pt-2 mt-1">
+                        <label class="text-[9px] text-blue-400 font-bold block mb-2 text-center uppercase tracking-widest">--- GOD MODE TOOLS ---</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button id="btn-auto-buy" onclick="APP.toggleTool('auto-buy')" class="bg-[#23262F] border border-c text-gray-300 text-[9px] py-1.5 rounded hover:bg-gray-700">Auto Haka</button>
+                            <button id="btn-wash" onclick="APP.toggleTool('wash')" class="bg-[#23262F] border border-c text-yellow-500 text-[9px] py-1.5 rounded hover:bg-gray-700">Wash Trade</button>
+                            <button id="btn-auto-sell" onclick="APP.toggleTool('auto-sell')" class="bg-[#23262F] border border-c text-gray-300 text-[9px] py-1.5 rounded hover:bg-gray-700">Auto Haki</button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <button onclick="APP.trigger('fakeout')" class="bg-[#23262F] border border-red-900 text-red-400 text-[9px] py-1.5 rounded font-bold hover:bg-red-900/30">Fakeout Trap</button>
+                            <button onclick="APP.trigger('breakout')" class="bg-[#23262F] border border-green-900 text-green-400 text-[9px] py-1.5 rounded font-bold hover:bg-green-900/30">Force Breakout</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-    <div id="toast">Notifikasi</div>
+        </div>
+    </div>
+
+    <div id="toast">Notification</div>
 
 <script>
 /**
- * REVISI TOTAL V11.2 - SINKRONISASI REALITA & SMOOTH CANDLE
- */
+ * SMARTALGO V10 - STABLE CORE
+ */
 const $ = (id) => document.getElementById(id);
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 
+// --- CONFIG ---
 const ASSETS = {
-    BTC: { p: 97500.00, tick: 0.5, dec: 2, min: 0.01, max: 2.0, cur: '$' },
-    BBCA: { p: 10250, tick: 25, dec: 0, min: 1, max: 500, cur: 'Rp' }
+    BTC: { price: 97500.00, tick: 0.5, dec: 2, minVol: 0.01, maxVol: 2.0, cur: '$' },
+    BBCA: { price: 10250, tick: 25, dec: 0, minVol: 1, maxVol: 500, cur: 'Rp' }
 };
 
+// --- STATE ---
 const STATE = {
-    active: 'BTC', price: 0, cash: 50000,
-    portfolio: { pos: 0, avg: 0 },
-    bids: [], asks: [], trades: [],
-    candles1m: [], tf: 1, sentiment: 50,
-    zones: [], toolTimer: null, activeTool: null
+    active: 'BTC',
+    price: 0,
+    cash: 50000,
+    portfolio: { pos: 0, avg: 0 },
+    
+    // Data
+    bids: [], asks: [], trades: [],
+    candles1m: [], candles5m: [], // Dual DB for error-free switching
+    
+    // System
+    tf: 1, // 1 or 5
+    sentiment: 50,
+    activeTool: null,
+    toolTimer: null
 };
 
+// --- CHART ENGINE ---
 const CHART = {
-    canvas: $('chartCanvas'),
-    ctx: $('chartCanvas').getContext('2d'),
-    init() {
-        this.resize();
-        window.onresize = () => this.resize();
-        this.resetData();
-        this.loop();
-    },
-    resize() {
-        this.canvas.width = this.canvas.parentElement.clientWidth;
-        this.canvas.height = this.canvas.parentElement.clientHeight;
-    },
-    resetData() {
-        STATE.candles1m = [];
-        let p = ASSETS[STATE.active].p;
-        let now = Date.now();
-        for(let i=60; i>0; i--) {
-            let o = p;
-            let c = p + (Math.random()-0.5)*15;
-            STATE.candles1m.push({time: now - (i*60000), o, h:Math.max(o,c)+2, l:Math.min(o,c)-2, c});
-            p = c;
-        }
-        STATE.price = p;
-        STATE.zones = [{price: p - 100, type: 'DEMAND'}];
-    },
-    update(p) {
-        let last = STATE.candles1m[STATE.candles1m.length-1];
-        if(!last) return;
-        last.c = p;
-        if(p > last.h) last.h = p;
-        if(p < last.l) last.l = p;
-    },
-    draw() {
-        const ctx = this.ctx; const w = this.canvas.width, h = this.canvas.height;
-        ctx.fillStyle = '#050505'; ctx.fillRect(0,0,w,h);
-        
-        const data = STATE.candles1m;
-        if(data.length === 0) return;
-        let vals = data.map(d=>[d.h, d.l]).flat();
-        let min = Math.min(...vals), max = Math.max(...vals);
-        let pad = (max-min)*0.2; min-=pad; max+=pad;
-        const getY = p => h - ((p-min)/(max-min))*h;
-        const barW = (w-60)/data.length;
+    canvas: $('chartCanvas'),
+    ctx: $('chartCanvas').getContext('2d'),
+    
+    init() {
+        this.resize();
+        window.onresize = () => this.resize();
+        this.generateHistory(); // Fill both databases
+        this.loop();
+    },
+    resize() {
+        this.canvas.width = this.canvas.parentElement.clientWidth;
+        this.canvas.height = this.canvas.parentElement.clientHeight;
+    },
+    generateHistory() {
+        STATE.candles1m = [];
+        STATE.candles5m = [];
+        let p = STATE.price;
+        let now = Date.now();
+        let mult = STATE.active === 'BTC' ? 50 : 25;
 
-        // Supply Demand Visual
-        STATE.zones.forEach(z => {
-            ctx.fillStyle = z.type === 'SUPPLY' ? 'rgba(246, 70, 93, 0.05)' : 'rgba(14, 203, 129, 0.05)';
-            ctx.fillRect(0, getY(z.price)-20, w, 40);
-        });
+        // Generate 100 mins of history
+        for(let i=100; i>0; i--) {
+            let t = now - (i * 60000);
+            let c = p + (Math.random()-0.5)*mult;
+            let h = Math.max(p,c) + Math.random()*mult;
+            let l = Math.min(p,c) - Math.random()*mult;
+            
+            // Push to 1m
+            STATE.candles1m.push({time: t, o:p, h:h, l:l, c:c});
+            
+            // Push to 5m (Aggregate every 5th)
+            if(i % 5 === 0) {
+                 STATE.candles5m.push({time: t, o:p, h:h+mult, l:l-mult, c:c});
+            }
+            p = c;
+        }
+        STATE.price = p; // Sync
+    },
+    setTF(m) {
+        STATE.tf = m;
+        $('btn-1m').className = m===1 ? "px-2 py-0.5 text-[10px] font-bold rounded bg-gray-700 text-white" : "px-2 py-0.5 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400";
+        $('btn-5m').className = m===5 ? "px-2 py-0.5 text-[10px] font-bold rounded bg-gray-700 text-white" : "px-2 py-0.5 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400";
+        this.draw(); // Force redraw
+    },
+    update(price) {
+        const updateCandle = (arr, interval) => {
+            let last = arr[arr.length-1];
+            let now = Date.now();
+            if(now - last.time > interval) {
+                arr.push({time: now, o:price, h:price, l:price, c:price});
+                if(arr.length > 80) arr.shift();
+            } else {
+                last.c = price;
+                if(price > last.h) last.h = price;
+                if(price < last.l) last.l = price;
+            }
+        };
+        updateCandle(STATE.candles1m, 60000);
+        updateCandle(STATE.candles5m, 300000);
+    },
+    draw() {
+        const ctx = this.ctx;
+        const w = this.canvas.width, h = this.canvas.height;
+        const data = STATE.tf === 1 ? STATE.candles1m : STATE.candles5m;
 
-        data.forEach((d, i) => {
-            let x = 30 + i*barW;
-            let color = d.c >= d.o ? '#0ECB81' : '#F6465D';
-            ctx.strokeStyle = color; ctx.beginPath();
-            ctx.moveTo(x+barW/2, getY(d.h)); ctx.lineTo(x+barW/2, getY(d.l)); ctx.stroke();
-            ctx.fillStyle = color;
-            ctx.fillRect(x+1, getY(Math.max(d.o, d.c)), barW-2, Math.max(1, Math.abs(getY(d.o)-getY(d.c))));
-        });
-    },
-    loop() { requestAnimationFrame(() => this.loop()); this.draw(); },
-    setTF(t) { STATE.tf = t; APP.toast("Timeframe Switched to " + t + "m"); }
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
+        
+        // Grid
+        ctx.strokeStyle = '#1e2329'; ctx.lineWidth = 1;
+        ctx.beginPath(); for(let i=0; i<h; i+=50){ctx.moveTo(0,i);ctx.lineTo(w,i);} ctx.stroke();
+
+        if(data.length === 0) return;
+
+        let vals = data.map(d=>[d.h, d.l]).flat();
+        let min = Math.min(...vals), max = Math.max(...vals);
+        let pad = (max-min)*0.1; min-=pad; max+=pad;
+        const getY = p => h - ((p-min)/(max-min))*h;
+        const barW = (w-20)/data.length;
+
+        data.forEach((d,i) => {
+            let x = 10 + i*barW;
+            let col = d.c >= d.o ? '#0ECB81' : '#F6465D';
+            ctx.fillStyle = col; ctx.strokeStyle = col;
+            ctx.beginPath(); ctx.moveTo(x+barW/2, getY(d.h)); ctx.lineTo(x+barW/2, getY(d.l)); ctx.stroke();
+            let bH = Math.max(1, Math.abs(getY(d.o)-getY(d.c)));
+            ctx.fillRect(x+1, getY(Math.max(d.o, d.c)), barW-2, bH);
+        });
+
+        let py = getY(STATE.price);
+        ctx.strokeStyle = '#fff'; ctx.setLineDash([2,4]);
+        ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke(); ctx.setLineDash([]);
+    },
+    loop() {
+        requestAnimationFrame(() => this.loop());
+        this.draw();
+    }
 };
 
+// --- APP ENGINE ---
 const APP = {
-    init() {
-        this.setAsset();
-        CHART.init();
-        this.uiLoop();
-        setInterval(() => this.marketTick(), 500); // More stable interval
-    },
-    setAsset() {
-        const a = $('asset-select').value;
-        STATE.active = a;
-        STATE.price = ASSETS[a].p;
-        STATE.cash = a === 'BTC' ? 100000 : 500000000;
-        STATE.portfolio = { pos: 0, avg: 0 };
-        $('input-qty').value = ASSETS[a].min * 10;
-        this.resetBook();
-        CHART.resetData();
-    },
-    editBalance() {
-        let n = prompt("Input New Balance:", STATE.cash);
-        if(n && !isNaN(n)) { STATE.cash = parseFloat(n); this.toast("Balance Sync Success"); }
-    },
-    resetBook() {
-        const cfg = ASSETS[STATE.active];
-        STATE.asks = []; STATE.bids = [];
-        for(let i=0; i<12; i++) {
-            STATE.asks.push({ price: STATE.price + ((i+1)*cfg.tick), vol: rand(5, 50) * cfg.min });
-            STATE.bids.push({ price: STATE.price - (i*cfg.tick), vol: rand(5, 50) * cfg.min });
-        }
-    },
-    execute(side, qtyOverride = null, isUser = true) {
-        const qty = qtyOverride || parseFloat($('input-qty').value);
-        if(qty <= 0 || isNaN(qty)) return;
-        const cfg = ASSETS[STATE.active];
-        const mul = STATE.active === 'BBCA' ? 100 : 1;
+    init() {
+        this.setAsset();
+        CHART.init();
+        this.uiLoop();
+        
+        // Background Workers
+        setInterval(() => this.marketTick(), 400); // Organic
+        setInterval(() => this.sentimentTick(), 800); // Fear/Greed
+    },
 
-        if(isUser) {
-            const estPrice = side === 'BUY' ? STATE.asks[0].price : STATE.bids[0].price;
-            const cost = estPrice * qty * mul;
-            if(side === 'BUY' && STATE.cash < cost) return this.toast("ERROR: Insufficient Cash!", "error");
-            if(side === 'SELL' && STATE.portfolio.pos < qty) return this.toast("ERROR: No Position Available!", "error");
-        }
+    setAsset() {
+        const val = $('asset-select').value;
+        STATE.active = val;
+        const cfg = ASSETS[val];
+        
+        STATE.price = cfg.price;
+        STATE.cash = val === 'BTC' ? 50000 : 100000000;
+        STATE.portfolio = { pos: 0, avg: 0 };
+        
+        this.resetBook();
+        if(STATE.candles1m.length > 0) CHART.generateHistory(); // Regen history
+        
+        $('input-qty').value = val === 'BTC' ? 0.1 : 100;
+        $('input-qty').step = val === 'BTC' ? 0.01 : 1;
+        
+        this.toast(`Market Switched: ${val}`);
+    },
 
-        let filled = 0; let totalVal = 0;
-        let books = side === 'BUY' ? STATE.asks : STATE.bids;
+    editBalance() {
+        let n = prompt("Set Balance:", STATE.cash);
+        if(n && !isNaN(n)) STATE.cash = parseFloat(n);
+    },
 
-        while(filled < qty && books.length > 0) {
-            let top = books[0];
-            let take = Math.min(qty - filled, top.vol);
-            STATE.price = top.price;
-            CHART.update(STATE.price);
-            
-            top.vol -= take;
-            filled += take;
-            totalVal += (top.price * take * mul);
+    resetBook() {
+        const cfg = ASSETS[STATE.active];
+        STATE.asks = []; STATE.bids = [];
+        for(let i=0; i<15; i++) {
+            let vol = STATE.active === 'BTC' ? Math.random()*2 : rand(10, 500);
+            STATE.asks.push({price: STATE.price + ((i+1)*cfg.tick), vol: vol});
+            STATE.bids.push({price: STATE.price - (i*cfg.tick), vol: vol});
+        }
+    },
 
-            STATE.trades.unshift({ time: new Date().toLocaleTimeString().split(' ')[0], price: top.price, vol: take, side: side });
-            if(STATE.trades.length > 25) STATE.trades.pop();
+    // --- EXECUTION CORE ---
+    execute(side, qtyOverride=null, isUser=true) {
+        let qty = qtyOverride || parseFloat($('input-qty').value);
+        if(qty <= 0) return;
+        const cfg = ASSETS[STATE.active];
 
-            if(top.vol <= 0.00001) {
-                books.shift();
-                let last = books[books.length-1].price;
-                books.push({ price: side === 'BUY' ? last + cfg.tick : last - cfg.tick, vol: rand(5, 50) * cfg.min });
-            }
-        }
+        if(isUser) {
+            let cost = STATE.asks[0].price * qty * (STATE.active==='BBCA'?100:1);
+            if(side === 'BUY' && STATE.cash < cost) return this.toast("Insufficient Funds!", 'error');
+            if(side === 'SELL' && STATE.portfolio.pos < qty) return this.toast("No Position!", 'error');
+        }
 
-        if(isUser) this.updatePorto(side, filled, totalVal);
-    },
-    updatePorto(side, q, v) {
-        const p = STATE.portfolio;
-        const mul = STATE.active === 'BBCA' ? 100 : 1;
-        if(side === 'BUY') {
-            STATE.cash -= v;
-            let oldV = p.pos * p.avg * mul;
-            p.pos += q;
-            p.avg = (oldV + v) / (p.pos * mul);
-        } else {
-            STATE.cash += v;
-            p.pos -= q;
-            if(p.pos < 0.000001) { p.pos = 0; p.avg = 0; }
-        }
-    },
-    marketTick() {
-        const cfg = ASSETS[STATE.active];
-        const mode = $('sim-mode').value;
-        let bias = 0.5;
+        let remaining = qty;
+        let books = side === 'BUY' ? STATE.asks : STATE.bids;
+        let filled = 0;
+        let totalCost = 0;
 
-        // Smart Logic: Pantulan di Base
-        let zone = STATE.zones.find(z => Math.abs(z.price - STATE.price) < (cfg.tick * 10));
-        if(zone) {
-            bias = zone.type === 'DEMAND' ? 0.7 : 0.3;
-            $('market-phase').innerText = "Rebounding " + zone.type;
-        } else {
-            $('market-phase').innerText = "Trending";
-        }
+        while(remaining > 0 && books.length > 0) {
+            let best = books[0];
+            let trade = Math.min(remaining, best.vol);
+            
+            // Price Update
+            STATE.price = best.price;
+            CHART.update(best.price);
 
-        // Retail FOMO
-        if(STATE.sentiment > 70) bias += 0.2;
-        if(STATE.sentiment < 30) bias -= 0.2;
+            best.vol -= trade;
+            if(STATE.active === 'BTC') best.vol = parseFloat(best.vol.toFixed(4));
+            
+            remaining -= trade;
+            filled += trade;
+            let mul = STATE.active==='BBCA'?100:1;
+            totalCost += (best.price * trade * mul);
 
-        if(mode === 'war' && STATE.portfolio.pos > 0) bias = 0.2; // AI banting harga jika user beli
+            // Tape
+            STATE.trades.unshift({time: new Date().toLocaleTimeString().split(' ')[0], price: best.price, vol: trade, side: side});
+            if(STATE.trades.length > 40) STATE.trades.pop();
 
-        let s = Math.random() < bias ? 'BUY' : 'SELL';
-        this.execute(s, cfg.min * rand(1, 3), false);
+            if(best.vol <= cfg.minVol/10) {
+                books.shift();
+                let lastP = books.length ? books[books.length-1].price : STATE.price;
+                let newP = side === 'BUY' ? lastP + cfg.tick : lastP - cfg.tick;
+                let newV = STATE.active==='BTC' ? Math.random() : rand(10,500);
+                books.push({price: newP, vol: newV});
+            }
+        }
+        
+        if(isUser && filled > 0) this.updatePorto(side, filled, totalCost);
+    },
 
-        if(Math.random() < 0.02) {
-            STATE.zones.push({ price: STATE.price, type: Math.random() > 0.5 ? 'SUPPLY' : 'DEMAND' });
-            if(STATE.zones.length > 3) STATE.zones.shift();
-        }
-        
-        // Sentiment Gravity
-        if(STATE.sentiment > 50) STATE.sentiment -= 0.5; else STATE.sentiment += 0.5;
-        $('sentiment-bar').style.width = STATE.sentiment + "%";
-        $('sentiment-val').innerText = Math.floor(STATE.sentiment) + "%";
-    },
-    uiLoop() {
-        requestAnimationFrame(() => this.uiLoop());
-        const cfg = ASSETS[STATE.active];
-        const mul = STATE.active === 'BBCA' ? 100 : 1;
+    updatePorto(side, qty, val) {
+        const P = STATE.portfolio;
+        let mul = STATE.active==='BBCA'?100:1;
+        if(side === 'BUY') {
+            STATE.cash -= val;
+            let prev = P.pos * P.avg * mul;
+            P.pos += qty;
+            if(STATE.active==='BTC') P.pos = parseFloat(P.pos.toFixed(4));
+            P.avg = (prev + val) / (P.pos * mul);
+        } else {
+            STATE.cash += val;
+            P.pos -= qty;
+            if(STATE.active==='BTC') P.pos = parseFloat(P.pos.toFixed(4));
+            if(P.pos <= 0.0001) { P.pos=0; P.avg=0; }
+        }
+    },
 
-        $('chart-price').innerText = STATE.price.toFixed(cfg.dec);
-        $('head-cash').innerText = cfg.cur + " " + Math.floor(STATE.cash).toLocaleString();
-        $('head-pos').innerText = STATE.portfolio.pos.toFixed(STATE.active === 'BTC' ? 3 : 0);
-        
-        let pnl = (STATE.price - STATE.portfolio.avg) * STATE.portfolio.pos * mul;
-        $('head-pl').innerText = (pnl >= 0 ? "+" : "") + cfg.cur + " " + Math.floor(pnl).toLocaleString();
-        $('head-pl').className = `text-sm font-bold mono ${pnl >= 0 ? 'text-up' : 'text-down'}`;
+    // --- GOD MODE TOOLS ---
+    toggleTool(type) {
+        if(STATE.activeTool === type) {
+            clearInterval(STATE.toolTimer);
+            STATE.activeTool = null;
+            this.clearStyles();
+            return;
+        }
+        clearInterval(STATE.toolTimer);
+        this.clearStyles();
+        STATE.activeTool = type;
+        
+        const btn = $(type==='auto-buy'?'btn-auto-buy':type==='auto-sell'?'btn-auto-sell':'btn-wash');
+        btn.classList.add('active-tool');
+        
+        const qty = parseFloat($('input-qty').value);
+        STATE.toolTimer = setInterval(() => {
+            if(type === 'auto-buy') this.execute('BUY', qty, true);
+            if(type === 'auto-sell') this.execute('SELL', qty, true);
+            if(type === 'wash') {
+                // Fake Volume
+                STATE.trades.unshift({time: new Date().toLocaleTimeString().split(' ')[0], price: STATE.price, vol: qty, side: 'BUY'});
+                STATE.trades.unshift({time: new Date().toLocaleTimeString().split(' ')[0], price: STATE.price, vol: qty, side: 'SELL'});
+            }
+        }, 200);
+    },
 
-        // Book
-        let h = '';
-        STATE.asks.slice(0, 10).reverse().forEach(a => {
-            let w = Math.min((a.vol / (cfg.max * 5)) * 100, 100);
-            h += `<div class="grid grid-cols-3 px-3 py-0.5 relative border-b border-white/5">
-                <div class="bar-ask" style="width:${w}%"></div>
-                <span class="z-10 text-gray-500">-</span>
-                <span class="z-10 text-down text-center font-bold">${a.price.toFixed(cfg.dec)}</span>
-                <span class="z-10 text-right text-gray-400 font-mono">${a.vol.toFixed(STATE.active === 'BTC' ? 2 : 0)}</span>
-            </div>`;
-        });
-        h += `<div class="py-1 bg-white/5 text-center text-[10px] font-bold">SPREAD: ${(STATE.asks[0].price - STATE.bids[0].price).toFixed(cfg.dec)}</div>`;
-        STATE.bids.slice(0, 10).forEach(b => {
-            let w = Math.min((b.vol / (cfg.max * 5)) * 100, 100);
-            h += `<div class="grid grid-cols-3 px-3 py-0.5 relative border-b border-white/5">
-                <div class="bar-bid" style="width:${w}%"></div>
-                <span class="z-10 text-gray-400 font-mono">${b.vol.toFixed(STATE.active === 'BTC' ? 2 : 0)}</span>
-                <span class="z-10 text-up text-center font-bold">${b.price.toFixed(cfg.dec)}</span>
-                <span class="z-10 text-gray-500 text-right">-</span>
-            </div>`;
-        });
-        $('book-container').innerHTML = h;
+    trigger(type) {
+        const qty = parseFloat($('input-qty').value) * 10;
+        this.toast(`TRIGGERING: ${type.toUpperCase()}`);
+        if(type === 'fakeout') {
+            let i=0; let iv=setInterval(()=>{ i++; if(i<4) this.execute('BUY', qty, false); else if(i<8) this.execute('SELL', qty*2, false); else clearInterval(iv); }, 300);
+        }
+        if(type === 'breakout') {
+             let i=0; let iv=setInterval(()=>{ i++; this.execute('BUY', qty*2, false); if(i>4) clearInterval(iv); }, 100);
+        }
+    },
+    
+    clearStyles() {
+        ['btn-auto-buy','btn-auto-sell','btn-wash'].forEach(id => $(id).classList.remove('active-tool'));
+    },
 
-        // Tape
-        let th = '';
-        STATE.trades.forEach(t => {
-            th += `<div class="flex justify-between px-3 py-1 border-b border-white/5">
-                <span class="text-gray-600">${t.time}</span>
-                <span class="${t.side === 'BUY' ? 'text-up' : 'text-down'} font-bold">${t.price.toFixed(cfg.dec)}</span>
-                <span class="text-gray-400">${t.vol.toFixed(STATE.active === 'BTC' ? 2 : 0)}</span>
-            </div>`;
-        });
-        $('tape-container').innerHTML = th;
-    },
-    toggleTool(t) {
-        if(STATE.activeTool === t) { clearInterval(STATE.toolTimer); STATE.activeTool = null; this.clearStyles(); return; }
-        this.clearStyles(); STATE.activeTool = t;
-        $(t === 'auto-buy' ? 'btn-auto-buy' : t === 'auto-sell' ? 'btn-auto-sell' : 'btn-wash').classList.add('active-tool');
-        STATE.toolTimer = setInterval(() => {
-            let q = parseFloat($('input-qty').value);
-            if(t === 'auto-buy') this.execute('BUY', q, true);
-            if(t === 'auto-sell') this.execute('SELL', q, true);
-            if(t === 'wash') { this.execute('BUY', q, false); this.execute('SELL', q, false); }
-        }, 1000);
-    },
-    trigger(t) {
-        let q = ASSETS[STATE.active].max;
-        this.toast("Initiating " + t.toUpperCase());
-        let i = 0; let iv = setInterval(() => {
-            this.execute(t === 'breakout' ? 'BUY' : 'SELL', q, false);
-            STATE.sentiment += (t === 'breakout' ? 5 : -5);
-            i++; if(i > 8) clearInterval(iv);
-        }, 150;);
-    },
-    clearStyles() { ['btn-auto-buy', 'btn-auto-sell', 'btn-wash'].forEach(id => $(id).classList.remove('active-tool')); },
-    toast(m, type = 'info') {
-        const t = $('toast'); t.innerText = m; t.style.borderLeft = "4px solid " + (type === 'error' ? '#F6465D' : '#2962FF');
-        t.className = "show"; setTimeout(() => t.className = "", 3000);
-    }
+    // --- MARKET LOGIC ---
+    marketTick() {
+        const mode = $('sim-mode').value;
+        let bias = 0.5;
+        if(mode === 'war') {
+            if(STATE.portfolio.pos > 0) bias = 0.2; // AI dumps on user
+            if(STATE.portfolio.pos < 0) bias = 0.8; // AI pumps on user
+        }
+        
+        if(Math.random() < 0.3) {
+            let side = Math.random() < bias ? 'BUY' : 'SELL';
+            let vol = STATE.active === 'BTC' ? Math.random() : rand(1, 100);
+            this.execute(side, vol, false);
+        }
+        
+        // Liquidity
+        if(Math.random() < 0.5) {
+             let idx = rand(0,4);
+             let add = STATE.active === 'BTC' ? Math.random() : rand(10,50);
+             STATE.asks[idx].vol += add;
+             STATE.bids[idx].vol += add;
+        }
+    },
+
+    sentimentTick() {
+        let lastC = STATE.candles1m[STATE.candles1m.length-1];
+        let drift = (lastC.c > lastC.o) ? 1 : -1;
+        STATE.sentiment += (drift + (Math.random()-0.5)*2);
+        if(STATE.sentiment > 100) STATE.sentiment = 100; if(STATE.sentiment < 0) STATE.sentiment = 0;
+        
+        $('sentiment-bar').style.width = STATE.sentiment + "%";
+        $('sentiment-bar').className = `h-full transition-all duration-500 ${STATE.sentiment > 70 ? 'bg-green-500' : STATE.sentiment < 30 ? 'bg-red-500' : 'bg-yellow-500'}`;
+        $('sentiment-val').innerText = STATE.sentiment > 70 ? "EXTREME GREED" : STATE.sentiment < 30 ? "EXTREME FEAR" : "NEUTRAL";
+        $('sentiment-val').className = STATE.sentiment > 70 ? "text-up font-bold" : STATE.sentiment < 30 ? "text-down font-bold" : "text-white font-bold";
+    },
+
+    // --- UI LOOP ---
+    uiLoop() {
+        requestAnimationFrame(() => this.uiLoop());
+        const cfg = ASSETS[STATE.active];
+        const dec = cfg.dec;
+
+        $('chart-price').innerText = STATE.price.toFixed(dec);
+        $('head-cash').innerText = cfg.cur + " " + parseInt(STATE.cash).toLocaleString();
+        $('head-pos').innerText = STATE.portfolio.pos.toFixed(STATE.active==='BTC'?4:0);
+        
+        let mul = STATE.active==='BBCA'?100:1;
+        let pl = (STATE.price - STATE.portfolio.avg) * STATE.portfolio.pos * mul;
+        $('head-pl').innerText = cfg.cur + " " + parseInt(pl).toLocaleString();
+        $('head-pl').className = `text-sm font-bold mono ${pl>=0 ? 'text-up':'text-down'}`;
+
+        // Book
+        const bEl = $('book-container');
+        let h = '';
+        STATE.asks.slice(0,8).reverse().forEach(a => {
+            let w = Math.min((a.vol/cfg.maxVol)*100, 100);
+            h += `<div class="grid grid-cols-3 px-2 py-0.5 relative cursor-pointer hover:bg-white/5" onclick="APP.execute('BUY', ${a.vol})">
+                <div class="bar-ask" style="width:${w}%"></div>
+                <span class="text-gray-400 text-right z-10 pr-2 font-mono">${STATE.active==='BTC'?a.vol.toFixed(4):parseInt(a.vol)}</span>
+                <span class="text-down text-center z-10 font-bold">${a.price.toFixed(dec)}</span>
+                <span class="text-gray-400 text-right z-10">-</span>
+            </div>`;
+        });
+        h += `<div class="text-center text-[9px] py-0.5 border-y border-c bg-black/40 text-gray-500">Spread: ${(STATE.asks[0].price - STATE.bids[0].price).toFixed(dec)}</div>`;
+        STATE.bids.slice(0,8).forEach(b => {
+             let w = Math.min((b.vol/cfg.maxVol)*100, 100);
+            h += `<div class="grid grid-cols-3 px-2 py-0.5 relative cursor-pointer hover:bg-white/5" onclick="APP.execute('SELL', ${b.vol})">
+                <div class="bar-bid" style="width:${w}%"></div>
+                <span class="text-gray-400 text-right z-10 pr-2 font-mono">-</span>
+                <span class="text-up text-center z-10 font-bold">${b.price.toFixed(dec)}</span>
+                <span class="text-gray-400 text-right z-10">${STATE.active==='BTC'?b.vol.toFixed(4):parseInt(b.vol)}</span>
+            </div>`;
+        });
+        bEl.innerHTML = h;
+
+        // Tape
+        const tEl = $('tape-container');
+        let th = '';
+        STATE.trades.forEach(t => {
+            let c = t.side==='BUY'?'text-up':'text-down';
+            th += `<div class="grid grid-cols-3 px-2 py-0.5 border-b border-c/30">
+                <span class="text-gray-500">${t.time}</span>
+                <span class="text-center ${c} font-bold">${t.price.toFixed(dec)}</span>
+                <span class="text-right text-gray-400">${STATE.active==='BTC'?t.vol.toFixed(4):parseInt(t.vol)}</span>
+            </div>`;
+        });
+        tEl.innerHTML = th;
+    },
+
+    toast(msg, type='info') {
+        const t = $('toast');
+        t.innerText = msg;
+        t.style.borderLeftColor = type === 'error' ? '#F6465D' : '#0ECB81';
+        t.className = "show";
+        setTimeout(() => t.className = "", 3000);
+    }
 };
+
 window.onload = () => APP.init();
+
 </script>
 </body>
 </html>
