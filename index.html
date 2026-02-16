@@ -3,504 +3,519 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAlgo V6 - True Liquidity Engine</title>
+    <title>SmartAlgo Pro V7 - Professional Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #e0e0e0; overflow: hidden; user-select: none; }
+        /* CORE THEME */
+        :root { --bg-main: #0E1117; --bg-panel: #161A25; --border: #262B3D; --text-muted: #848E9C; --up: #0ECB81; --down: #F6465D; }
+        body { background-color: var(--bg-main); color: #EAECEF; font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; }
         .mono { font-family: 'Roboto Mono', monospace; }
-        .bg-panel { background-color: #111318; }
-        .border-line { border-color: #2a2e39; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; }
+        /* LAYOUT UTILS */
+        .border-r-dark { border-right: 1px solid var(--border); }
+        .border-b-dark { border-bottom: 1px solid var(--border); }
+        .border-t-dark { border-top: 1px solid var(--border); }
+        .bg-panel { background-color: var(--bg-panel); }
+        .text-up { color: var(--up); } .text-down { color: var(--down); }
+        .bg-up { background-color: var(--up); } .bg-down { background-color: var(--down); }
 
-        /* Order Book Bars */
-        .bar-bid { position: absolute; right:0; top:0; height:100%; background: rgba(34, 197, 94, 0.15); transition: width 0.1s; }
-        .bar-ask { position: absolute; left:0; top:0; height:100%; background: rgba(239, 68, 68, 0.15); transition: width 0.1s; }
-        
-        /* Layout Fixes */
-        .h-calc-chart { height: calc(100% - 140px); } /* Chart takes remaining space minus controls */
-        .h-controls { height: 140px; }
+        /* ORDER BOOK BARS */
+        .bar-ask { position: absolute; top:0; left:0; height:100%; background: rgba(246, 70, 93, 0.15); z-index:0; transition: width 0.2s; }
+        .bar-bid { position: absolute; top:0; right:0; height:100%; background: rgba(14, 203, 129, 0.15); z-index:0; transition: width 0.2s; }
+
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg-main); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* TOAST NOTIFICATION */
+        #toast { visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 4px; padding: 12px; position: fixed; z-index: 99; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 13px; opacity: 0; transition: opacity 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; }
+        #toast.error { background-color: #F6465D; }
+        #toast.success { background-color: #0ECB81; }
     </style>
 </head>
-<body class="flex h-screen w-screen text-[12px]">
+<body class="flex flex-col h-screen w-screen text-[13px]">
 
-    <aside class="w-12 bg-[#0b0e11] border-r border-line flex flex-col items-center py-4 z-50">
-        <div class="w-8 h-8 bg-blue-700 rounded flex items-center justify-center font-bold text-white mb-6">S</div>
-        <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_#22c55e]" id="status-light"></div>
-    </aside>
-
-    <main class="flex-1 flex flex-col min-w-0">
-        
-        <header class="h-12 bg-[#0b0e11] border-b border-line flex items-center px-4 justify-between shrink-0">
-            <div class="flex items-center gap-6">
-                <div><span class="text-gray-500 text-[9px] uppercase font-bold">Symbol</span><div class="font-bold text-lg text-white">$BBCA</div></div>
-                <div><span class="text-gray-500 text-[9px] uppercase font-bold">Last Price</span><div class="font-bold text-xl mono" id="head-price">0</div></div>
-                <div class="pl-6 border-l border-gray-800"><span class="text-gray-500 text-[9px] uppercase font-bold">Cash</span><div class="font-bold mono text-yellow-500" id="head-cash">0</div></div>
+    <header class="h-12 flex items-center justify-between px-4 bg-panel border-b-dark shrink-0">
+        <div class="flex items-center gap-6">
+            <div class="font-bold text-lg text-blue-500 tracking-wider">PRO TERMINAL</div>
+            <div class="h-6 w-px bg-gray-700"></div>
+            <div>
+                <span class="text-[10px] text-muted block">SYMBOL</span>
+                <span class="font-bold text-base">$BBCA</span>
             </div>
-            <div class="flex items-center gap-4 text-right">
-                <div><span class="text-gray-500 text-[9px] uppercase font-bold">Position</span><div class="font-bold mono text-blue-400" id="head-pos">0</div></div>
-                <div><span class="text-gray-500 text-[9px] uppercase font-bold">Float P/L</span><div class="font-bold mono text-gray-400" id="head-pl">0</div></div>
-            </div>
-        </header>
-
-        <div class="flex-1 flex overflow-hidden">
-            
-            <div class="flex-1 flex flex-col relative border-r border-line">
-                <div class="h-calc-chart w-full relative bg-[#050709]">
-                    <canvas id="chartCanvas" class="block w-full h-full"></canvas>
-                    <div class="absolute top-2 left-2 flex gap-2 pointer-events-none opacity-70">
-                        <span class="bg-black/50 px-2 py-1 rounded text-[10px] text-gray-300 border border-gray-800" id="mode-display">NORMAL MODE</span>
-                    </div>
-                </div>
-
-                <div class="h-controls bg-panel border-t border-line p-3 shrink-0">
-                    <div class="grid grid-cols-12 gap-3 h-full">
-                        <div class="col-span-3 flex flex-col justify-between">
-                            <div>
-                                <label class="text-[9px] text-gray-500 uppercase font-bold">Market Mode</label>
-                                <select id="sim-mode" onchange="APP.setMode()" class="w-full bg-black border border-gray-700 text-white text-xs p-1.5 rounded outline-none focus:border-blue-500">
-                                    <option value="normal">Normal (Liquid & Organic)</option>
-                                    <option value="hard">Hard (Wall Defense)</option>
-                                    <option value="war">War (Smart Money Fight)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-[9px] text-gray-500 uppercase font-bold">Order Lot</label>
-                                <input type="number" id="user-lot" value="1000" class="w-full bg-black border border-gray-700 text-white text-xs p-1.5 rounded text-center font-mono">
-                            </div>
-                        </div>
-                        
-                        <div class="col-span-9 grid grid-cols-3 gap-2">
-                            <button onclick="APP.startAlgo('buy')" id="btn-buy" class="bg-green-800 hover:bg-green-700 text-white font-bold rounded flex flex-col items-center justify-center border-b-4 border-green-950 transition active:scale-95">
-                                <span class="text-sm">HAKA (BUY)</span>
-                                <span class="text-[9px] opacity-60 font-normal">Accumulate</span>
-                            </button>
-                            <button onclick="APP.startAlgo('sell')" id="btn-sell" class="bg-red-800 hover:bg-red-700 text-white font-bold rounded flex flex-col items-center justify-center border-b-4 border-red-950 transition active:scale-95">
-                                <span class="text-sm">HAKI (SELL)</span>
-                                <span class="text-[9px] opacity-60 font-normal">Distribute</span>
-                            </button>
-                            <button onclick="APP.stopAlgo()" class="bg-gray-700 hover:bg-gray-600 text-white font-bold rounded flex flex-col items-center justify-center border-b-4 border-gray-900 transition active:scale-95">
-                                <span>STOP</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="w-[420px] flex flex-row bg-panel border-l border-line shrink-0">
-                
-                <div class="flex-1 flex flex-col min-w-0 border-r border-line">
-                    <div class="p-1.5 bg-[#0b0e11] text-center text-[10px] font-bold text-gray-500 border-b border-line uppercase">Order Book</div>
-                    <div class="grid grid-cols-3 text-[9px] font-bold text-gray-500 text-center py-1 bg-black/20">
-                        <span>Bid Vol</span><span>Price</span><span>Ask Vol</span>
-                    </div>
-                    <div id="book-container" class="flex-1 overflow-y-auto bg-[#080a0d] relative"></div>
-                </div>
-
-                <div class="w-[160px] flex flex-col shrink-0">
-                    <div class="p-1.5 bg-[#0b0e11] text-center text-[10px] font-bold text-gray-500 border-b border-line uppercase">Trade Log</div>
-                    <div id="tape-container" class="flex-1 overflow-y-auto bg-[#080a0d] font-mono text-[10px]"></div>
-                </div>
-
+            <div>
+                <span class="text-[10px] text-muted block">LAST PRICE</span>
+                <span class="font-bold text-lg mono" id="head-price">9,850</span>
             </div>
         </div>
-    </main>
+        <div class="flex items-center gap-8">
+             <div>
+                <span class="text-[10px] text-muted block text-right">EQUITY / CASH</span>
+                <div class="font-bold mono text-yellow-500 text-right" id="head-cash">IDR 0</div>
+            </div>
+            <div>
+                <span class="text-[10px] text-muted block text-right">UNREALIZED P/L</span>
+                <div class="font-bold mono text-right" id="head-pl">IDR 0</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <div class="flex-1 flex flex-col min-w-0 bg-[#0E1117] border-r-dark relative group">
+            <div class="h-10 border-b-dark flex items-center px-4 gap-2">
+                <span class="text-xs font-bold text-muted mr-2">Timeframe:</span>
+                <button onclick="CHART.setTimeframe(1)" id="tf-1m" class="px-3 py-1 rounded text-xs font-bold bg-[#262B3D] text-white hover:bg-blue-600 transition">1m</button>
+                <button onclick="CHART.setTimeframe(5)" id="tf-5m" class="px-3 py-1 rounded text-xs font-bold text-muted hover:text-white transition">5m</button>
+                <div class="flex-1"></div>
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-[10px] text-green-500 font-bold">LIVE MARKET</span>
+                </div>
+            </div>
+            
+            <div class="flex-1 relative w-full h-full">
+                <canvas id="mainChart" class="block w-full h-full cursor-crosshair"></canvas>
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-[80px] font-bold text-white opacity-[0.03] pointer-events-none">BBCA</div>
+            </div>
+        </div>
+
+        <div class="w-[380px] flex flex-col bg-panel shrink-0">
+            
+            <div class="h-[45%] flex flex-col border-b-dark">
+                <div class="px-3 py-2 border-b-dark flex justify-between">
+                    <span class="text-xs font-bold text-muted">ORDER BOOK</span>
+                </div>
+                <div class="grid grid-cols-3 text-[10px] text-muted font-bold px-2 py-1">
+                    <span>BID VOL</span><span class="text-center">PRICE</span><span class="text-right">ASK VOL</span>
+                </div>
+                <div id="book-container" class="flex-1 overflow-y-auto relative"></div>
+            </div>
+
+            <div class="h-[25%] flex flex-col border-b-dark">
+                 <div class="px-3 py-2 border-b-dark bg-[#11141B]">
+                    <span class="text-xs font-bold text-muted">RUNNING TRADE</span>
+                </div>
+                <div class="grid grid-cols-3 text-[10px] text-muted font-bold px-2 py-1">
+                    <span>TIME</span><span class="text-center">PRICE</span><span class="text-right">VOL</span>
+                </div>
+                <div id="tape-container" class="flex-1 overflow-y-auto font-mono text-[11px] bg-[#0E1117]"></div>
+            </div>
+
+            <div class="flex-1 p-4 bg-panel flex flex-col gap-3">
+                
+                <div class="flex justify-between items-center text-xs bg-[#0E1117] p-2 rounded border border-[#262B3D]">
+                    <span class="text-muted">Avg Price: <span id="lbl-avg" class="text-white font-mono font-bold">0</span></span>
+                    <span class="text-muted">Pos: <span id="lbl-pos" class="text-blue-400 font-mono font-bold">0</span> Lot</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-[10px] text-muted uppercase font-bold">Lot Size</label>
+                        <input type="number" id="input-lot" value="1000" class="w-full bg-[#0E1117] border border-[#262B3D] text-white p-2 rounded text-center font-mono font-bold outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-muted uppercase font-bold">Mode</label>
+                        <select id="input-mode" class="w-full bg-[#0E1117] border border-[#262B3D] text-white p-2 rounded text-xs font-bold outline-none">
+                            <option value="normal">NORMAL</option>
+                            <option value="volatile">VOLATILE</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 mt-auto">
+                    <button onclick="ENGINE.submitOrder('BUY')" class="bg-[#0ECB81] hover:brightness-110 text-white font-bold py-3 rounded text-sm transition active:scale-95">
+                        BUY (HAKA)
+                    </button>
+                    <button onclick="ENGINE.submitOrder('SELL')" class="bg-[#F6465D] hover:brightness-110 text-white font-bold py-3 rounded text-sm transition active:scale-95">
+                        SELL (HAKI)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Notification</div>
 
 <script>
 /**
- * SMARTALGO V6 - REALISTIC LIQUIDITY ENGINE
- * Core Logic: Price only moves if volume at best bid/ask is fully consumed.
+ * SMARTALGO V7 - PROFESSIONAL ENGINE
+ * Features: Time-based Candles, Strict Portfolio, Liquid Orderbook
  */
-const APP = {
-    state: {
-        lastPrice: 9850,
-        cash: 1000000000,
-        portfolio: { pos: 0, avg: 0 },
-        
-        // Data Structures
-        bids: [], // [{price: 9825, vol: 5000}, ...]
-        asks: [], // [{price: 9850, vol: 4500}, ...]
-        trades: [],
-        candles: [],
-        currCandle: null,
 
-        // Engine Params
-        mode: 'normal',
-        tickSpeed: 200, 
-        algoInterval: null,
-        trendBias: 0, // -1 to 1 (Bearish to Bullish)
-        volatility: 1
-    },
+// --- UTILS ---
+const $ = (id) => document.getElementById(id);
+const fmtMoney = (n) => parseInt(n).toLocaleString('id-ID');
+const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+const showToast = (msg, type='error') => {
+    const t = $('toast');
+    t.className = `show ${type}`;
+    t.innerText = msg;
+    setTimeout(() => { t.className = t.className.replace("show", ""); }, 3000);
+};
 
+// --- CORE STATE ---
+const STATE = {
+    // Market Data
+    price: 9850,
+    bids: [], 
+    asks: [],
+    trades: [],
+    
+    // User Account (Strict)
+    cash: 1000000000, // 1 Milyar Start
+    portfolio: { pos: 0, avg: 0 },
+
+    // Chart Data
+    candles1m: [], // [{time, o, h, l, c, vol}]
+    candles5m: [],
+    currentTick: null, // Temp aggregator
+    tf: 1, // 1 or 5
+    
+    // System
+    lastUpdate: Date.now()
+};
+
+// --- 1. CHARTING ENGINE (REAL TIME AGGREGATION) ---
+const CHART = {
+    canvas: $('mainChart'),
+    ctx: $('mainChart').getContext('2d'),
+    
     init() {
-        console.log("Engine V6 Started...");
+        this.resize();
+        window.onresize = () => this.resize();
         
-        // 1. Initialize Deep Order Book (Liquid Market)
-        this.resetBook(9850);
+        // Generate Pre-History (So chart isn't empty)
+        let p = 9800;
+        let now = Math.floor(Date.now() / 60000) * 60000; // Round to minute
         
-        // 2. Initialize Chart
-        this.initChartHistory();
-
-        // 3. Start Loops
-        setInterval(() => this.marketPulse(), this.state.tickSpeed); // Market Heartbeat
-        setInterval(() => this.closeCandle(), 5000); // 5s Candle
-        this.render(); // Loop Visual
-        
-        // UI Init
-        this.updateHeader();
-    },
-
-    // --- CORE: ORDER BOOK LOGIC ---
-    resetBook(centerPrice) {
-        this.state.bids = [];
-        this.state.asks = [];
-        // Create huge liquid walls
-        for(let i=1; i<=20; i++) {
-            this.state.bids.push({
-                price: centerPrice - (i * 25),
-                vol: this.genLiquidVol()
-            });
-            this.state.asks.push({
-                price: centerPrice + ((i-1) * 25), // Start Ask exactly at center or tick above? Let's say center is last done. 
-                // Correction: Best Ask should be > Last Price usually, or Last Price is executed at Ask.
-                // Let's set Best Ask = center + 25, Best Bid = center.
-                vol: this.genLiquidVol()
-            });
-        }
-        // Fix gap
-        this.state.asks = this.state.asks.map((a, i) => ({...a, price: centerPrice + ((i+1)*25)}));
-        this.state.bids = this.state.bids.map((b, i) => ({...b, price: centerPrice - (i*25)}));
-        
-        // Sort
-        this.state.bids.sort((a,b) => b.price - a.price); // Desc High to Low
-        this.state.asks.sort((a,b) => a.price - b.price); // Asc Low to High
-    },
-
-    genLiquidVol() {
-        // Real liquid volume: 1000 - 15000 lots
-        return Math.floor(Math.random() * 8000) + 1000;
-    },
-
-    // --- CORE: MATCHING ENGINE (THE REALISM) ---
-    executeOrder(side, vol, isUser) {
-        if (vol <= 0) return;
-        
-        let remaining = vol;
-        let executedPrice = this.state.lastPrice;
-        let totalVal = 0;
-        let avgPriceCalc = 0;
-
-        // MATCHING LOOP
-        while (remaining > 0) {
-            let targetBook = (side === 'BUY') ? this.state.asks : this.state.bids;
+        for(let i=60; i>0; i--) {
+            let t = now - (i * 60000);
+            let o = p;
+            let c = p + randInt(-25, 25);
+            let h = Math.max(o,c) + randInt(0, 10);
+            let l = Math.min(o,c) - randInt(0, 10);
+            STATE.candles1m.push({time: t, o, h, l, c, vol: randInt(100,5000)});
+            p = c;
             
-            // If book empty (unlikely in liquid mode), break
-            if (targetBook.length === 0) break;
-
-            let bestLevel = targetBook[0];
-            let tradeVol = 0;
-
-            if (remaining >= bestLevel.vol) {
-                // EAT ENTIRE LEVEL
-                tradeVol = bestLevel.vol;
-                remaining -= bestLevel.vol;
-                executedPrice = bestLevel.price;
-                
-                // Remove level from book
-                targetBook.shift();
-                
-                // Generate new depth level at the back to keep book full
-                if(side === 'BUY') {
-                    let lastP = this.state.asks[this.state.asks.length-1].price;
-                    this.state.asks.push({price: lastP + 25, vol: this.genLiquidVol()});
-                } else {
-                    let lastP = this.state.bids[this.state.bids.length-1].price;
-                    this.state.bids.push({price: lastP - 25, vol: this.genLiquidVol()});
-                }
-
-            } else {
-                // PARTIAL FILL
-                tradeVol = remaining;
-                bestLevel.vol -= remaining;
-                executedPrice = bestLevel.price;
-                remaining = 0;
-            }
-
-            // Update System Logic
-            this.updateTicker(executedPrice, tradeVol, side, isUser);
-            totalVal += (executedPrice * tradeVol);
-        }
-
-        // Handle Portfolio Logic for User
-        if (isUser) {
-            let filledVol = vol - remaining;
-            if (filledVol > 0) {
-                let avgP = totalVal / filledVol;
-                this.updatePortfolio(side, filledVol, avgP);
+            // Generate 5m (Rough approximation for init)
+            if(i % 5 === 0) {
+                STATE.candles5m.push({time: t, o, h, l, c, vol: randInt(500,20000)});
             }
         }
+        STATE.price = p;
+        this.startNewTick();
+        this.loop();
     },
 
-    // --- MARKET PULSE (AI BOT) ---
-    marketPulse() {
-        const S = this.state;
-        
-        // 1. Trend Logic (Slow Drift)
-        // Every 50 ticks, change bias slightly
-        if(Math.random() < 0.05) S.trendBias = (Math.random() * 2) - 1; 
-
-        // 2. Decide Action
-        let buyProb = 0.5 + (S.trendBias * 0.1); // Bias influences probability
-        
-        // Mode Modifiers
-        if (S.mode === 'hard') {
-            // Defend Resistance (10,000) / Support (9,700)
-            if (S.lastPrice > 9950) buyProb = 0.1; // Big Selling at top
-            if (S.lastPrice < 9750) buyProb = 0.9; // Big Buying at bottom
-        }
-
-        let isBuy = Math.random() < buyProb;
-        
-        // 3. Volume Logic (Normal Retail vs Big Player)
-        // 90% trades are small (1-500 lots), 10% are big (1000-5000 lots)
-        let isBig = Math.random() < 0.1; 
-        let vol = isBig ? Math.floor(Math.random()*4000)+1000 : Math.floor(Math.random()*200)+1;
-
-        // 4. Execute
-        this.executeOrder(isBuy ? 'BUY' : 'SELL', vol, false);
-
-        // 5. Replenish Liquidity (Market Makers)
-        // Randomly add volume to existing Bid/Ask to simulate cancelling/amending
-        if(Math.random() < 0.3) {
-            let randBid = S.bids[Math.floor(Math.random()*5)];
-            if(randBid) randBid.vol += Math.floor(Math.random()*500);
-            
-            let randAsk = S.asks[Math.floor(Math.random()*5)];
-            if(randAsk) randAsk.vol += Math.floor(Math.random()*500);
-        }
+    resize() {
+        this.canvas.width = this.canvas.parentElement.clientWidth;
+        this.canvas.height = this.canvas.parentElement.clientHeight;
     },
 
-    // --- HELPERS ---
-    updateTicker(price, vol, side, isUser) {
-        this.state.lastPrice = price;
-        
-        // Candle Update
-        const C = this.state.currCandle;
-        C.close = price;
-        if(price > C.high) C.high = price;
-        if(price < C.low) C.low = price;
-
-        // Tape Add
-        this.state.trades.unshift({
-            time: new Date().toLocaleTimeString('id-ID', {hour12:false}),
-            price: price,
-            vol: vol,
-            side: side,
-            user: isUser
-        });
-        if(this.state.trades.length > 30) this.state.trades.pop();
+    setTimeframe(min) {
+        STATE.tf = min;
+        $('tf-1m').className = min===1 ? "px-3 py-1 rounded text-xs font-bold bg-[#262B3D] text-white" : "px-3 py-1 rounded text-xs font-bold text-muted hover:text-white";
+        $('tf-5m').className = min===5 ? "px-3 py-1 rounded text-xs font-bold bg-[#262B3D] text-white" : "px-3 py-1 rounded text-xs font-bold text-muted hover:text-white";
     },
 
-    updatePortfolio(side, vol, price) {
-        const P = this.state.portfolio;
-        const val = price * vol * 100;
-
-        if (side === 'BUY') {
-            if (this.state.cash >= val) {
-                this.state.cash -= val;
-                let oldVal = P.pos * P.avg * 100;
-                P.pos += vol;
-                P.avg = (oldVal + val) / (P.pos * 100);
-            }
+    updateCandle(price, vol) {
+        const now = Date.now();
+        // 1m Logic
+        let last1m = STATE.candles1m[STATE.candles1m.length-1];
+        // Check if minute changed
+        if (Math.floor(now / 60000) > Math.floor(last1m.time / 60000)) {
+            // New Candle
+            STATE.candles1m.push({time: now, o: price, h: price, l: price, c: price, vol: vol});
+            if(STATE.candles1m.length > 100) STATE.candles1m.shift();
         } else {
-            // Simple Sell Logic
-            if (P.pos > 0) {
-                let sellVol = Math.min(vol, P.pos);
-                this.state.cash += price * sellVol * 100;
-                P.pos -= sellVol;
-                if (P.pos === 0) P.avg = 0;
+            // Update Current
+            last1m.c = price;
+            last1m.h = Math.max(last1m.h, price);
+            last1m.l = Math.min(last1m.l, price);
+            last1m.vol += vol;
+        }
+
+        // 5m Logic
+        if(STATE.candles5m.length === 0) STATE.candles5m.push({...last1m});
+        let last5m = STATE.candles5m[STATE.candles5m.length-1];
+        if (Math.floor(now / 300000) > Math.floor(last5m.time / 300000)) {
+            STATE.candles5m.push({time: now, o: price, h: price, l: price, c: price, vol: vol});
+             if(STATE.candles5m.length > 60) STATE.candles5m.shift();
+        } else {
+            last5m.c = price;
+            last5m.h = Math.max(last5m.h, price);
+            last5m.l = Math.min(last5m.l, price);
+            last5m.vol += vol;
+        }
+    },
+
+    startNewTick() {
+        // Just ensuring data exists
+        if(STATE.candles1m.length === 0) STATE.candles1m.push({time: Date.now(), o: STATE.price, h:STATE.price, l:STATE.price, c:STATE.price, vol:0});
+    },
+
+    draw() {
+        const ctx = this.ctx;
+        const w = this.canvas.width;
+        const h = this.canvas.height;
+        const data = STATE.tf === 1 ? STATE.candles1m : STATE.candles5m;
+
+        // Clear
+        ctx.fillStyle = '#0E1117';
+        ctx.fillRect(0,0,w,h);
+
+        // Grid
+        ctx.strokeStyle = '#161A25'; ctx.lineWidth = 1;
+        ctx.beginPath();
+        for(let i=0; i<h; i+=50) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
+        for(let i=0; i<w; i+=60) { ctx.moveTo(i,0); ctx.lineTo(i,h); }
+        ctx.stroke();
+
+        // Scale Calculation
+        // View last 60 candles max
+        const viewData = data.slice(-60);
+        let prices = viewData.map(c=>[c.h, c.l]).flat();
+        let minP = Math.min(...prices) - 10;
+        let maxP = Math.max(...prices) + 10;
+        let range = maxP - minP;
+        
+        const getY = (p) => h - ((p - minP) / range) * (h - 40) - 20;
+        const barW = (w - 60) / 60; 
+
+        // Draw Candles
+        viewData.forEach((c, i) => {
+            const x = i * barW + 10;
+            const isUp = c.c >= c.o;
+            const color = isUp ? '#0ECB81' : '#F6465D';
+            
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+
+            // Wick
+            ctx.beginPath();
+            ctx.moveTo(x + barW/2, getY(c.h));
+            ctx.lineTo(x + barW/2, getY(c.l));
+            ctx.stroke();
+
+            // Body
+            let bodyH = Math.abs(getY(c.o) - getY(c.c));
+            if(bodyH < 1) bodyH = 1;
+            ctx.fillRect(x + 1, getY(Math.max(c.o, c.c)), barW - 3, bodyH);
+        });
+
+        // Current Price Line
+        const yP = getY(STATE.price);
+        ctx.strokeStyle = '#ffffff';
+        ctx.setLineDash([2,4]);
+        ctx.beginPath(); ctx.moveTo(0, yP); ctx.lineTo(w, yP); ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Price Label
+        ctx.fillStyle = STATE.price >= viewData[viewData.length-1].o ? '#0ECB81' : '#F6465D';
+        ctx.fillRect(w-50, yP-10, 50, 20);
+        ctx.fillStyle = '#fff';
+        ctx.font = '11px Roboto Mono';
+        ctx.fillText(STATE.price, w-45, yP+4);
+    },
+
+    loop() {
+        this.draw();
+        requestAnimationFrame(() => this.loop());
+    }
+};
+
+// --- 2. MARKET ENGINE (LOGIC & PORTFOLIO) ---
+const ENGINE = {
+    init() {
+        this.buildOrderBook(STATE.price);
+        this.uiLoop();
+        
+        // Market Maker Bot (Adds liquidity & random trades)
+        setInterval(() => this.botTick(), 500); 
+    },
+
+    buildOrderBook(price) {
+        STATE.asks = []; STATE.bids = [];
+        for(let i=0; i<15; i++) {
+            STATE.asks.push({price: price + ((i+1)*25), vol: randInt(1000, 8000)});
+            STATE.bids.push({price: price - (i*25), vol: randInt(1000, 8000)});
+        }
+    },
+
+    // Strict Order Processing
+    submitOrder(side) {
+        const lot = parseInt($('input-lot').value);
+        if(lot <= 0 || isNaN(lot)) return showToast("Invalid Lot Size");
+
+        // VALIDATION
+        if(side === 'BUY') {
+            // Est Cost (Worst case: Best Ask)
+            const bestAsk = STATE.asks[0].price;
+            const estCost = bestAsk * lot * 100;
+            if (STATE.cash < estCost) return showToast("INSUFFICIENT FUNDS (Gagal Bayar)", "error");
+        } else {
+            // Sell Check
+            if (STATE.portfolio.pos < lot) return showToast("REJECTED: Barang Kurang (Short Selling Disabled)", "error");
+        }
+
+        // Execute
+        this.executeTrade(side, lot, true);
+        showToast("Order Sent: " + side, "success");
+    },
+
+    executeTrade(side, vol, isUser) {
+        let remaining = vol;
+        let books = side === 'BUY' ? STATE.asks : STATE.bids;
+        let totalCost = 0;
+        let fillVol = 0;
+
+        while(remaining > 0 && books.length > 0) {
+            let best = books[0];
+            let tradeVol = Math.min(remaining, best.vol);
+            
+            // Update Candle Logic
+            STATE.price = best.price;
+            CHART.updateCandle(best.price, tradeVol);
+
+            // Eat Book
+            best.vol -= tradeVol;
+            remaining -= tradeVol;
+            fillVol += tradeVol;
+            totalCost += (best.price * tradeVol * 100);
+
+            // Record Tape
+            STATE.trades.unshift({
+                time: new Date().toLocaleTimeString('id-ID', {hour12:false}),
+                price: best.price,
+                vol: tradeVol,
+                side: side
+            });
+            if(STATE.trades.length > 40) STATE.trades.pop();
+
+            // Clear level if empty
+            if(best.vol <= 0) {
+                books.shift();
+                // Add new depth
+                if(side==='BUY') {
+                    let last = STATE.asks[STATE.asks.length-1].price;
+                    STATE.asks.push({price: last+25, vol: randInt(1000,5000)});
+                } else {
+                    let last = STATE.bids[STATE.bids.length-1].price;
+                    STATE.bids.push({price: last-25, vol: randInt(1000,5000)});
+                }
             }
         }
-        this.updateHeader();
+
+        // Update Portfolio (If User)
+        if(isUser && fillVol > 0) {
+            this.updatePortfolio(side, fillVol, totalCost);
+        }
     },
 
-    // --- ALGO BUTTONS ---
-    startAlgo(type) {
-        if(this.state.algoInterval) clearInterval(this.state.algoInterval);
-        const lot = parseInt(document.getElementById('user-lot').value);
+    updatePortfolio(side, vol, totalVal) {
+        const P = STATE.portfolio;
+        if(side === 'BUY') {
+            STATE.cash -= totalVal;
+            // Weighted Average
+            let oldVal = P.pos * P.avg * 100;
+            P.pos += vol;
+            P.avg = (oldVal + totalVal) / (P.pos * 100);
+        } else {
+            STATE.cash += totalVal;
+            P.pos -= vol;
+            if(P.pos === 0) P.avg = 0;
+        }
+    },
+
+    botTick() {
+        // Random Bot Trade to move market slightly
+        if(Math.random() > 0.3) return; // Not always trading
         
-        const btn = document.getElementById(type === 'buy' ? 'btn-buy' : 'btn-sell');
-        btn.classList.add('ring-2', 'ring-white', 'animate-pulse');
-
-        this.state.algoInterval = setInterval(() => {
-            this.executeOrder(type.toUpperCase(), lot, true);
-        }, 200); // 5x per second HAKA/HAKI
-    },
-
-    stopAlgo() {
-        if(this.state.algoInterval) clearInterval(this.state.algoInterval);
-        this.state.algoInterval = null;
-        document.querySelectorAll('button').forEach(b => b.classList.remove('ring-2', 'ring-white', 'animate-pulse'));
-    },
-
-    setMode() {
-        this.state.mode = document.getElementById('sim-mode').value;
-        document.getElementById('mode-display').innerText = this.state.mode.toUpperCase() + " MODE";
-    },
-
-    // --- VISUALS ---
-    updateHeader() {
-        const S = this.state;
-        const headPrice = document.getElementById('head-price');
-        headPrice.innerText = S.lastPrice.toLocaleString();
+        const mode = $('input-mode').value;
+        const isVolatile = mode === 'volatile';
         
-        // Color update based on Candle Open
-        let openP = S.currCandle ? S.currCandle.open : S.lastPrice;
-        headPrice.className = `font-bold text-xl mono ${S.lastPrice > openP ? 'text-green-500' : S.lastPrice < openP ? 'text-red-500' : 'text-white'}`;
-
-        document.getElementById('head-cash').innerText = "IDR " + (S.cash/1000000).toFixed(1) + " Jt";
-        document.getElementById('head-pos').innerText = S.portfolio.pos.toLocaleString();
-
-        const pl = (S.lastPrice - S.portfolio.avg) * S.portfolio.pos * 100;
-        const plEl = document.getElementById('head-pl');
-        plEl.innerText = pl.toLocaleString();
-        plEl.className = `font-bold mono ${pl > 0 ? 'text-green-500' : pl < 0 ? 'text-red-500' : 'text-gray-400'}`;
+        const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
+        const vol = randInt(10, isVolatile ? 1000 : 200);
+        
+        this.executeTrade(side, vol, false);
+        
+        // Randomly Replenish Book (Liquidity Provider)
+        if(Math.random() > 0.5) {
+            STATE.asks[randInt(0,4)].vol += randInt(100, 500);
+            STATE.bids[randInt(0,4)].vol += randInt(100, 500);
+        }
     },
 
-    render() {
-        requestAnimationFrame(() => this.render());
+    uiLoop() {
+        requestAnimationFrame(() => this.uiLoop());
         
-        // 1. Render Order Book (OPTIMIZED)
-        const bookEl = document.getElementById('book-container');
+        // 1. Render Book
+        const bookEl = $('book-container');
         let html = '';
-        
-        // Show 10 levels best Asks (reversed to be on top)
-        let asks = this.state.asks.slice(0, 10).reverse();
-        asks.forEach(a => {
-            let w = Math.min((a.vol/10000)*100, 100); // Max bar at 10k lots
-            html += `
-            <div class="grid grid-cols-3 text-[11px] py-[1px] hover:bg-gray-800 relative cursor-pointer" onclick="APP.executeOrder('BUY', ${a.vol}, true)">
+        // Asks (Reverse)
+        [...STATE.asks].slice(0, 8).reverse().forEach(a => {
+            let w = Math.min((a.vol/10000)*100, 100);
+            html += `<div class="grid grid-cols-3 px-2 py-0.5 relative text-xs hover:bg-[#1E232F] cursor-pointer" onclick="ENGINE.executeTrade('BUY', ${a.vol}, true)">
                 <div class="bar-ask" style="width:${w}%"></div>
-                <span class="text-right pr-2 z-10 text-gray-700 font-mono">-</span>
-                <span class="text-center z-10 text-red-500 font-bold font-mono">${a.price.toLocaleString()}</span>
-                <span class="text-left pl-2 z-10 text-gray-400 font-mono">${a.vol.toLocaleString()}</span>
+                <span class="text-left z-10 text-muted">-</span>
+                <span class="text-center z-10 text-down font-mono font-bold">${a.price.toLocaleString()}</span>
+                <span class="text-right z-10 text-muted font-mono">${a.vol.toLocaleString()}</span>
             </div>`;
         });
-
-        // Current Price Spread Separator
-        html += `<div class="bg-[#1a1d26] text-center text-[9px] text-gray-500 py-0.5 border-y border-gray-800">SPREAD</div>`;
-
-        // Show 10 levels best Bids
-        let bids = this.state.bids.slice(0, 10);
-        bids.forEach(b => {
+        // Spread
+        html += `<div class="text-center text-[10px] text-muted py-0.5 bg-[#1E232F] border-y border-[#262B3D] my-1">SPREAD: ${(STATE.asks[0].price - STATE.bids[0].price)}</div>`;
+        // Bids
+        STATE.bids.slice(0, 8).forEach(b => {
             let w = Math.min((b.vol/10000)*100, 100);
-            html += `
-            <div class="grid grid-cols-3 text-[11px] py-[1px] hover:bg-gray-800 relative cursor-pointer" onclick="APP.executeOrder('SELL', ${b.vol}, true)">
+            html += `<div class="grid grid-cols-3 px-2 py-0.5 relative text-xs hover:bg-[#1E232F] cursor-pointer" onclick="ENGINE.executeTrade('SELL', ${b.vol}, true)">
                 <div class="bar-bid" style="width:${w}%"></div>
-                <span class="text-right pr-2 z-10 text-gray-300 font-mono">${b.vol.toLocaleString()}</span>
-                <span class="text-center z-10 text-green-500 font-bold font-mono">${b.price.toLocaleString()}</span>
-                <span class="text-left pl-2 z-10 text-gray-700 font-mono">-</span>
+                <span class="text-left z-10 text-muted font-mono">${b.vol.toLocaleString()}</span>
+                <span class="text-center z-10 text-up font-mono font-bold">${b.price.toLocaleString()}</span>
+                <span class="text-right z-10 text-muted">-</span>
             </div>`;
         });
         bookEl.innerHTML = html;
 
         // 2. Render Tape
-        const tapeEl = document.getElementById('tape-container');
-        let tHtml = '';
-        this.state.trades.forEach(t => {
-            let col = t.side === 'BUY' ? 'text-green-500' : 'text-red-500';
-            let bg = t.user ? 'bg-blue-900/30' : '';
-            tHtml += `
-            <div class="grid grid-cols-3 px-1 border-b border-gray-800 py-0.5 ${bg}">
-                <span class="text-gray-500">${t.time.split('.')[0]}</span>
-                <span class="${col} text-center">${t.price}</span>
-                <span class="text-right text-white">${t.vol}</span>
+        const tapeEl = $('tape-container');
+        let tapeHtml = '';
+        STATE.trades.forEach(t => {
+            let col = t.side==='BUY' ? 'text-up' : 'text-down';
+            tapeHtml += `<div class="grid grid-cols-3 px-2 py-0.5 border-b border-[#262B3D]">
+                <span class="text-muted">${t.time}</span>
+                <span class="text-center font-bold ${col}">${t.price}</span>
+                <span class="text-right text-gray-400">${t.vol}</span>
             </div>`;
         });
-        tapeEl.innerHTML = tHtml;
+        tapeEl.innerHTML = tapeHtml;
 
-        // 3. Render Chart
-        this.drawChart();
-    },
+        // 3. Header Stats
+        const P = STATE.portfolio;
+        const currentVal = P.pos * STATE.price * 100;
+        const equity = STATE.cash + currentVal;
+        const pl = (STATE.price - P.avg) * P.pos * 100;
 
-    // --- CHART ENGINE ---
-    initChartHistory() {
-        let p = 9800;
-        for(let i=0; i<50; i++) {
-            let o = p;
-            let c = p + (Math.random()-0.5)*20;
-            this.state.candles.push({open:o, close:c, high: Math.max(o,c)+5, low: Math.min(o,c)-5});
-            p = c;
-        }
-        this.startCandle(p);
-    },
-    startCandle(p) { this.state.currCandle = {open:p, close:p, high:p, low:p}; },
-    closeCandle() {
-        this.state.candles.push({...this.state.currCandle});
-        if(this.state.candles.length > 80) this.state.candles.shift();
-        this.startCandle(this.state.currCandle.close);
-    },
-    drawChart() {
-        const c = document.getElementById('chartCanvas');
-        const ctx = c.getContext('2d');
-        
-        // Auto Resize
-        if(c.width !== c.parentElement.clientWidth) {
-            c.width = c.parentElement.clientWidth;
-            c.height = c.parentElement.clientHeight;
-        }
-        const w = c.width; 
-        const h = c.height;
+        $('head-price').innerText = STATE.price.toLocaleString();
+        $('head-price').className = `font-bold text-lg mono ${STATE.price > STATE.candles1m[STATE.candles1m.length-1]?.o ? 'text-up' : 'text-down'}`;
+        $('head-cash').innerText = "IDR " + fmtMoney(equity);
+        $('head-pl').innerText = "IDR " + fmtMoney(pl);
+        $('head-pl').className = `font-bold mono text-right ${pl>=0 ? 'text-up':'text-down'}`;
 
-        // Bg
-        ctx.fillStyle = '#050709';
-        ctx.fillRect(0,0,w,h);
-
-        // Grid
-        ctx.strokeStyle = '#1e222d'; ctx.lineWidth = 1;
-        ctx.beginPath();
-        for(let i=0; i<h; i+=40) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
-        ctx.stroke();
-
-        // Data Scale
-        const data = [...this.state.candles, this.state.currCandle];
-        let vals = data.map(d=>[d.high, d.low]).flat();
-        let min = Math.min(...vals) - 10;
-        let max = Math.max(...vals) + 10;
-        const getY = p => h - ((p-min)/(max-min))*h;
-        const barW = (w-20) / data.length;
-
-        // Draw Candles
-        data.forEach((d, i) => {
-            let x = 10 + (i*barW);
-            let isUp = d.close >= d.open;
-            ctx.strokeStyle = isUp ? '#22c55e' : '#ef4444';
-            ctx.fillStyle = isUp ? '#22c55e' : '#ef4444';
-            
-            // Wick
-            ctx.beginPath();
-            ctx.moveTo(x + barW/2, getY(d.high));
-            ctx.lineTo(x + barW/2, getY(d.low));
-            ctx.stroke();
-
-            // Body
-            let bodyH = Math.max(1, Math.abs(getY(d.open) - getY(d.close)));
-            ctx.fillRect(x + 1, getY(Math.max(d.open, d.close)), barW - 2, bodyH);
-        });
-
-        // Price Line
-        let py = getY(this.state.lastPrice);
-        ctx.strokeStyle = '#fff';
-        ctx.setLineDash([2,4]);
-        ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke(); ctx.setLineDash([]);
+        $('lbl-avg').innerText = Math.round(P.avg).toLocaleString();
+        $('lbl-pos').innerText = P.pos.toLocaleString();
     }
 };
 
-window.onload = () => APP.init();
+// START
+window.onload = () => {
+    CHART.init();
+    ENGINE.init();
+};
+
 </script>
 </body>
 </html>
