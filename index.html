@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAlgo Pro v2.5 - MM Training Mode</title>
+    <title>SmartAlgo Pro v3.0 - Market Maker Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -17,6 +17,7 @@
         input { background: #000 !important; color: #00ff00 !important; border: 1px solid #222 !important; text-align: center; }
         .trade-row { animation: slideIn 0.2s ease-out; }
         @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .sentiment-bar { transition: width 0.5s ease-in-out; }
     </style>
 </head>
 <body class="flex h-screen w-screen text-[13px]">
@@ -27,35 +28,38 @@
     </aside>
 
     <main class="flex-1 flex flex-col">
-        <header class="h-14 bg-sidebar border-b border-stockbit flex items-center px-6 justify-between">
+        <header class="h-16 bg-sidebar border-b border-stockbit flex items-center px-6 justify-between">
             <div class="flex items-center space-x-8">
                 <div>
-                    <span class="text-gray-500 text-[10px] block uppercase">Ticker</span>
+                    <span class="text-gray-500 text-[10px] block uppercase tracking-tighter">Ticker</span>
                     <span class="font-bold text-lg text-white">$BBCA</span>
                 </div>
                 <div>
-                    <span class="text-gray-500 text-[10px] block uppercase">Last Price</span>
+                    <span class="text-gray-500 text-[10px] block uppercase tracking-tighter">Last Price</span>
                     <div class="text-green-500 font-bold mono text-xl" id="live-price">9,850</div>
                 </div>
                 <div class="border-l border-gray-800 pl-8">
-                    <span class="text-gray-500 text-[10px] block uppercase">Regime</span>
-                    <div class="text-yellow-500 font-bold mono uppercase animate-pulse" id="market-regime">SIDEWAYS</div>
+                    <span class="text-gray-500 text-[10px] block uppercase tracking-tighter">Market Regime</span>
+                    <div class="text-yellow-500 font-bold mono uppercase text-xs" id="market-regime">INITIALIZING...</div>
+                </div>
+                <div class="border-l border-gray-800 pl-8 w-32">
+                    <span class="text-gray-500 text-[10px] block uppercase tracking-tighter">Market Psychology</span>
+                    <div class="w-full bg-gray-900 h-1.5 mt-1.5 rounded-full overflow-hidden">
+                        <div id="sentiment-bar" class="h-full bg-blue-500 sentiment-bar" style="width: 50%;"></div>
+                    </div>
+                    <div class="text-[9px] mt-1 flex justify-between uppercase mono">
+                        <span id="psy-label">Neutral</span>
+                    </div>
                 </div>
                 <div class="border-l border-gray-800 pl-8">
-                    <span class="text-gray-500 text-[10px] block uppercase">Net Position</span>
+                    <span class="text-gray-500 text-[10px] block uppercase tracking-tighter">Net Position</span>
                     <div class="text-white font-bold mono" id="my-pos">0 LOT</div>
-                </div>
-                <div class="border-l border-gray-800 pl-8">
-                    <span class="text-gray-500 text-[10px] block uppercase">Avg Price</span>
-                    <div class="text-blue-400 font-bold mono" id="avg-price">0</div>
                 </div>
             </div>
 
-            <div class="flex items-center space-x-4">
-                <div class="text-right">
-                    <span class="text-gray-500 text-[10px] block uppercase">Unrealized P/L</span>
-                    <div class="font-bold mono text-sm" id="floating-pl">IDR 0</div>
-                </div>
+            <div class="flex flex-col items-end">
+                <span class="text-gray-500 text-[10px] uppercase">Unrealized P/L</span>
+                <div class="font-bold mono text-lg" id="floating-pl">IDR 0</div>
             </div>
         </header>
 
@@ -64,25 +68,26 @@
                 <div class="flex-1 relative">
                     <canvas id="mainChart" class="w-full h-full"></canvas>
                 </div>
-                <div class="h-48 bg-black/40 border-t border-stockbit backdrop-blur-md flex flex-col">
-                    <div class="px-4 py-1 border-b border-stockbit flex justify-between items-center bg-black/60">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Running Trade</span>
-                        <span class="text-[9px] text-gray-600 mono" id="rt-clock">--:--:--</span>
+                <div class="h-44 bg-black/40 border-t border-stockbit backdrop-blur-md flex flex-col">
+                    <div class="px-4 py-1.5 border-b border-stockbit flex justify-between items-center bg-black/60">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Running Trade Stream</span>
+                        <div class="flex items-center space-x-3">
+                             <span class="text-[9px] text-gray-500" id="vol-indicator">VOL: 0</span>
+                             <span class="text-[9px] text-gray-600 mono" id="rt-clock">--:--:--</span>
+                        </div>
                     </div>
                     <div class="flex-1 overflow-y-auto px-4 py-2 mono text-[11px]" id="running-trade-list"></div>
                 </div>
             </div>
 
-            <div class="w-[420px] bg-sidebar border-l border-stockbit flex flex-col">
+            <div class="w-[440px] bg-sidebar border-l border-stockbit flex flex-col">
                 <div class="p-3 flex-1 overflow-hidden flex flex-col">
                     <div class="flex justify-between items-center mb-2 px-1">
-                        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[2px]">Market Depth</h3>
-                        <div class="flex space-x-2">
-                            <span id="activity-light" class="w-2 h-2 bg-green-500 rounded-full"></span>
-                        </div>
+                        <h3 class="text-[10px] font-bold text-gray-500 uppercase tracking-[2px]">Unified Order Book</h3>
+                        <div id="activity-light" class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
                     </div>
 
-                    <div class="grid grid-cols-6 text-[9px] text-gray-600 mb-2 px-2 font-bold uppercase border-b border-stockbit pb-1">
+                    <div class="grid grid-cols-6 text-[9px] text-gray-600 mb-2 px-2 font-bold uppercase border-b border-stockbit pb-1.5">
                         <span>Freq</span><span>Vol</span><span class="text-right">Bid</span>
                         <span class="pl-4">Offer</span><span class="text-right">Vol</span><span class="text-right">Freq</span>
                     </div>
@@ -90,25 +95,25 @@
                     <div id="order-book-list" class="flex-1 overflow-y-auto space-y-[0px] mono text-[11px]"></div>
                 </div>
 
-                <div class="p-4 bg-card border-t border-stockbit space-y-4">
-                    <div class="grid grid-cols-2 gap-2">
+                <div class="p-4 bg-card border-t border-stockbit space-y-4 shadow-2xl">
+                    <div class="grid grid-cols-2 gap-3">
                         <div class="space-y-1">
-                            <label class="text-[9px] text-gray-500 uppercase">Algo Lot Size</label>
-                            <input type="number" id="order-size" value="1000" class="w-full p-2 rounded text-sm font-bold">
+                            <label class="text-[9px] text-gray-500 uppercase font-bold">Execution Lot</label>
+                            <input type="number" id="order-size" value="1000" class="w-full p-2.5 rounded border border-gray-800 text-sm font-bold bg-black">
                         </div>
                         <div class="space-y-1">
-                            <label class="text-[9px] text-gray-500 uppercase">Interval (ms)</label>
-                            <input type="number" id="algo-speed" value="100" class="w-full p-2 rounded text-sm font-bold">
+                            <label class="text-[9px] text-gray-500 uppercase font-bold">Algo Speed (ms)</label>
+                            <input type="number" id="algo-speed" value="200" class="w-full p-2.5 rounded border border-gray-800 text-sm font-bold bg-black">
                         </div>
                     </div>
 
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="startAlgo('accum')" class="bg-green-600 py-3 rounded text-[10px] font-bold text-white hover:bg-green-500 uppercase">Haka Accum</button>
-                        <button onclick="startAlgo('distrib')" class="bg-red-600 py-3 rounded text-[10px] font-bold text-white hover:bg-red-500 uppercase">Haki Distrib</button>
+                        <button onclick="startAlgo('accum')" class="bg-green-600 py-3.5 rounded text-[10px] font-bold text-white hover:bg-green-500 uppercase transition-colors shadow-lg shadow-green-900/10">Haka Accumulate</button>
+                        <button onclick="startAlgo('distrib')" class="bg-red-600 py-3.5 rounded text-[10px] font-bold text-white hover:bg-red-500 uppercase transition-colors shadow-lg shadow-red-900/10">Haki Distribute</button>
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="startAlgo('wash')" class="bg-blue-600/20 border border-blue-600/50 text-blue-400 py-2 rounded text-[10px] font-bold uppercase">Wash Trade</button>
-                        <button onclick="stopAlgos()" class="bg-gray-800 text-white py-2 rounded text-[10px] font-bold uppercase">Emergency Stop</button>
+                        <button onclick="startAlgo('wash')" class="bg-blue-600/20 border border-blue-600/50 text-blue-400 py-2.5 rounded text-[10px] font-bold uppercase hover:bg-blue-600/30">Wash Trade</button>
+                        <button onclick="stopAlgos()" class="bg-gray-800 text-white py-2.5 rounded text-[10px] font-bold uppercase hover:bg-gray-700">Stop All Algos</button>
                     </div>
                 </div>
             </div>
@@ -123,21 +128,28 @@
         let tradeLogs = [];
         let algoInterval = null, marketInterval = null;
         
-        // --- LOGIKA REGIME BARU ---
-        const REGIMES = ['SIDEWAYS', 'BULL', 'BEAR', 'BIAS_BULL', 'BIAS_BEAR'];
+        // --- SENTIMENT & REGIME LOGIC ---
+        let marketSentiment = 50; // 0 (Panic) to 100 (FOMO)
+        const REGIMES = ['SIDEWAYS', 'BULL', 'BEAR', 'BIAS_BULL', 'BIAS_BEAR', 'SPIKE_UP', 'SPIKE_DOWN'];
         let currentRegime = 'SIDEWAYS';
 
         function updateRegime() {
-            currentRegime = REGIMES[Math.floor(Math.random() * REGIMES.length)];
-            document.getElementById('market-regime').innerText = currentRegime.replace('_',' ');
-            // Ganti regime setiap 30-60 detik
-            setTimeout(updateRegime, Math.random() * 30000 + 30000);
+            const roll = Math.random();
+            if(roll < 0.05) currentRegime = 'SPIKE_UP';
+            else if(roll < 0.10) currentRegime = 'SPIKE_DOWN';
+            else currentRegime = REGIMES[Math.floor(Math.random() * 5)]; // Pick from standard 5
+            
+            const el = document.getElementById('market-regime');
+            el.innerText = currentRegime.replace('_',' ');
+            el.className = currentRegime.includes('UP') || currentRegime === 'BULL' ? 'text-green-500 font-bold mono text-xs animate-pulse' : 
+                           currentRegime.includes('DOWN') || currentRegime === 'BEAR' ? 'text-red-500 font-bold mono text-xs animate-pulse' : 'text-yellow-500 font-bold mono text-xs';
+            
+            setTimeout(updateRegime, Math.random() * 20000 + 15000);
         }
 
         // --- CHART ENGINE ---
         const canvas = document.getElementById('mainChart');
         const ctx = canvas.getContext('2d');
-
         function initChart() {
             let p = 9800;
             for(let i=0; i<80; i++) {
@@ -148,23 +160,20 @@
             }
             resize(); animate();
         }
-
         function resize() {
             canvas.width = canvas.parentElement.clientWidth;
             canvas.height = canvas.parentElement.clientHeight;
         }
         window.onresize = resize;
-
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const padding = 60;
             const candleWidth = (canvas.width - padding*2) / history.length;
             const prices = history.map(h => [h.high, h.low]).flat();
-            const maxP = Math.max(...prices) + 5;
-            const minP = Math.min(...prices) - 5;
+            const maxP = Math.max(...prices) + 10;
+            const minP = Math.min(...prices) - 10;
             const range = maxP - minP;
             const getY = (p) => canvas.height - padding - ((p - minP) / range) * (canvas.height - padding*2);
-
             history.forEach((c, i) => {
                 const x = padding + i * candleWidth;
                 const color = c.close >= c.open ? '#22c55e' : '#ef4444';
@@ -180,7 +189,7 @@
             requestAnimationFrame(animate);
         }
 
-        // --- ADVANCED MARKET ENGINE ---
+        // --- MARKET ENGINE V3 (REACTIVE) ---
         function initMarket() {
             bookData.asks = []; bookData.bids = [];
             for(let i=0; i<15; i++) {
@@ -191,51 +200,57 @@
             runMarketEngine();
         }
 
-        const randVol = () => Math.floor(Math.random() * 5000) + 100;
-        const randFreq = () => Math.floor(Math.random() * 30) + 1;
+        const randVol = () => Math.floor(Math.random() * 6000) + 200;
+        const randFreq = () => Math.floor(Math.random() * 45) + 1;
 
         function runMarketEngine() {
             if(marketInterval) clearInterval(marketInterval);
             
             marketInterval = setInterval(() => {
-                // 1. Logika Spike Mendadak (0.5% chance)
-                if(Math.random() < 0.005) {
-                    const spikeSide = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                    executeTrade(spikeSide, 15000, false); // Massive order
-                    return;
-                }
+                // Decay Sentiment (Kembali ke Netral 50)
+                if(marketSentiment > 52) marketSentiment -= 0.5;
+                if(marketSentiment < 48) marketSentiment += 0.5;
 
-                // 2. Hitung Supply vs Demand (Imbalance)
-                const totalBidVol = bookData.bids.slice(0,5).reduce((a,b) => a + b.vol, 0);
-                const totalAskVol = bookData.asks.slice(0,5).reduce((a,b) => a + b.vol, 0);
-                const imbalance = totalBidVol / (totalBidVol + totalAskVol);
+                // Hitung Imbalance
+                const bidV = bookData.bids.slice(0,3).reduce((a,b) => a + b.vol, 0);
+                const askV = bookData.asks.slice(0,3).reduce((a,b) => a + b.vol, 0);
+                const imbalance = bidV / (bidV + askV);
 
-                // 3. Tentukan Bias berdasarkan Regime + Imbalance
+                // Base Probability dari Regime
                 let buyProb = 0.5;
-                if(currentRegime === 'BULL') buyProb = 0.75;
-                if(currentRegime === 'BEAR') buyProb = 0.25;
-                if(currentRegime === 'BIAS_BULL') buyProb = 0.60;
-                if(currentRegime === 'BIAS_BEAR') buyProb = 0.40;
-                
-                // Tambahkan pengaruh supply demand ke probabilitas
-                buyProb = (buyProb + imbalance) / 2;
+                if(currentRegime === 'BULL' || currentRegime === 'SPIKE_UP') buyProb = 0.8;
+                if(currentRegime === 'BEAR' || currentRegime === 'SPIKE_DOWN') buyProb = 0.2;
+                if(currentRegime === 'BIAS_BULL') buyProb = 0.6;
+                if(currentRegime === 'BIAS_BEAR') buyProb = 0.4;
 
-                const side = Math.random() < buyProb ? 'BUY' : 'SELL';
-                const size = Math.floor(Math.random() * 800) + 50;
+                // Tambahkan Efek Sentiment (FOMO/PANIC) + Imbalance
+                // Jika sentiment > 70, retail FOMO parah. Jika < 30, retail Panic.
+                let finalProb = (buyProb * 0.4) + ((marketSentiment/100) * 0.4) + (imbalance * 0.2);
                 
-                executeTrade(side, size, false);
+                const side = Math.random() < finalProb ? 'BUY' : 'SELL';
+                const size = Math.floor(Math.random() * 1200 * (marketSentiment/50));
                 
-                // Refill Liquidity secara dinamis
-                bookData.asks.forEach(a => a.vol += Math.floor(Math.random()*120));
-                bookData.bids.forEach(b => b.vol += Math.floor(Math.random()*120));
+                executeTrade(side, Math.max(50, size), false);
                 
+                // Liquidity Refill (MM lain di pasar)
+                bookData.asks.forEach(a => a.vol += Math.floor(Math.random()*250));
+                bookData.bids.forEach(b => b.vol += Math.floor(Math.random()*250));
+                
+                updatePsychologyUI();
                 renderBook();
-            }, 300); // Konsisten di 300ms untuk feel yang pas
+            }, 250);
         }
 
         function executeTrade(side, amount, isSmartMoney) {
             if(amount <= 0) return;
             totalVol += amount;
+            
+            // Reaksi Sentiment jika Smart Money (User) Beraksi
+            if(isSmartMoney) {
+                if(side === 'BUY') marketSentiment = Math.min(100, marketSentiment + (amount/500));
+                else marketSentiment = Math.max(0, marketSentiment - (amount/500));
+            }
+
             addTradeLog(side, currentPrice, amount, isSmartMoney);
 
             if(side === 'BUY') {
@@ -247,11 +262,10 @@
                     bookData.asks.push({ price: bookData.asks[bookData.asks.length-1].price + 2, vol: randVol(), freq: randFreq() });
                     bookData.bids.unshift({ price: currentPrice, vol: randVol()/2, freq: 1 });
                     bookData.bids.pop();
-                    // Jika supply habis, rekursif untuk sisa lot
                     executeTrade('BUY', amount - target.vol, isSmartMoney);
                 } else {
                     target.vol -= amount;
-                    target.freq = Math.max(1, target.freq + 1);
+                    target.freq += isSmartMoney ? 5 : 1;
                     currentPrice = target.price;
                     if(isSmartMoney) updatePortfolio('BUY', currentPrice, amount);
                 }
@@ -267,13 +281,25 @@
                     executeTrade('SELL', amount - target.vol, isSmartMoney);
                 } else {
                     target.vol -= amount;
-                    target.freq = Math.max(1, target.freq + 1);
+                    target.freq += isSmartMoney ? 5 : 1;
                     currentPrice = target.price;
                     if(isSmartMoney) updatePortfolio('SELL', currentPrice, amount);
                 }
             }
             updateChartState();
             updateUI();
+        }
+
+        function updatePsychologyUI() {
+            const bar = document.getElementById('sentiment-bar');
+            const label = document.getElementById('psy-label');
+            bar.style.width = `${marketSentiment}%`;
+            
+            if(marketSentiment > 75) { label.innerText = "Extreme FOMO"; bar.className = "h-full bg-green-500 sentiment-bar"; }
+            else if(marketSentiment > 55) { label.innerText = "Greed"; bar.className = "h-full bg-blue-500 sentiment-bar"; }
+            else if(marketSentiment > 45) { label.innerText = "Neutral"; bar.className = "h-full bg-gray-500 sentiment-bar"; }
+            else if(marketSentiment > 25) { label.innerText = "Fear"; bar.className = "h-full bg-orange-500 sentiment-bar"; }
+            else { label.innerText = "Panic Selling"; bar.className = "h-full bg-red-600 sentiment-bar"; }
         }
 
         function updateChartState() {
@@ -286,22 +312,23 @@
         function addTradeLog(side, price, vol, isSmart) {
             const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
             tradeLogs.unshift({ time, side, price, vol, isSmart });
-            if(tradeLogs.length > 50) tradeLogs.pop();
+            if(tradeLogs.length > 40) tradeLogs.pop();
             renderRunningTrade();
         }
 
         function renderRunningTrade() {
             const container = document.getElementById('running-trade-list');
             container.innerHTML = tradeLogs.map(t => `
-                <div class="grid grid-cols-5 py-[2px] border-b border-white/[0.02] trade-row ${t.isSmart ? 'bg-blue-500/10' : ''}">
+                <div class="grid grid-cols-5 py-[3px] border-b border-white/[0.02] trade-row ${t.isSmart ? 'bg-blue-600/20' : ''}">
                     <span class="text-gray-600">${t.time}</span>
                     <span class="text-white font-bold">$BBCA</span>
                     <span class="${t.side === 'BUY' ? 'text-green-500' : 'text-red-500'} font-bold">${t.price.toLocaleString()}</span>
                     <span class="${t.side === 'BUY' ? 'text-green-500' : 'text-red-500'} text-right">${t.side === 'BUY' ? '↑' : '↓'}</span>
-                    <span class="text-gray-400 text-right">${t.vol.toLocaleString()}</span>
+                    <span class="text-gray-300 text-right font-bold">${t.vol.toLocaleString()}</span>
                 </div>
             `).join('');
             document.getElementById('rt-clock').innerText = new Date().toLocaleTimeString('id-ID', { hour12: false });
+            document.getElementById('vol-indicator').innerText = `ACCUM VOL: ${totalVol.toLocaleString()}`;
         }
 
         function renderBook() {
@@ -311,7 +338,7 @@
                 const bid = bookData.bids[i] || { freq: 0, vol: 0, price: 0 };
                 const ask = bookData.asks[i] || { freq: 0, vol: 0, price: 0 };
                 html += `
-                <div class="grid grid-cols-6 px-2 py-[4px] hover:bg-white/5 transition border-b border-white/[0.02] items-center">
+                <div class="grid grid-cols-6 px-2 py-[4.5px] hover:bg-white/5 transition border-b border-white/[0.02] items-center">
                     <span class="text-gray-600 text-[9px]">${bid.freq}</span>
                     <span class="text-gray-400 font-bold">${bid.vol.toLocaleString()}</span>
                     <span class="text-green-500 font-bold text-right">${bid.price.toLocaleString()}</span>
@@ -321,7 +348,6 @@
                 </div>`;
             }
             list.innerHTML = html;
-            document.getElementById('activity-light').className = `w-2 h-2 rounded-full ${currentRegime.includes('BULL') ? 'bg-green-500 animate-pulse' : 'bg-red-500 animate-pulse'}`;
         }
 
         function updatePortfolio(side, price, lot) {
