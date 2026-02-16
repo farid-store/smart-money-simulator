@@ -15,10 +15,10 @@
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: #333; }
         input { background: #000 !important; color: #00ff00 !important; border: 1px solid #222 !important; text-align: center; }
-        .flash-red { animation: flashR 0.2s; }
-        .flash-green { animation: flashG 0.2s; }
-        @keyframes flashR { from { background: rgba(239, 68, 68, 0.3); } to { background: transparent; } }
-        @keyframes flashG { from { background: rgba(34, 197, 94, 0.3); } to { background: transparent; } }
+        
+        /* Animasi Running Trade Baru */
+        .trade-row { animation: slideIn 0.2s ease-out; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
 <body class="flex h-screen w-screen text-[13px]">
@@ -65,12 +65,18 @@
         </header>
 
         <div class="flex-1 flex overflow-hidden">
-            <div class="flex-1 relative bg-[#050709] overflow-hidden">
-                <canvas id="mainChart" class="w-full h-full"></canvas>
-                <div class="absolute bottom-4 left-4 flex space-x-2">
-                    <div class="bg-black/80 p-2 rounded text-[9px] mono text-gray-500 border border-gray-800">
-                        VOL: <span id="total-vol" class="text-white">0</span>
+            <div class="flex-1 flex flex-col relative bg-[#050709] overflow-hidden">
+                <div class="flex-1 relative">
+                    <canvas id="mainChart" class="w-full h-full"></canvas>
+                </div>
+
+                <div class="h-48 bg-black/40 border-t border-stockbit backdrop-blur-md flex flex-col">
+                    <div class="px-4 py-1 border-b border-stockbit flex justify-between items-center bg-black/60">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Running Trade</span>
+                        <span class="text-[9px] text-gray-600 mono" id="rt-clock">--:--:--</span>
                     </div>
+                    <div class="flex-1 overflow-y-auto px-4 py-2 mono text-[11px]" id="running-trade-list">
+                        </div>
                 </div>
             </div>
 
@@ -86,8 +92,7 @@
                         <span class="pl-4">Offer</span><span class="text-right">Vol</span><span class="text-right">Freq</span>
                     </div>
 
-                    <div id="order-book-list" class="flex-1 overflow-y-auto space-y-[0px] mono text-[11px]">
-                        </div>
+                    <div id="order-book-list" class="flex-1 overflow-y-auto space-y-[0px] mono text-[11px]"></div>
                 </div>
 
                 <div class="p-4 bg-card border-t border-stockbit space-y-4">
@@ -121,9 +126,8 @@
         let myPos = 0, myAvg = 0, myCost = 0, totalVol = 0;
         let bookData = { asks: [], bids: [] };
         let history = [];
-        let algoInterval = null;
-        let marketInterval = null;
-        let mode = 'normal';
+        let tradeLogs = []; // Untuk Running Trade
+        let algoInterval = null, marketInterval = null, mode = 'normal';
 
         // --- CHART ENGINE ---
         const canvas = document.getElementById('mainChart');
@@ -172,10 +176,9 @@
             requestAnimationFrame(animate);
         }
 
-        // --- MARKET LOGIC ---
+        // --- MARKET ENGINE ---
         function initMarket() {
-            bookData.asks = [];
-            bookData.bids = [];
+            bookData.asks = []; bookData.bids = [];
             for(let i=0; i<15; i++) {
                 bookData.asks.push({ price: currentPrice + ((i+1)*2), vol: randVol(), freq: randFreq() });
                 bookData.bids.push({ price: currentPrice - (i*2), vol: randVol(), freq: randFreq() });
@@ -193,8 +196,8 @@
                 const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
                 const noiseSize = mode === 'hard' ? Math.random() * 3000 : Math.random() * 500;
                 executeTrade(side, Math.floor(noiseSize), false);
-                bookData.asks.forEach(a => a.vol += Math.floor(Math.random()*200));
-                bookData.bids.forEach(b => b.vol += Math.floor(Math.random()*200));
+                bookData.asks.forEach(a => a.vol += Math.floor(Math.random()*150));
+                bookData.bids.forEach(b => b.vol += Math.floor(Math.random()*150));
                 renderBook();
             }, speed);
         }
@@ -202,6 +205,10 @@
         function executeTrade(side, amount, isSmartMoney) {
             if(amount <= 0) return;
             totalVol += amount;
+            
+            // Catat log untuk Running Trade
+            addTradeLog(side, currentPrice, amount, isSmartMoney);
+
             if(side === 'BUY') {
                 let target = bookData.asks[0];
                 if(amount >= target.vol) {
@@ -240,27 +247,46 @@
             updateUI();
         }
 
-        // --- REVISED RENDER BOOK (STOCKBIT STYLE) ---
+        // --- NEW: RUNNING TRADE LOGIC ---
+        function addTradeLog(side, price, vol, isSmart) {
+            const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
+            const log = { time, side, price, vol, isSmart };
+            tradeLogs.unshift(log);
+            if(tradeLogs.length > 50) tradeLogs.pop();
+            renderRunningTrade();
+        }
+
+        function renderRunningTrade() {
+            const container = document.getElementById('running-trade-list');
+            container.innerHTML = tradeLogs.map(t => `
+                <div class="grid grid-cols-5 py-[2px] border-b border-white/[0.02] trade-row">
+                    <span class="text-gray-600">${t.time}</span>
+                    <span class="text-white font-bold">$BBCA</span>
+                    <span class="${t.side === 'BUY' ? 'text-green-500' : 'text-red-500'} font-bold">${t.price.toLocaleString()}</span>
+                    <span class="${t.side === 'BUY' ? 'text-green-500' : 'text-red-500'} text-right">${t.side === 'BUY' ? '↑' : '↓'}</span>
+                    <span class="text-gray-400 text-right">${t.vol.toLocaleString()}</span>
+                </div>
+            `).join('');
+            document.getElementById('rt-clock').innerText = new Date().toLocaleTimeString('id-ID', { hour12: false });
+        }
+
+        // --- RENDER BOOK (UNIFIED) ---
         function renderBook() {
             const list = document.getElementById('order-book-list');
             let html = '';
-            
             for (let i = 0; i < 15; i++) {
                 const bid = bookData.bids[i] || { freq: 0, vol: 0, price: 0 };
                 const ask = bookData.asks[i] || { freq: 0, vol: 0, price: 0 };
-
                 html += `
                 <div class="grid grid-cols-6 px-2 py-[4px] hover:bg-white/5 transition border-b border-white/[0.02] items-center">
                     <span class="text-gray-600 text-[9px]">${bid.freq}</span>
                     <span class="text-gray-400 font-bold">${bid.vol.toLocaleString()}</span>
                     <span class="text-green-500 font-bold text-right">${bid.price.toLocaleString()}</span>
-                    
                     <span class="text-red-500 font-bold pl-4">${ask.price.toLocaleString()}</span>
                     <span class="text-gray-400 font-bold text-right">${ask.vol.toLocaleString()}</span>
                     <span class="text-gray-600 text-[9px] text-right">${ask.freq}</span>
                 </div>`;
             }
-
             list.innerHTML = html;
             document.getElementById('activity-light').className = `w-2 h-2 rounded-full ${mode === 'hard' ? 'bg-red-500 animate-ping' : 'bg-green-500'}`;
         }
@@ -285,7 +311,6 @@
             lp.className = currentPrice > oldPrice ? 'text-green-500 font-bold mono text-xl' : 'text-red-500 font-bold mono text-xl';
             document.getElementById('my-pos').innerText = `${myPos.toLocaleString()} LOT`;
             document.getElementById('avg-price').innerText = Math.round(myAvg).toLocaleString();
-            document.getElementById('total-vol').innerText = totalVol.toLocaleString();
             let pl = (currentPrice - myAvg) * myPos * 100;
             if (myPos === 0) pl = 0;
             const plEl = document.getElementById('floating-pl');
