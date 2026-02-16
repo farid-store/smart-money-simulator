@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Money Simulator | Pro Trading Terminal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e11; color: #eaecef; }
+        .order-bar-bid { background: rgba(0, 192, 118, 0.2); transition: width 0.3s; }
+        .order-bar-ask { background: rgba(248, 73, 96, 0.2); transition: width 0.3s; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3b3e46; border-radius: 10px; }
+    </style>
+</head>
+<body class="h-screen overflow-hidden flex flex-col">
+
+    <nav class="border-b border-gray-800 px-6 py-3 flex justify-between items-center bg-[#161a1e]">
+        <div class="flex items-center space-x-8">
+            <h1 class="text-xl font-bold text-yellow-500 tracking-tighter uppercase">SMART<span class="text-white">ALGO</span></h1>
+            <div class="flex space-x-6 text-sm italic text-gray-400">
+                <div>Ticker: <span class="text-white font-mono">$DUMMY</span></div>
+                <div>Price: <span id="last-price" class="text-green-400 font-mono">1,250.00</span></div>
+                <div>Vol: <span id="total-vol" class="text-white font-mono">1.2M</span></div>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="text-xs bg-gray-700 px-2 py-1 rounded">INSTITUTIONAL MODE</span>
+            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex overflow-hidden">
+        
+        <div class="flex-1 flex flex-col border-r border-gray-800 bg-[#0b0e11] p-4">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-sm font-semibold text-gray-400">REAL-TIME PRICE ACTION</span>
+                <div class="flex space-x-2">
+                    <button class="text-xs bg-gray-800 px-2 py-1 rounded">1m</button>
+                    <button class="text-xs bg-gray-800 px-2 py-1 rounded">5m</button>
+                    <button class="text-xs border border-yellow-500 text-yellow-500 px-2 py-1 rounded">Live</button>
+                </div>
+            </div>
+            <div id="chart-container" class="flex-1 relative flex items-end space-x-1 border-b border-gray-800 pb-2">
+                </div>
+        </div>
+
+        <div class="w-80 border-r border-gray-800 flex flex-col bg-[#161a1e]">
+            <div class="p-3 border-b border-gray-800 text-xs font-bold uppercase tracking-widest text-gray-500 text-center">Order Book (Retail)</div>
+            
+            <div class="flex-1 overflow-hidden flex flex-col-reverse p-2" id="ask-book">
+                </div>
+
+            <div class="py-2 bg-gray-900 text-center border-y border-gray-800">
+                <span id="mid-price" class="text-lg font-mono font-bold text-yellow-500">1,250</span>
+            </div>
+
+            <div class="flex-1 overflow-hidden p-2" id="bid-book">
+                </div>
+        </div>
+
+        <div class="w-96 p-6 space-y-6 bg-[#161a1e] overflow-y-auto">
+            <div>
+                <h3 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider">Smart Money Execution</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="executeAlgo('pump')" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded text-sm transition shadow-lg shadow-green-900/20">ACCUMULATE (PUMP)</button>
+                    <button onclick="executeAlgo('dump')" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded text-sm transition shadow-lg shadow-red-900/20">DISTRIBUTE (DUMP)</button>
+                </div>
+            </div>
+
+            <div class="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                <h3 class="text-xs font-bold text-yellow-500 mb-3 uppercase">Algo Attack Modes</h3>
+                <div class="space-y-3">
+                    <button onclick="executeAlgo('sl-hunt')" class="w-full text-left p-3 bg-gray-900 hover:bg-gray-800 rounded border border-gray-700 text-xs flex justify-between items-center group">
+                        <span>🎯 STOP-LOSS HUNTING (Sweep Bids)</span>
+                        <span class="text-gray-500 group-hover:text-white">Run ></span>
+                    </button>
+                    <button onclick="executeAlgo('spoof')" class="w-full text-left p-3 bg-gray-900 hover:bg-gray-800 rounded border border-gray-700 text-xs flex justify-between items-center group">
+                        <span>👻 SPOOFING (Fake Walls)</span>
+                        <span class="text-gray-500 group-hover:text-white">Run ></span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-xs text-gray-500 italic leading-relaxed">
+                <p><strong>Simulator Note:</strong> "Accumulate" akan menghabiskan offer retail secara agresif. "SL Hunt" akan memicu cascade selling dengan menekan harga ke area support retail.</p>
+            </div>
+
+            <div>
+                <h3 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">Live Tape</h3>
+                <div id="trade-history" class="text-[10px] font-mono space-y-1 h-40 overflow-y-auto">
+                    </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- Market State ---
+        let currentPrice = 1250;
+        let orderBook = { bids: [], asks: [] };
+        let history = [];
+        const chartContainer = document.getElementById('chart-container');
+
+        // --- Core Functions ---
+
+        function initOrderBook() {
+            orderBook.bids = [];
+            orderBook.asks = [];
+            for(let i=1; i<=15; i++) {
+                orderBook.asks.push({ price: currentPrice + (i * 2), vol: Math.floor(Math.random() * 500) + 100 });
+                orderBook.bids.push({ price: currentPrice - (i * 2), vol: Math.floor(Math.random() * 500) + 100 });
+            }
+            renderOrderBook();
+        }
+
+        function renderOrderBook() {
+            const askContainer = document.getElementById('ask-book');
+            const bidContainer = document.getElementById('bid-book');
+            
+            askContainer.innerHTML = orderBook.asks.map(a => `
+                <div class="relative flex justify-between text-[11px] py-0.5 px-2 mb-0.5">
+                    <div class="order-bar-ask absolute right-0 top-0 h-full" style="width: ${a.vol/10}%"></div>
+                    <span class="text-red-400 font-mono z-10">${a.price.toLocaleString()}</span>
+                    <span class="text-gray-300 z-10">${a.vol}</span>
+                </div>
+            `).join('');
+
+            bidContainer.innerHTML = orderBook.bids.map(b => `
+                <div class="relative flex justify-between text-[11px] py-0.5 px-2 mb-0.5">
+                    <div class="order-bar-bid absolute left-0 top-0 h-full" style="width: ${b.vol/10}%"></div>
+                    <span class="text-green-400 font-mono z-10">${b.price.toLocaleString()}</span>
+                    <span class="text-gray-300 z-10">${b.vol}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('mid-price').innerText = currentPrice.toLocaleString();
+            document.getElementById('last-price').innerText = currentPrice.toLocaleString();
+        }
+
+        function logTrade(side, price, qty, type = "RETAIL") {
+            const historyDiv = document.getElementById('trade-history');
+            const color = side === 'BUY' ? 'text-green-400' : 'text-red-400';
+            const bgColor = type === 'SMART' ? 'bg-yellow-900/20' : '';
+            const html = `
+                <div class="flex justify-between py-1 border-b border-gray-800 ${bgColor}">
+                    <span class="${color}">[${side}]</span>
+                    <span>${price.toLocaleString()}</span>
+                    <span class="text-gray-500">${qty}</span>
+                    <span class="${type === 'SMART' ? 'text-yellow-500' : 'text-gray-600'}">${type}</span>
+                </div>
+            `;
+            historyDiv.insertAdjacentHTML('afterbegin', html);
+        }
+
+        function addCandle(price, open) {
+            const height = Math.abs(price - open) * 2 + 10;
+            const color = price >= open ? 'bg-green-500' : 'bg-red-500';
+            const candle = document.createElement('div');
+            candle.className = `w-4 ${color} rounded-t-sm transition-all duration-500`;
+            candle.style.height = `${height}px`;
+            chartContainer.appendChild(candle);
+            if(chartContainer.children.length > 30) chartContainer.removeChild(chartContainer.firstChild);
+        }
+
+        // --- Smart Money Algos ---
+
+        async function executeAlgo(type) {
+            let openPrice = currentPrice;
+            
+            if(type === 'pump') {
+                // Smart Money sweeps the Ask side
+                for(let i=0; i<8; i++) {
+                    let target = orderBook.asks[0];
+                    currentPrice = target.price;
+                    logTrade('BUY', currentPrice, target.vol, 'SMART');
+                    orderBook.asks.shift();
+                    orderBook.asks.push({ price: currentPrice + 30, vol: Math.floor(Math.random() * 300) });
+                    renderOrderBook();
+                    await new Promise(r => setTimeout(r, 100));
+                }
+            } 
+            else if (type === 'dump') {
+                for(let i=0; i<8; i++) {
+                    let target = orderBook.bids[0];
+                    currentPrice = target.price;
+                    logTrade('SELL', currentPrice, target.vol, 'SMART');
+                    orderBook.bids.shift();
+                    orderBook.bids.push({ price: currentPrice - 30, vol: Math.floor(Math.random() * 300) });
+                    renderOrderBook();
+                    await new Promise(r => setTimeout(r, 100));
+                }
+            }
+            else if (type === 'sl-hunt') {
+                // Rapid drop to trigger "retail fear"
+                currentPrice -= 50;
+                logTrade('SELL', currentPrice, 2500, 'SMART_ATTACK');
+                initOrderBook(); // Regenerate book at lower price
+            }
+
+            addCandle(currentPrice, openPrice);
+        }
+
+        // --- Retail Simulation Engine ---
+        setInterval(() => {
+            // Noise: Retail buying/selling small amounts
+            const side = Math.random() > 0.5 ? 'bids' : 'asks';
+            const index = Math.floor(Math.random() * 5);
+            orderBook[side][index].vol += Math.floor(Math.random() * 50) - 20;
+            if(orderBook[side][index].vol < 10) orderBook[side][index].vol = 100;
+            
+            renderOrderBook();
+        }, 800);
+
+        // Bootstrap
+        initOrderBook();
+    </script>
+</body>
+</html>
