@@ -3,546 +3,187 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAlgo Pro v2.0 - Bandar Detector</title>
+    <title>Bandar Command Center | Algo MM</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* BASE CONFIG */
-        :root {
-            --bg-dark: #050709;
-            --bg-panel: #0c0e14;
-            --bg-card: #131722;
-            --border-color: #1e222d;
-            --up-color: #00E396;
-            --down-color: #FF4560;
-        }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: #cfd3da; overflow: hidden; user-select: none; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* CUSTOM UTILS */
-        .text-up { color: var(--up-color); }
-        .text-down { color: var(--down-color); }
-        .bg-panel { background-color: var(--bg-panel); }
-        .border-c { border-color: var(--border-color); }
-        
-        /* SCROLLBAR */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: var(--bg-dark); }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
-
-        /* INPUTS */
-        input[type="number"] {
-            background-color: #000;
-            color: #fff;
-            border: 1px solid #333;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        input[type="number"]:focus { border-color: #3b82f6; }
-
-        /* ANIMATIONS */
-        @keyframes flash-green { 0% { background-color: rgba(0, 227, 150, 0.5); } 100% { background-color: transparent; } }
-        @keyframes flash-red { 0% { background-color: rgba(255, 69, 96, 0.5); } 100% { background-color: transparent; } }
-        .animate-flash-buy { animation: flash-green 0.3s ease-out; }
-        .animate-flash-sell { animation: flash-red 0.3s ease-out; }
-        
-        /* BUTTONS */
-        .btn-action { transition: all 0.1s; active: scale-95; }
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'JetBrains Mono', monospace; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .bg-dark-panel { background-color: #0f1115; }
+        .text-bid { color: #22c55e; }
+        .text-offer { color: #ef4444; }
+        .row-new { animation: highlight 0.5s ease-out; }
+        @keyframes highlight { from { background-color: #1e293b; } to { background-color: transparent; } }
     </style>
 </head>
-<body class="flex h-screen w-screen text-[12px]">
+<body class="bg-black text-gray-300 min-h-screen overflow-hidden">
 
-    <aside class="w-14 bg-panel border-r border-c flex flex-col items-center py-4 space-y-6 z-20">
-        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]">
-            S
+    <nav class="border-b border-gray-800 p-4 flex justify-between items-center bg-dark-panel">
+        <div class="flex items-center gap-4">
+            <h1 class="text-xl font-bold text-white flex items-center gap-2">
+                <i data-lucide="shield-check" class="text-blue-500"></i> BANDAR ENGINE v1.0
+            </h1>
+            <span class="bg-green-900/30 text-green-500 text-xs px-2 py-1 rounded border border-green-500/50 flex items-center gap-1">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> SYSTEM ACTIVE
+            </span>
         </div>
-        <div class="space-y-6 text-gray-500">
-            <div class="hover:text-blue-500 cursor-pointer"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div>
-            <div class="hover:text-blue-500 cursor-pointer"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
-            <div class="hover:text-blue-500 cursor-pointer"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg></div>
+        <div class="flex gap-6 text-sm">
+            <div>WAREHOUSE: <span id="wh-total" class="text-white">125,400 Lot</span></div>
+            <div>AVG PRICE: <span class="text-blue-400">452.12</span></div>
+            <div class="text-gray-500">API: <span class="text-yellow-500">CONNECTED (SIM)</span></div>
         </div>
-    </aside>
+    </nav>
 
-    <main class="flex-1 flex flex-col min-w-0">
+    <main class="grid grid-cols-12 gap-1 p-1 h-[calc(100vh-68px)]">
         
-        <header class="h-14 bg-panel border-b border-c flex items-center px-6 justify-between shrink-0">
-            <div class="flex items-center space-x-8">
-                <div>
-                    <span class="text-gray-500 text-[9px] font-bold uppercase tracking-wider">Asset</span>
-                    <div class="flex items-center gap-2">
-                        <span class="font-bold text-lg text-white tracking-tight">$BBCA</span>
-                        <span class="bg-blue-900/30 text-blue-400 text-[9px] px-1.5 py-0.5 rounded border border-blue-800">JKSE</span>
-                    </div>
+        <div class="col-span-3 bg-dark-panel rounded flex flex-col">
+            <div class="p-2 border-b border-gray-800 flex justify-between items-center">
+                <span class="text-xs font-bold uppercase">Running Trade (SoT)</span>
+                <span id="sot-indicator" class="text-[10px] bg-red-900/30 text-red-500 px-2 py-0.5 rounded">SoT: 0/sec</span>
+            </div>
+            <div id="running-trade" class="flex-1 overflow-y-auto scrollbar-hide text-[11px] p-2 space-y-1">
                 </div>
-                <div>
-                    <span class="text-gray-500 text-[9px] font-bold uppercase tracking-wider">Last Price</span>
-                    <div class="font-bold mono text-xl transition-all" id="live-price">--</div>
+        </div>
+
+        <div class="col-span-6 flex flex-col gap-1">
+            <div class="flex-1 bg-dark-panel rounded grid grid-cols-2 gap-0.5 relative">
+                <div class="p-2">
+                    <div class="text-center text-xs font-bold text-bid border-b border-gray-800 pb-1 mb-2">BID (BUY)</div>
+                    <div id="bid-list" class="space-y-1"></div>
                 </div>
-                <div class="h-8 w-px bg-gray-800"></div>
-                <div>
-                    <span class="text-gray-500 text-[9px] font-bold uppercase tracking-wider">Net Position</span>
-                    <div class="text-white font-bold mono" id="my-pos">0 LOT</div>
+                <div class="p-2 border-l border-gray-800">
+                    <div class="text-center text-xs font-bold text-offer border-b border-gray-800 pb-1 mb-2">OFFER (SELL)</div>
+                    <div id="offer-list" class="space-y-1"></div>
                 </div>
-                <div>
-                    <span class="text-gray-500 text-[9px] font-bold uppercase tracking-wider">Avg Price</span>
-                    <div class="text-yellow-500 font-bold mono" id="avg-price">0</div>
-                </div>
+                <div class="absolute inset-y-0 left-1/2 w-[1px] bg-gray-800"></div>
             </div>
 
-            <div class="flex items-center gap-4">
-                <div class="flex flex-col items-end">
-                    <span class="text-gray-500 text-[9px] font-bold uppercase tracking-wider">Unrealized P/L</span>
-                    <div class="font-bold mono text-sm" id="floating-pl">IDR 0</div>
-                </div>
-                <div class="flex items-center gap-2 bg-black/40 border border-c rounded px-2 py-1">
-                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse" id="status-dot"></div>
-                    <span class="text-[10px] font-bold text-gray-400">LIVE</span>
-                </div>
-            </div>
-        </header>
-
-        <div class="flex-1 flex overflow-hidden">
-            
-            <div class="flex-1 relative bg-[#050709] flex flex-col">
-                <div class="absolute top-2 left-2 z-10 flex gap-1">
-                    <button class="bg-gray-800 text-gray-300 px-2 py-0.5 rounded text-[10px] border border-gray-700">1m</button>
-                    <button class="bg-gray-800 text-gray-300 px-2 py-0.5 rounded text-[10px] border border-gray-700">5m</button>
-                    <button class="bg-gray-800 text-gray-300 px-2 py-0.5 rounded text-[10px] border border-gray-700">Daily</button>
-                </div>
-                
-                <canvas id="mainChart" class="w-full h-full cursor-crosshair"></canvas>
-                
-                <div class="h-6 bg-panel border-t border-c flex items-center px-4 justify-between text-[10px] text-gray-500 mono">
-                    <span>O: <span id="c-open" class="text-gray-300">0</span> H: <span id="c-high" class="text-gray-300">0</span> L: <span id="c-low" class="text-gray-300">0</span> C: <span id="c-close" class="text-gray-300">0</span></span>
-                    <span>VOL: <span id="total-vol" class="text-blue-400">0</span></span>
-                </div>
-            </div>
-
-            <div class="w-[360px] bg-panel border-l border-c flex flex-col shrink-0">
-                
-                <div class="flex-1 flex flex-col overflow-hidden">
-                    <div class="p-2 border-b border-c flex justify-between items-center bg-[#131722]">
-                        <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Market Depth (L2)</h3>
-                        <select id="market-mode" onchange="changeMode()" class="bg-black text-[10px] border border-gray-700 rounded px-1 text-gray-300 outline-none">
-                            <option value="normal">🟢 Normal</option>
-                            <option value="hard">🔴 War Mode</option>
+            <div class="h-48 bg-dark-panel rounded p-4">
+                <h3 class="text-xs font-bold mb-3 border-b border-gray-800 pb-1">ALGO EXECUTION (MANIPULATION)</h3>
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-[10px] text-gray-500 block">ALGO TYPE</label>
+                        <select class="w-full bg-black border border-gray-700 text-xs p-2 rounded outline-none focus:border-blue-500">
+                            <option>Layering (Auto-Fill)</option>
+                            <option>Iceberg Order</option>
+                            <option>Wash Trade (Churning)</option>
+                            <option>Spoofing Wall</option>
                         </select>
                     </div>
-
-                    <div class="grid grid-cols-3 text-[9px] text-gray-500 py-1 px-2 font-bold uppercase border-b border-c bg-black/20">
-                        <span>Bid Lot</span>
-                        <span class="text-center">Price</span>
-                        <span class="text-right">Offer Lot</span>
-                    </div>
-
-                    <div id="order-book-list" class="flex-1 overflow-y-auto overflow-x-hidden mono text-[11px] bg-[#050709] relative">
-                        </div>
-                </div>
-
-                <div class="p-4 bg-[#131722] border-t border-c space-y-4 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-10">
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="space-y-1">
-                            <label class="text-[9px] text-gray-500 font-bold uppercase">Algo Lot Size</label>
-                            <input type="number" id="order-size" value="5000" class="w-full p-2 rounded text-sm font-bold font-mono text-center focus:border-blue-500">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-[9px] text-gray-500 font-bold uppercase">Speed (ms)</label>
-                            <input type="number" id="algo-speed" value="200" class="w-full p-2 rounded text-sm font-bold font-mono text-center focus:border-blue-500">
-                        </div>
-                    </div>
-
                     <div class="space-y-2">
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="startAlgo('accum')" class="btn-action bg-green-600/90 py-3 rounded text-[10px] font-bold text-white hover:bg-green-500 uppercase tracking-wider border-b-2 border-green-800 active:border-b-0 active:translate-y-[2px]">
-                                🟢 HAKA (Accum)
-                            </button>
-                            <button onclick="startAlgo('distrib')" class="btn-action bg-red-600/90 py-3 rounded text-[10px] font-bold text-white hover:bg-red-500 uppercase tracking-wider border-b-2 border-red-800 active:border-b-0 active:translate-y-[2px]">
-                                🔴 HAKI (Distrib)
-                            </button>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="startAlgo('wash')" class="btn-action bg-[#1e222d] border border-blue-500/30 text-blue-400 py-2 rounded text-[10px] font-bold uppercase hover:bg-blue-900/20">
-                                🔄 Wash Trade
-                            </button>
-                            <button onclick="stopAlgos()" class="btn-action bg-gray-700 text-white py-2 rounded text-[10px] font-bold uppercase hover:bg-gray-600 border border-gray-600">
-                                ⏹ Stop All
-                            </button>
-                        </div>
+                        <label class="text-[10px] text-gray-500 block">TOTAL VOLUME (LOT)</label>
+                        <input type="number" value="10000" class="w-full bg-black border border-gray-700 text-xs p-2 rounded outline-none">
                     </div>
+                    <div class="flex items-end">
+                        <button onclick="alert('Algo Injected to Exchange!')" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 rounded transition">
+                            INJECT ALGORITHM
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <div class="col-span-3 flex flex-col gap-1">
+            <div class="flex-1 bg-dark-panel rounded p-3">
+                <h3 class="text-xs font-bold mb-3 border-b border-gray-800 pb-1">WAREHOUSE TRACKING</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-gray-500">Broker AZ (Accum)</span>
+                        <span class="text-bid">45,000 Lot</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-gray-500">Broker PD (Retail)</span>
+                        <span class="text-offer">12,200 Lot</span>
+                    </div>
+                    <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                        <div class="bg-blue-500 h-full w-[65%]"></div>
+                    </div>
+                    <p class="text-[10px] text-gray-500 italic">Target: 200k Lot before Markup</p>
+                </div>
+            </div>
+            <div class="h-48 bg-dark-panel rounded p-3">
+                <h3 class="text-xs font-bold mb-2 border-b border-gray-800 pb-1 text-yellow-500">MARKET IMPACT SIM</h3>
+                <div class="bg-black/50 p-2 rounded border border-yellow-900/30">
+                    <p class="text-[10px] text-gray-400">If you dump <span class="text-white">50,000 Lot</span>:</p>
+                    <p class="text-lg font-bold text-offer">-14 TICKS</p>
+                    <p class="text-[10px] text-gray-500 mt-1">Slippage: 2.8% Est.</p>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        /** * SMARTALGO PRO V2.0 CORE ENGINE 
-         * -------------------------------
-         */
-        
-        // --- CONFIG & STATE ---
-        let currentPrice = 9850;
-        let tickSize = 25; // BBCA style tick
-        let myPos = 0;
-        let myAvg = 0;
-        let myTotalCost = 0;
-        let totalVolumeTraded = 0;
-        
-        let bookData = { asks: [], bids: [] };
-        let candles = [];
-        let algoInterval = null;
-        let marketMakerInterval = null;
-        let mode = 'normal';
+        // Inisialisasi Ikon
+        lucide.createIcons();
 
-        // --- CHART ENGINE ---
-        const canvas = document.getElementById('mainChart');
-        const ctx = canvas.getContext('2d');
-        
-        // Init Fake History
-        function initHistory() {
-            let price = 9700;
-            for(let i=0; i<60; i++) {
-                let open = price;
-                let close = price + (Math.random() - 0.5) * tickSize * 4;
-                // Snap to tick size
-                close = Math.round(close / tickSize) * tickSize;
-                let high = Math.max(open, close) + (Math.random() * tickSize * 2);
-                let low = Math.min(open, close) - (Math.random() * tickSize * 2);
-                candles.push({ open, close, high, low, vol: Math.random() * 1000 });
-                price = close;
+        // SIMULASI DATA ORDER BOOK
+        const bidList = document.getElementById('bid-list');
+        const offerList = document.getElementById('offer-list');
+        const runningTrade = document.getElementById('running-trade');
+        const sotIndicator = document.getElementById('sot-indicator');
+
+        let price = 500;
+        let tradeCount = 0;
+
+        function updateOrderBook() {
+            let bids = '';
+            let offers = '';
+            for(let i=1; i<=10; i++) {
+                // Bid Side (Buyer)
+                bids += `
+                    <div class="flex justify-between text-[11px] hover:bg-white/5 p-1 rounded transition cursor-pointer">
+                        <span class="text-gray-500">${1000 * i}</span>
+                        <span class="text-bid font-bold">${price - i}</span>
+                    </div>`;
+                // Offer Side (Seller)
+                offers += `
+                    <div class="flex justify-between text-[11px] hover:bg-white/5 p-1 rounded transition cursor-pointer">
+                        <span class="text-offer font-bold">${price + i}</span>
+                        <span class="text-gray-500">${800 * i}</span>
+                    </div>`;
             }
-            currentPrice = price;
+            bidList.innerHTML = bids;
+            offerList.innerHTML = offers;
         }
 
-        function resizeCanvas() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-        }
-        window.onresize = resizeCanvas;
-
-        function drawChart() {
-            requestAnimationFrame(drawChart);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // SIMULASI RUNNING TRADE (TAPE)
+        function addTrade() {
+            tradeCount++;
+            const time = new Date().toLocaleTimeString('en-GB', { hour12: false });
+            const side = Math.random() > 0.5 ? 'text-bid' : 'text-offer';
+            const action = side === 'text-bid' ? 'B' : 'S';
+            const vol = Math.floor(Math.random() * 500) + 1;
             
-            // Background Grid
-            ctx.strokeStyle = '#1e222d';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            for(let i=0; i<canvas.height; i+=50) { ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); }
-            ctx.stroke();
-
-            if(candles.length === 0) return;
-
-            // Scale calculations
-            const visibleCandles = candles.slice(-50); // Show last 50
-            const paddingRight = 60;
-            const candleWidth = (canvas.width - paddingRight) / 50;
+            const tradeRow = document.createElement('div');
+            tradeRow.className = `flex justify-between border-b border-gray-900 pb-1 row-new ${side}`;
+            tradeRow.innerHTML = `
+                <span>${time}</span>
+                <span class="font-bold">${price}</span>
+                <span>${vol}</span>
+                <span class="bg-gray-800 px-1 rounded text-[9px] text-gray-400">${action}</span>
+            `;
             
-            const prices = visibleCandles.map(c => [c.high, c.low]).flat();
-            const maxP = Math.max(...prices) + tickSize*2;
-            const minP = Math.min(...prices) - tickSize*2;
-            const range = maxP - minP;
-
-            const getY = (p) => canvas.height - ((p - minP) / range) * canvas.height;
-
-            // Draw Candles
-            visibleCandles.forEach((c, i) => {
-                const x = i * candleWidth;
-                const color = c.close >= c.open ? '#00E396' : '#FF4560';
-                
-                // Wick
-                ctx.strokeStyle = color;
-                ctx.beginPath();
-                ctx.moveTo(x + candleWidth/2, getY(c.high));
-                ctx.lineTo(x + candleWidth/2, getY(c.low));
-                ctx.stroke();
-
-                // Body
-                ctx.fillStyle = color;
-                const yOpen = getY(c.open);
-                const yClose = getY(c.close);
-                const height = Math.abs(yOpen - yClose);
-                ctx.fillRect(x + 2, Math.min(yOpen, yClose), candleWidth - 4, Math.max(height, 1));
-            });
-
-            // Draw Current Price Line
-            const lastY = getY(currentPrice);
-            ctx.strokeStyle = '#ffffff';
-            ctx.setLineDash([5, 5]);
-            ctx.beginPath();
-            ctx.moveTo(0, lastY);
-            ctx.lineTo(canvas.width, lastY);
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Price Label
-            ctx.fillStyle = '#00E396';
-            ctx.fillRect(canvas.width - 55, lastY - 10, 55, 20);
-            ctx.fillStyle = '#000';
-            ctx.font = 'bold 10px JetBrains Mono';
-            ctx.fillText(currentPrice, canvas.width - 50, lastY + 4);
-
-            // Update Info Bar
-            const last = visibleCandles[visibleCandles.length-1];
-            document.getElementById('c-open').innerText = last.open;
-            document.getElementById('c-high').innerText = last.high.toFixed(0);
-            document.getElementById('c-low').innerText = last.low.toFixed(0);
-            document.getElementById('c-close').innerText = last.close;
+            runningTrade.prepend(tradeRow);
+            if (runningTrade.children.length > 50) runningTrade.lastChild.remove();
         }
 
-        // --- MARKET ENGINE ---
-        
-        function initOrderBook() {
-            bookData.asks = [];
-            bookData.bids = [];
-            
-            // Build depth
-            for(let i=0; i<15; i++) {
-                bookData.asks.push({ 
-                    price: currentPrice + ((i+1) * tickSize), 
-                    vol: randVol() 
-                });
-                bookData.bids.push({ 
-                    price: currentPrice - (i * tickSize), 
-                    vol: randVol() 
-                });
-            }
-            renderBook();
-        }
-
-        const randVol = () => Math.floor(Math.random() * 5000) + 100;
-
-        function runMarketSim() {
-            if(marketMakerInterval) clearInterval(marketMakerInterval);
-            
-            // Speed based on mode
-            const interval = mode === 'hard' ? 100 : 500;
-            
-            marketMakerInterval = setInterval(() => {
-                // Retail Noise (Random small trades)
-                const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                const qty = Math.floor(Math.random() * 500);
-                executeTrade(side, qty, false);
-                
-                // Refill Liquidity (Market Maker logic)
-                if(Math.random() > 0.3) {
-                    const randIdx = Math.floor(Math.random() * 5);
-                    bookData.asks[randIdx].vol += Math.floor(Math.random() * 200);
-                    bookData.bids[randIdx].vol += Math.floor(Math.random() * 200);
-                    renderBook(); // Re-render for visual updates
-                }
-            }, interval);
-        }
-
-        function executeTrade(side, qty, isAlgo) {
-            if(qty <= 0) return;
-            totalVolumeTraded += qty;
-
-            if(side === 'BUY') {
-                // HAKA: Eat Ask
-                let target = bookData.asks[0];
-                if(qty >= target.vol) {
-                    // Consume level
-                    let remainder = qty - target.vol;
-                    currentPrice = target.price; // Price Up
-                    if(isAlgo) updatePortfolio('BUY', target.price, target.vol);
-                    
-                    // Shift Book Logic
-                    bookData.asks.shift();
-                    let newAskPrice = bookData.asks[bookData.asks.length-1].price + tickSize;
-                    bookData.asks.push({ price: newAskPrice, vol: randVol() });
-                    
-                    // New Bid fills gap
-                    bookData.bids.unshift({ price: currentPrice, vol: randVol() });
-                    bookData.bids.pop();
-                    
-                    // Trigger flash effect on UI container (will be handled in render)
-                    target.flash = true; 
-
-                } else {
-                    target.vol -= qty;
-                    currentPrice = target.price;
-                    if(isAlgo) updatePortfolio('BUY', target.price, qty);
-                    target.flash = true;
-                }
-            } else {
-                // HAKI: Eat Bid
-                let target = bookData.bids[0];
-                if(qty >= target.vol) {
-                    // Consume level
-                    currentPrice = target.price; // Price Down
-                    if(isAlgo) updatePortfolio('SELL', target.price, target.vol);
-                    
-                    // Shift Book
-                    bookData.bids.shift();
-                    let newBidPrice = bookData.bids[bookData.bids.length-1].price - tickSize;
-                    bookData.bids.push({ price: newBidPrice, vol: randVol() });
-                    
-                    // New Ask fills gap
-                    bookData.asks.unshift({ price: currentPrice, vol: randVol() });
-                    bookData.asks.pop();
-
-                } else {
-                    target.vol -= qty;
-                    currentPrice = target.price;
-                    if(isAlgo) updatePortfolio('SELL', target.price, qty);
-                    target.flash = true;
-                }
-            }
-
-            // Sync Chart Data
-            let lastCandle = candles[candles.length-1];
-            lastCandle.close = currentPrice;
-            lastCandle.high = Math.max(lastCandle.high, currentPrice);
-            lastCandle.low = Math.min(lastCandle.low, currentPrice);
-            lastCandle.vol += qty;
-
-            updateTopBar();
-            renderBook();
-        }
-
-        // --- UI RENDERING ---
-        function renderBook() {
-            const container = document.getElementById('order-book-list');
-            let html = '';
-
-            // Render Asks (Red, Top) - Reverse so lowest ask is bottom
-            const visibleAsks = bookData.asks.slice(0, 12).reverse();
-            visibleAsks.forEach(item => {
-                const barWidth = Math.min((item.vol / 10000) * 100, 100);
-                const flashClass = item.flash ? 'animate-flash-buy' : '';
-                item.flash = false; // reset
-                
-                html += `
-                <div class="grid grid-cols-3 px-2 py-[2px] hover:bg-[#1e222d] cursor-pointer relative group ${flashClass}">
-                    <div class="absolute right-0 top-0 bottom-0 bg-red-900/20 transition-all duration-300" style="width: ${barWidth}%"></div>
-                    <span class="text-gray-500 text-[10px] z-10"></span>
-                    <span class="text-red-500 font-bold text-center z-10">${item.price.toLocaleString()}</span>
-                    <span class="text-right text-gray-300 font-bold z-10 group-hover:text-white">${item.vol.toLocaleString()}</span>
-                </div>`;
-            });
-
-            // Spread / Current Price Divider
-            html += `
-            <div class="sticky top-0 bottom-0 py-1 bg-[#131722] border-y border-c flex justify-center items-center z-20 my-1">
-                <span class="text-lg font-bold mono ${currentPrice > candles[candles.length-1].open ? 'text-up' : 'text-down'}">${currentPrice.toLocaleString()}</span>
-                <span class="ml-2 text-[9px] text-gray-500">Spread: ${tickSize}</span>
-            </div>`;
-
-            // Render Bids (Green, Bottom)
-            const visibleBids = bookData.bids.slice(0, 12);
-            visibleBids.forEach(item => {
-                const barWidth = Math.min((item.vol / 10000) * 100, 100);
-                const flashClass = item.flash ? 'animate-flash-sell' : '';
-                item.flash = false;
-
-                html += `
-                <div class="grid grid-cols-3 px-2 py-[2px] hover:bg-[#1e222d] cursor-pointer relative group ${flashClass}">
-                    <div class="absolute left-0 top-0 bottom-0 bg-green-900/20 transition-all duration-300" style="width: ${barWidth}%"></div>
-                    <span class="text-gray-300 font-bold z-10 group-hover:text-white">${item.vol.toLocaleString()}</span>
-                    <span class="text-green-500 font-bold text-center z-10">${item.price.toLocaleString()}</span>
-                    <span class="text-right text-gray-500 text-[10px] z-10"></span>
-                </div>`;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function updatePortfolio(side, price, qty) {
-            if(side === 'BUY') {
-                // Weighted Average
-                const totalCostBefore = myAvg * myPos;
-                const newCost = price * qty;
-                myPos += qty;
-                myAvg = (totalCostBefore + newCost) / myPos;
-            } else {
-                // Reduce Position
-                if(myPos > 0) {
-                    const sellQty = Math.min(myPos, qty);
-                    myPos -= sellQty;
-                    if(myPos <= 0) { myPos = 0; myAvg = 0; }
-                }
-            }
-        }
-
-        function updateTopBar() {
-            // Live Price Color
-            const lpEl = document.getElementById('live-price');
-            const prevP = parseInt(lpEl.innerText.replace(',','')) || 0;
-            lpEl.innerText = currentPrice.toLocaleString();
-            lpEl.className = `font-bold mono text-xl transition-colors duration-200 ${currentPrice >= prevP ? 'text-up' : 'text-down'}`;
-
-            // Portfolio Stats
-            document.getElementById('my-pos').innerText = `${myPos.toLocaleString()} LOT`;
-            document.getElementById('avg-price').innerText = Math.round(myAvg).toLocaleString();
-            document.getElementById('total-vol').innerText = totalVolumeTraded.toLocaleString();
-
-            // Floating PnL
-            let pl = (currentPrice - myAvg) * myPos * 100; // Assuming 1 Lot = 100 Shares
-            if(myPos === 0) pl = 0;
-            
-            const plEl = document.getElementById('floating-pl');
-            plEl.innerText = `IDR ${Math.round(pl).toLocaleString()}`;
-            plEl.className = `font-bold mono text-sm ${pl > 0 ? 'text-up' : pl < 0 ? 'text-down' : 'text-gray-500'}`;
-        }
-
-        // --- ALGO CONTROL ---
-        function startAlgo(type) {
-            stopAlgos();
-            
-            const speed = parseInt(document.getElementById('algo-speed').value) || 200;
-            const size = parseInt(document.getElementById('order-size').value) || 1000;
-            
-            console.log(`Starting Algo: ${type} | Size: ${size} | Speed: ${speed}ms`);
-
-            algoInterval = setInterval(() => {
-                if(type === 'accum') {
-                    executeTrade('BUY', size, true);
-                } else if(type === 'distrib') {
-                    executeTrade('SELL', size, true);
-                } else if(type === 'wash') {
-                    executeTrade('BUY', size, true);
-                    // Wash trade needs fast sell back
-                    setTimeout(() => executeTrade('SELL', size, true), speed / 2);
-                }
-            }, speed);
-        }
-
-        function stopAlgos() {
-            clearInterval(algoInterval);
-            algoInterval = null;
-        }
-
-        function changeMode() {
-            mode = document.getElementById('market-mode').value;
-            runMarketSim();
-            const dot = document.getElementById('status-dot');
-            dot.className = `w-2 h-2 rounded-full ${mode === 'hard' ? 'bg-red-500 animate-ping' : 'bg-green-500 animate-pulse'}`;
-        }
-
-        // --- INITIALIZATION ---
-        // Create new candle every 5 seconds for simulation effect
+        // Hitung Speed of Tape (SoT)
         setInterval(() => {
-            let last = candles[candles.length-1];
-            candles.push({ 
-                open: currentPrice, 
-                close: currentPrice, 
-                high: currentPrice, 
-                low: currentPrice, 
-                vol: 0 
-            });
-            if(candles.length > 80) candles.shift();
-        }, 5000);
+            sotIndicator.innerText = `SoT: ${tradeCount}/sec`;
+            sotIndicator.className = tradeCount > 5 ? 
+                "text-[10px] bg-red-900 text-white px-2 py-0.5 rounded animate-bounce" : 
+                "text-[10px] bg-gray-800 text-gray-400 px-2 py-0.5 rounded";
+            tradeCount = 0;
+        }, 1000);
 
-        initHistory();
-        initOrderBook();
-        resizeCanvas();
-        drawChart();
-        runMarketSim();
-        updateTopBar();
+        // Jalankan Simulasi
+        updateOrderBook();
+        setInterval(addTrade, 200); // Trade masuk setiap 200ms
+        setInterval(() => {
+            price += Math.random() > 0.5 ? 1 : -1;
+            updateOrderBook();
+        }, 2000);
 
     </script>
 </body>
