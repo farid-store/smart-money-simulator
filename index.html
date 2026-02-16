@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAlgo Pro v7.0 - Director Mode</title>
+    <title>SmartAlgo Pro v7.0 - XAUUSD Director Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
     <style>
@@ -43,8 +43,8 @@
 <body class="flex h-screen w-screen text-[13px] select-none">
 
     <aside class="w-14 bg-sidebar border-r border-stockbit flex flex-col items-center py-4 space-y-8 z-50 shadow-xl">
-        <div class="w-10 h-10 bg-gradient-to-br from-indigo-600 to-blue-700 rounded flex items-center justify-center font-bold text-white shadow-lg text-xs tracking-tighter cursor-pointer hover:scale-110 transition-transform">MM</div>
-        <div class="text-blue-500 cursor-pointer animate-pulse" title="System Normal">
+        <div class="w-10 h-10 bg-gradient-to-br from-yellow-600 to-yellow-800 rounded flex items-center justify-center font-bold text-white shadow-lg text-xs tracking-tighter cursor-pointer hover:scale-110 transition-transform">MM</div>
+        <div class="text-yellow-500 cursor-pointer animate-pulse" title="System Normal">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
         </div>
         <div class="flex-1"></div>
@@ -56,16 +56,16 @@
             <div class="flex items-center space-x-8">
                 <div>
                     <span class="text-gray-500 text-[10px] block uppercase font-bold tracking-widest">Live Asset</span>
-                    <span class="font-black text-xl text-white italic tracking-tighter">$BBCA <span class="text-blue-500 text-[10px] not-italic align-top ml-1 bg-blue-500/10 px-1 rounded">AI-DIRECTOR</span></span>
+                    <span class="font-black text-xl text-white italic tracking-tighter">$XAUUSD <span class="text-yellow-500 text-[10px] not-italic align-top ml-1 bg-yellow-500/10 px-1 rounded border border-yellow-500/20">GOLD</span></span>
                 </div>
                 <div>
                     <span class="text-gray-500 text-[10px] block uppercase tracking-tighter">Market Price</span>
-                    <div class="text-green-500 font-bold mono text-xl tracking-tight" id="live-price">9,850</div>
+                    <div class="text-green-500 font-bold mono text-xl tracking-tight" id="live-price">2030.50</div>
                 </div>
                 <div class="border-l border-gray-800 pl-6">
                     <span class="text-gray-500 text-[10px] block uppercase tracking-tighter">Net Inventory</span>
                     <div class="text-white font-bold mono" id="my-pos">0 LOT</div>
-                    <div class="text-[9px] text-gray-500 uppercase">AVG: <span id="avg-price" class="text-blue-400">0</span></div>
+                    <div class="text-[9px] text-gray-500 uppercase">AVG: <span id="avg-price" class="text-blue-400">0.00</span></div>
                 </div>
                 <div class="border-l border-gray-800 pl-6 w-48">
                     <span class="text-gray-500 text-[10px] block uppercase tracking-tighter">Director Phase</span>
@@ -130,7 +130,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div class="space-y-1">
                             <label class="text-[9px] text-gray-500 uppercase font-black tracking-wider">Lot Size</label>
-                            <input type="number" id="order-size" value="5000" min="1" class="w-full p-2 rounded text-[11px] font-bold">
+                            <input type="number" id="order-size" value="10" min="1" class="w-full p-2 rounded text-[11px] font-bold">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[9px] text-gray-500 uppercase font-black tracking-wider">Speed (ms)</label>
@@ -162,57 +162,54 @@
          * CORE STATE MANAGEMENT
          */
         const State = {
-            price: 9850,
-            lastPrice: 9850,
+            price: 2030.50, // Gold Price Base
+            lastPrice: 2030.50,
             inventory: { pos: 0, cost: 0, avg: 0 },
             history: [], 
             sentiment: 50,
-            regime: 'SIDEWAYS', // 'BULL', 'BEAR', 'SPIKE_UP', 'SPIKE_DOWN', 'FLAG_BULL', 'FLAG_BEAR'
-            snr: { high: 0, low: 0 }, // Dynamic SNR Levels
+            regime: 'SIDEWAYS', 
+            snr: { high: 0, low: 0 },
             lastCandleTime: 0
         };
 
         const Config = {
             candleTimeframe: 2000, 
-            tickRate: 150, // Faster for HFT feel
-            maxHistory: 100
+            tickRate: 150, 
+            maxHistory: 100,
+            pointMultiplier: 100000 // Multiplier for IDR P/L simulation (1 point = 100k)
         };
 
-        // --- DIRECTOR ENGINE (NEW: THE BRAIN) ---
+        // --- DIRECTOR ENGINE ---
         const Director = {
             timer: 0,
             duration: 50,
-            bias: 0,        // Directional push (-1 to 1)
-            volatility: 1,  // Random noise multiplier
+            bias: 0,        
+            volatility: 0.1,  // Scaled for Gold Decimals
             
             init() {
                 this.updatePhase();
-                setInterval(() => this.cycle(), 500); // Director thinks every 0.5s
+                setInterval(() => this.cycle(), 500);
             },
 
             cycle() {
                 this.timer++;
-                // Change regime when timer ends or randomly triggered
                 if(this.timer > this.duration) {
                     this.updatePhase();
                     this.timer = 0;
                 }
 
-                // Random Black Swan Event (Spike) - 1% chance
                 if(Math.random() < 0.01) {
                     State.regime = Math.random() > 0.5 ? 'SPIKE_UP' : 'SPIKE_DOWN';
-                    this.duration = 10; // Short burst
+                    this.duration = 10;
                     this.timer = 0;
                     this.applyParams();
                 }
             },
 
             updatePhase() {
-                // Markov Chain-like Transitions
                 const phases = ['SIDEWAYS', 'SIDEWAYS', 'BULL_TREND', 'BEAR_TREND', 'FLAG_BULL', 'FLAG_BEAR'];
                 State.regime = phases[Math.floor(Math.random() * phases.length)];
-                this.duration = Math.floor(Math.random() * 60) + 20; // 10s to 40s duration
-                
+                this.duration = Math.floor(Math.random() * 60) + 20;
                 this.applyParams();
                 this.updateUI();
             },
@@ -220,20 +217,20 @@
             applyParams() {
                 switch(State.regime) {
                     case 'SIDEWAYS':
-                        this.bias = 0; this.volatility = 0.8; break;
+                        this.bias = 0; this.volatility = 0.05; break;
                     case 'BULL_TREND':
-                        this.bias = 0.4; this.volatility = 1.2; break;
+                        this.bias = 0.03; this.volatility = 0.08; break;
                     case 'BEAR_TREND':
-                        this.bias = -0.4; this.volatility = 1.2; break;
-                    case 'FLAG_BULL': // Consolidation after bull
+                        this.bias = -0.03; this.volatility = 0.08; break;
+                    case 'FLAG_BULL': 
                     case 'FLAG_BEAR':
-                        this.bias = State.regime === 'FLAG_BULL' ? -0.1 : 0.1; // Counter trend drift
-                        this.volatility = 0.3; // Low vol
+                        this.bias = State.regime === 'FLAG_BULL' ? -0.01 : 0.01; 
+                        this.volatility = 0.02; // Very tight range
                         break;
                     case 'SPIKE_UP':
-                        this.bias = 2.5; this.volatility = 4.0; break;
+                        this.bias = 0.3; this.volatility = 0.4; break;
                     case 'SPIKE_DOWN':
-                        this.bias = -2.5; this.volatility = 4.0; break;
+                        this.bias = -0.3; this.volatility = 0.4; break;
                 }
             },
 
@@ -287,10 +284,10 @@
                 let t = Date.now() - (Config.maxHistory * Config.candleTimeframe);
                 for(let i=0; i < 60; i++) {
                     const open = p;
-                    const change = (Math.random() - 0.5) * 10;
+                    const change = (Math.random() - 0.5) * 1.0;
                     const close = open + change;
                     State.history.push({ 
-                        time: t, open, high: Math.max(open,close)+2, low: Math.min(open,close)-2, close, vol: 1000 
+                        time: t, open, high: Math.max(open,close)+0.5, low: Math.min(open,close)-0.5, close, vol: 1000 
                     });
                     p = close;
                     t += Config.candleTimeframe;
@@ -308,7 +305,6 @@
                 });
                 if(State.history.length > Config.maxHistory) State.history.shift();
                 
-                // Recalculate Dynamic SNR (Pivot High/Low of last 30 candles)
                 const recent = State.history.slice(-30);
                 State.snr.high = Math.max(...recent.map(c => c.high));
                 State.snr.low = Math.min(...recent.map(c => c.low));
@@ -336,36 +332,41 @@
                 const h = this.height;
                 const prices = State.history.map(c => [c.high, c.low]).flat();
                 
-                // Include SNR in range calculation so lines are always visible
                 let minP = Math.min(...prices, State.snr.low);
                 let maxP = Math.max(...prices, State.snr.high);
-                let range = maxP - minP || 1;
+                let range = maxP - minP || 0.1;
                 minP -= range * 0.1; maxP += range * 0.1; range = maxP - minP;
 
                 ctx.clearRect(0, 0, w, h);
 
-                // 1. Draw Dynamic SNR Zones
+                // Grid & Labels
+                ctx.strokeStyle = '#1e222d'; ctx.lineWidth = 1; ctx.beginPath();
+                for(let i=0; i<5; i++) {
+                    const p = minP + (range * (i/4));
+                    const y = this.getY(p, minP, range, h);
+                    ctx.moveTo(0, y); ctx.lineTo(w, y);
+                    ctx.fillStyle = '#444'; ctx.font = '9px Roboto Mono';
+                    ctx.fillText(p.toFixed(2), w - 40, y - 4); // Decimals for XAU
+                }
+                ctx.stroke();
+
+                // Dynamic SNR
                 const yRes = this.getY(State.snr.high, minP, range, h);
                 const ySup = this.getY(State.snr.low, minP, range, h);
 
-                // Resistance Zone
                 ctx.fillStyle = 'rgba(239, 68, 68, 0.05)';
                 ctx.fillRect(0, yRes - 10, w, 20);
                 ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
                 ctx.setLineDash([5, 5]);
                 ctx.beginPath(); ctx.moveTo(0, yRes); ctx.lineTo(w, yRes); ctx.stroke();
-                ctx.fillStyle = '#ef4444'; ctx.font = '9px Inter'; ctx.fillText('RESISTANCE / SUPPLY', w - 120, yRes - 5);
-
-                // Support Zone
+                
                 ctx.fillStyle = 'rgba(34, 197, 94, 0.05)';
                 ctx.fillRect(0, ySup - 10, w, 20);
                 ctx.strokeStyle = 'rgba(34, 197, 94, 0.3)';
                 ctx.beginPath(); ctx.moveTo(0, ySup); ctx.lineTo(w, ySup); ctx.stroke();
-                ctx.fillStyle = '#22c55e'; ctx.fillText('SUPPORT / DEMAND', w - 120, ySup + 15);
-
                 ctx.setLineDash([]);
 
-                // 2. Grid & Candles
+                // Candles
                 const candleWidth = (w - 50) / State.history.length;
                 const barW = Math.max(1, candleWidth - 1);
 
@@ -383,13 +384,13 @@
                     ctx.fillRect(x, Math.min(yOpen, yClose), barW, Math.max(Math.abs(yClose - yOpen), 1));
                 });
 
-                // 3. Current Price
+                // Current Price
                 const yCur = this.getY(State.price, minP, range, h);
                 ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 4]);
                 ctx.beginPath(); ctx.moveTo(0, yCur); ctx.lineTo(w, yCur); ctx.stroke();
-                ctx.fillStyle = '#fff'; ctx.fillRect(w - 45, yCur - 10, 45, 20);
+                ctx.fillStyle = '#fff'; ctx.fillRect(w - 55, yCur - 10, 55, 20);
                 ctx.fillStyle = '#000'; ctx.font = 'bold 10px Roboto Mono'; 
-                ctx.fillText(Math.round(State.price), w - 40, yCur + 4);
+                ctx.fillText(State.price.toFixed(2), w - 50, yCur + 4);
             },
 
             loop() {
@@ -397,22 +398,22 @@
             }
         };
 
-        // --- DOM ENGINE (Dynamic Liquidity) ---
+        // --- DOM ENGINE (Decimals) ---
         const DOMEngine = {
             el: document.getElementById('order-book-list'),
             render() {
-                const center = Math.round(State.price);
+                const center = State.price; // Float
                 let html = '';
-                // Ask
+                // Ask (XAU tick 0.10 or 0.01)
                 for(let i=8; i>0; i--) {
-                    const p = center + (i * 2);
+                    const p = center + (i * 0.10); // Spread 10 cents
                     const v = this.getRegimeVolume(p, 'ASK');
                     html += this.createRow(p, v, 'ask');
                 }
                 html += `<div class="py-1 bg-white/5 text-center text-[9px] text-gray-600 tracking-widest border-y border-white/5">SPREAD</div>`;
                 // Bid
                 for(let i=1; i<=8; i++) {
-                    const p = center - (i * 2);
+                    const p = center - (i * 0.10);
                     const v = this.getRegimeVolume(p, 'BID');
                     html += this.createRow(p, v, 'bid');
                 }
@@ -420,14 +421,11 @@
             },
 
             getRegimeVolume(price, side) {
-                // Base noise
-                let vol = Math.floor(Math.abs(Math.sin(price)*10000) % 1500) + 100;
+                let vol = Math.floor(Math.abs(Math.sin(price * 10)*10000) % 1500) + 100; // Noise based on decimal price
                 
-                // Adjust by Regime
-                if(State.regime.includes('SPIKE')) vol = Math.floor(vol * 0.2); // Thin liquidity during spikes
-                if(State.regime === 'SIDEWAYS') vol = Math.floor(vol * 1.5); // Thick liquidity in ranging
+                if(State.regime.includes('SPIKE')) vol = Math.floor(vol * 0.2); 
+                if(State.regime === 'SIDEWAYS') vol = Math.floor(vol * 1.5); 
                 
-                // Imbalance based on bias
                 if(State.regime === 'BULL_TREND' && side === 'BID') vol *= 1.5;
                 if(State.regime === 'BEAR_TREND' && side === 'ASK') vol *= 1.5;
 
@@ -442,13 +440,13 @@
                 return `<div class="grid grid-cols-3 py-0.5 px-3 relative ${bgHover} cursor-pointer group">
                     <div class="absolute top-0 ${isAsk ? 'right-0 bg-red-500/10' : 'left-0 bg-green-500/10'} h-full transition-all duration-300" style="width: ${barWidth}%"></div>
                     <span class="z-10 text-left ${!isAsk ? 'text-gray-400' : 'text-transparent'}">${!isAsk ? vol.toLocaleString() : ''}</span>
-                    <span class="z-10 text-center ${color} font-bold">${price.toLocaleString()}</span>
+                    <span class="z-10 text-center ${color} font-bold">${price.toFixed(2)}</span>
                     <span class="z-10 text-right ${isAsk ? 'text-gray-400' : 'text-transparent'}">${isAsk ? vol.toLocaleString() : ''}</span>
                 </div>`;
             }
         };
 
-        // --- MARKET & ALGO (Keep Buttons, Change Physics) ---
+        // --- MARKET & ALGO ---
         const AlgoManager = {
             active: null, timer: null,
             toggle(type) {
@@ -479,25 +477,23 @@
             },
             triggerShakeout() {
                 this.stopAll();
-                Director.duration = 100; // Lock director
-                State.regime = 'SPIKE_DOWN'; Director.applyParams(); // Force Bear Spike
-                setTimeout(() => { State.regime = 'SPIKE_UP'; Director.applyParams(); }, 3000); // V-Shape Recovery
+                Director.duration = 100; // Lock
+                State.regime = 'SPIKE_DOWN'; Director.applyParams();
+                setTimeout(() => { State.regime = 'SPIKE_UP'; Director.applyParams(); }, 3000); 
             },
             spoof() { const dom = document.getElementById('order-book-list'); dom.style.opacity = '0.5'; setTimeout(() => dom.style.opacity = '1', 200); }
         };
 
         const Market = {
             init() {
-                // Main Loop driven by Director Physics
                 setInterval(() => {
                     if (!AlgoManager.active) {
-                        // Math: Random Walk + Director Bias + Volatility
                         const noise = (Math.random() - 0.5) * Director.volatility;
-                        const trend = Director.bias * 0.3; 
+                        const trend = Director.bias * 0.1; 
                         const move = noise + trend;
                         
                         const side = move > 0 ? 'BUY' : 'SELL';
-                        const size = Math.floor(Math.abs(move) * 500) + 100; // Volume correlates to volatility
+                        const size = Math.floor(Math.abs(move) * 2000) + 10; 
                         
                         this.executeTrade(side, size, false);
                     }
@@ -505,9 +501,8 @@
             },
 
             executeTrade(side, size, isAlgo) {
-                // Price Impact
-                const liquidity = State.regime.includes('SPIKE') ? 2000 : 8000; // Low liquidity = High impact
-                const impact = (size / liquidity) * (Math.random() * 2);
+                const liquidity = State.regime.includes('SPIKE') ? 5000 : 20000; 
+                const impact = (size / liquidity) * (Math.random() * 0.5); // Smaller impact for gold decimal
                 
                 State.lastPrice = State.price;
                 if (side === 'BUY') State.price += impact; else State.price -= impact;
@@ -536,7 +531,7 @@
                 const color = side === 'BUY' ? 'text-green-500' : 'text-red-500';
                 const bg = isAlgo ? (side === 'BUY' ? 'bg-green-500/10' : 'bg-red-500/10') : '';
                 const html = `<div class="grid grid-cols-4 py-0.5 px-2 border-b border-white/5 trade-row ${bg}">
-                    <span class="text-gray-500">${time}</span><span class="${color} font-bold">${price.toFixed(0)}</span>
+                    <span class="text-gray-500">${time}</span><span class="${color} font-bold">${price.toFixed(2)}</span>
                     <span class="text-center ${color}">${side === 'BUY' ? '↑' : '↓'}</span>
                     <span class="text-right ${isAlgo ? 'text-blue-400 font-bold' : 'text-gray-400'}">${Math.floor(size).toLocaleString()}</span>
                 </div>`;
@@ -546,15 +541,17 @@
 
             updateUI() {
                 const lp = document.getElementById('live-price');
-                lp.innerText = Math.round(State.price).toLocaleString();
-                if (Math.round(State.price) > Math.round(State.lastPrice)) {
+                lp.innerText = State.price.toFixed(2);
+                if (State.price > State.lastPrice) {
                     lp.classList.add('text-green-500', 'flash-green'); lp.classList.remove('text-red-500'); setTimeout(()=>lp.classList.remove('flash-green'), 500);
                 } else {
                     lp.classList.add('text-red-500', 'flash-red'); lp.classList.remove('text-green-500'); setTimeout(()=>lp.classList.remove('flash-red'), 500);
                 }
                 document.getElementById('my-pos').innerText = Math.floor(State.inventory.pos).toLocaleString() + ' LOT';
-                document.getElementById('avg-price').innerText = Math.floor(State.inventory.avg).toLocaleString();
-                const pl = (State.price - State.inventory.avg) * State.inventory.pos * 100;
+                document.getElementById('avg-price').innerText = State.inventory.avg.toFixed(2);
+                
+                // P/L = Point Difference * Lots * Multiplier
+                const pl = (State.price - State.inventory.avg) * State.inventory.pos * Config.pointMultiplier;
                 const plEl = document.getElementById('floating-pl');
                 plEl.innerText = `IDR ${Math.floor(pl).toLocaleString()}`;
                 plEl.className = `font-bold mono text-xl transition-colors duration-200 ${pl >= 0 ? 'text-green-500' : 'text-red-500'}`;
