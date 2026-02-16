@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAlgo V11 - Market Structure Edition</title>
+    <title>SmartAlgo V11 REVISI - Smart Money Battle</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -19,130 +19,133 @@
         .mono { font-family: 'JetBrains Mono', monospace; }
         .border-c { border-color: var(--border); }
         .bg-panel { background-color: var(--bg-panel); }
+        
         .text-up { color: var(--up); } .text-down { color: var(--down); }
         .bar-ask { position: absolute; left:0; top:0; height:100%; background: rgba(246, 70, 93, 0.15); transition: width 0.1s; }
         .bar-bid { position: absolute; right:0; top:0; height:100%; background: rgba(14, 203, 129, 0.15); transition: width 0.1s; }
         
-        @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(246, 70, 93, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(246, 70, 93, 0); } 100% { box-shadow: 0 0 0 0 rgba(246, 70, 93, 0); } }
-        .war-active { animation: pulse-red 2s infinite; border-color: var(--down) !important; }
+        @keyframes pulse-border { 0% { border-color: #444; } 50% { border-color: var(--accent); } 100% { border-color: #444; } }
+        .active-tool { animation: pulse-border 1s infinite; border: 1px solid var(--accent) !important; color: var(--accent); }
 
-        #toast { visibility: hidden; min-width: 250px; background: #1a1d23; color: #fff; text-align: center; border-radius: 4px; padding: 12px; position: fixed; z-index: 99; left: 50%; top: 20px; transform: translateX(-50%); font-size: 12px; opacity: 0; transition: 0.3s; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        #toast.show { visibility: visible; opacity: 1; top: 80px; }
+        #toast { visibility: hidden; min-width: 200px; background: #333; color: #fff; text-align: center; border-radius: 4px; padding: 10px; position: fixed; z-index: 99; left: 50%; top: 80px; transform: translateX(-50%); font-size: 12px; opacity: 0; transition: opacity 0.3s; border-left: 4px solid var(--accent); }
+        #toast.show { visibility: visible; opacity: 1; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
 <body class="flex flex-col h-screen w-screen text-[12px]">
 
-    <header class="h-[55px] bg-panel border-b border-c flex items-center justify-between px-4 shrink-0 z-20">
-        <div class="flex items-center gap-6">
+    <header class="h-[50px] bg-panel border-b border-c flex items-center justify-between px-4 shrink-0 z-20">
+        <div class="flex items-center gap-4">
             <div class="flex flex-col">
-                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Market Structure</span>
+                <span class="text-[9px] text-gray-500 font-bold uppercase tracking-tighter">Active Asset</span>
                 <select id="asset-select" onchange="APP.setAsset()" class="bg-transparent text-white font-bold text-sm outline-none cursor-pointer">
                     <option value="BTC">BTC/USD (Crypto)</option>
                     <option value="BBCA">BBCA (Stock)</option>
                 </select>
             </div>
-            <div class="h-8 w-px bg-gray-800"></div>
-            <div class="flex flex-col w-[220px]">
-                <div class="flex justify-between text-[9px] font-bold uppercase mb-1">
-                    <span id="sentiment-label-left" class="text-down">Panic</span>
+            <div class="h-6 w-px bg-gray-700"></div>
+            <div class="flex flex-col w-[200px]">
+                <div class="flex justify-between text-[9px] font-bold uppercase mb-0.5">
+                    <span class="text-down">PANIC</span>
                     <span class="text-white" id="sentiment-val">Neutral</span>
-                    <span id="sentiment-label-right" class="text-up">FOMO</span>
+                    <span class="text-up">FOMO</span>
                 </div>
-                <div class="w-full h-2 bg-gray-900 rounded-full overflow-hidden relative border border-white/5">
-                    <div id="sentiment-bar" class="h-full bg-yellow-500 transition-all duration-700" style="width: 50%"></div>
+                <div class="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden relative">
+                    <div id="sentiment-bar" class="h-full bg-yellow-500 transition-all duration-500" style="width: 50%"></div>
                 </div>
             </div>
         </div>
 
-        <div class="flex items-center gap-8">
-            <div class="text-right">
-                <span class="text-[9px] text-gray-500 block font-bold uppercase">Cash Available</span>
+        <div class="flex items-center gap-6 text-right">
+            <div class="cursor-pointer hover:bg-gray-800 px-2 py-1 rounded border border-transparent hover:border-gray-600 transition" onclick="APP.editBalance()">
+                <span class="text-[9px] text-gray-500 block font-bold">CASH (CLICK TO EDIT)</span>
                 <span class="text-sm font-bold mono text-yellow-500" id="head-cash">0</span>
             </div>
-            <div class="text-right">
+            <div>
                 <span class="text-[9px] text-gray-500 block font-bold uppercase">Unrealized PNL</span>
                 <span class="text-sm font-bold mono" id="head-pl">0</span>
             </div>
-            <div class="bg-black/30 p-2 rounded border border-c min-w-[80px] text-center">
-                <span class="text-[9px] text-gray-400 block font-bold uppercase">Net Pos</span>
+            <div class="bg-black/40 px-3 py-1 rounded border border-c">
+                <span class="text-[9px] text-gray-500 block font-bold uppercase">Position</span>
                 <span class="text-sm font-bold mono text-blue-400" id="head-pos">0</span>
             </div>
         </div>
     </header>
 
     <div class="flex-1 flex overflow-hidden">
-        <div class="flex-1 flex flex-col min-w-0 bg-[#020202] relative border-r border-c">
-            <div class="absolute top-4 left-4 z-10 flex gap-3 items-center">
-                <div class="flex bg-panel border border-c rounded p-1 shadow-xl">
-                    <button onclick="CHART.setTF(1)" id="btn-1m" class="px-3 py-1 text-[10px] font-bold rounded bg-gray-700 text-white">1m</button>
-                    <button onclick="CHART.setTF(5)" id="btn-5m" class="px-3 py-1 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400">5m</button>
+        <div class="flex-1 flex flex-col min-w-0 bg-[#000] relative border-r border-c group">
+            <div class="absolute top-3 left-3 z-10 flex gap-2">
+                <div class="flex bg-panel border border-c rounded p-0.5 shadow-lg">
+                    <button onclick="CHART.setTF(1)" id="btn-1m" class="px-2 py-0.5 text-[10px] font-bold rounded bg-gray-700 text-white">1m</button>
+                    <button onclick="CHART.setTF(5)" id="btn-5m" class="px-2 py-0.5 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400">5m</button>
                 </div>
-                <div class="px-3 py-1 bg-black/80 border border-c rounded text-[11px] text-white flex items-center gap-3 backdrop-blur-md">
-                     <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                     <span id="chart-price" class="mono font-bold text-lg">0.00</span>
+                <div class="px-2 py-0.5 bg-black/60 border border-c rounded text-[10px] text-white flex items-center gap-2 backdrop-blur-sm">
+                     <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                     <span id="chart-price" class="mono font-bold">0.00</span>
                 </div>
-                <div id="market-status" class="text-[9px] font-bold px-2 py-1 bg-blue-900/30 border border-blue-500 text-blue-400 rounded uppercase tracking-tighter">
-                    Accumulating Phase
+                <div id="market-phase" class="px-2 py-0.5 bg-blue-900/30 border border-blue-500 text-blue-400 text-[9px] font-bold rounded uppercase">
+                    Consolidating
                 </div>
             </div>
             <canvas id="chartCanvas" class="w-full h-full cursor-crosshair"></canvas>
         </div>
 
-        <div class="w-[380px] flex flex-col bg-panel shrink-0">
+        <div class="w-[360px] flex flex-col bg-panel shrink-0 border-l border-c">
             <div class="h-[35%] flex flex-col border-b border-c">
-                <div class="px-3 py-2 bg-[#161A25] border-b border-c flex justify-between items-center">
+                <div class="px-3 py-1.5 bg-[#161A25] border-b border-c flex justify-between">
                     <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Order Book</span>
-                    <span class="text-[10px] font-mono text-gray-500" id="spread-val">SPREAD: 0.00</span>
+                    <span class="text-[10px] font-mono text-gray-500" id="spread-val">Spread: 0</span>
                 </div>
-                <div class="grid grid-cols-3 text-[9px] text-gray-500 font-bold px-3 py-1.5 bg-black/40 border-b border-c">
-                    <span>SIZE</span><span class="text-center">PRICE</span><span class="text-right">SIZE</span>
+                <div class="grid grid-cols-3 text-[9px] text-gray-500 font-bold px-2 py-1 bg-black/20">
+                    <span>BID QTY</span><span class="text-center">PRICE</span><span class="text-right">ASK QTY</span>
                 </div>
-                <div id="book-container" class="flex-1 overflow-hidden relative bg-[#050505]"></div>
+                <div id="book-container" class="flex-1 overflow-y-auto relative bg-[#050505]"></div>
             </div>
 
             <div class="h-[25%] flex flex-col border-b border-c">
-                <div class="px-3 py-2 bg-[#161A25] border-b border-c">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Market Tape</span>
+                <div class="px-3 py-1.5 bg-[#161A25] border-b border-c">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Running Trade</span>
                 </div>
                 <div id="tape-container" class="flex-1 overflow-y-auto font-mono text-[10px] bg-[#050505]"></div>
             </div>
 
-            <div class="h-[40%] flex flex-col bg-panel">
-                <div class="px-3 py-2 bg-[#161A25] border-b border-c">
-                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-blue-400">Smart Money Console</span>
+            <div class="h-[40%] flex flex-col bg-panel min-h-[220px]">
+                <div class="px-3 py-1.5 bg-[#161A25] border-b border-c">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Execution Panel</span>
                 </div>
                 
-                <div class="p-4 flex flex-col gap-4 overflow-y-auto">
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-black/40 p-2 rounded border border-c">
-                            <label class="text-[8px] text-gray-500 font-bold block mb-1 uppercase">Market Bias</label>
-                            <select id="sim-mode" class="w-full bg-transparent text-white text-[11px] font-bold outline-none cursor-pointer">
+                <div class="p-3 flex flex-col gap-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-black/40 p-1.5 rounded border border-c">
+                            <label class="text-[8px] text-gray-500 font-bold block mb-1 uppercase">Bias</label>
+                            <select id="sim-mode" class="w-full bg-transparent text-white text-[10px] outline-none">
                                 <option value="normal">🟢 Efficiency</option>
-                                <option value="volatile">🟡 Volatility</option>
-                                <option value="war">🔴 Market War</option>
+                                <option value="volatile">🟡 Volatile</option>
+                                <option value="war">🔴 War Zone</option>
                             </select>
                         </div>
-                        <div class="bg-black/40 p-2 rounded border border-c">
-                            <label class="text-[8px] text-gray-500 font-bold block mb-1 uppercase">Order Size</label>
-                            <input type="number" id="input-qty" value="1" class="w-full bg-transparent text-white text-[11px] font-bold outline-none text-right">
+                        <div class="bg-black/40 p-1.5 rounded border border-c">
+                            <label class="text-[8px] text-gray-500 font-bold block mb-1 uppercase">Lot/Size</label>
+                            <input type="number" id="input-qty" class="w-full bg-transparent text-white text-right font-bold outline-none">
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="APP.execute('BUY')" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded text-xs transition-all border-b-4 border-green-800 active:border-b-0 active:translate-y-1">MARKET BUY</button>
-                        <button onclick="APP.execute('SELL')" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded text-xs transition-all border-b-4 border-red-800 active:border-b-0 active:translate-y-1">MARKET SELL</button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="APP.execute('BUY')" class="bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded text-xs transition border-b-2 border-green-800 active:scale-95">BUY / LONG</button>
+                        <button onclick="APP.execute('SELL')" class="bg-red-600 hover:bg-red-500 text-white font-bold py-2 rounded text-xs transition border-b-2 border-red-800 active:scale-95">SELL / SHORT</button>
                     </div>
 
-                    <div class="space-y-2 pt-2 border-t border-c">
-                        <span class="text-[9px] text-blue-500 font-black uppercase tracking-tighter">Algorithm Execution</span>
+                    <div class="border-t border-c pt-2 mt-1">
+                        <label class="text-[9px] text-blue-400 font-bold block mb-2 text-center uppercase tracking-widest">Smart Money Algorithms</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <button id="btn-auto-buy" onclick="APP.toggleTool('auto-buy')" class="bg-[#1a1d23] border border-c text-[9px] py-2 rounded hover:bg-blue-900/20">Accumulate</button>
-                            <button id="btn-wash" onclick="APP.toggleTool('wash')" class="bg-[#1a1d23] border border-c text-[9px] py-2 rounded hover:bg-yellow-900/20">Wash Volume</button>
-                            <button id="btn-auto-sell" onclick="APP.toggleTool('auto-sell')" class="bg-[#1a1d23] border border-c text-[9px] py-2 rounded hover:bg-red-900/20">Distribute</button>
+                            <button id="btn-auto-buy" onclick="APP.toggleTool('auto-buy')" class="bg-[#23262F] border border-c text-[9px] py-1.5 rounded">Accumulate</button>
+                            <button id="btn-wash" onclick="APP.toggleTool('wash')" class="bg-[#23262F] border border-c text-yellow-500 text-[9px] py-1.5 rounded">Wash Trade</button>
+                            <button id="btn-auto-sell" onclick="APP.toggleTool('auto-sell')" class="bg-[#23262F] border border-c text-[9px] py-1.5 rounded">Distribute</button>
                         </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <button onclick="APP.trigger('breakout')" class="bg-green-900/20 border border-green-500/50 text-green-400 text-[9px] py-2 rounded font-bold hover:bg-green-500 hover:text-white transition">Force Breakout</button>
-                            <button onclick="APP.trigger('guyur')" class="bg-red-900/20 border border-red-500/50 text-red-400 text-[9px] py-2 rounded font-bold hover:bg-red-500 hover:text-white transition">Smart Money Dump</button>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <button onclick="APP.trigger('breakout')" class="bg-[#23262F] border border-green-900 text-green-400 text-[9px] py-1.5 rounded font-bold">Force Breakout</button>
+                            <button onclick="APP.trigger('guyur')" class="bg-[#23262F] border border-red-900 text-red-400 text-[9px] py-1.5 rounded font-bold">Guyur Retail</button>
                         </div>
                     </div>
                 </div>
@@ -154,7 +157,7 @@
 
 <script>
 /**
- * SMARTALGO V11 - CORE LOGIC
+ * SMARTALGO V11 REVISI - ENGINE
  */
 const $ = (id) => document.getElementById(id);
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
@@ -165,27 +168,19 @@ const ASSETS = {
 };
 
 const STATE = {
-    active: 'BTC',
-    price: 0,
-    cash: 50000,
+    active: 'BTC', price: 0, cash: 50000,
     portfolio: { pos: 0, avg: 0 },
     bids: [], asks: [], trades: [],
     candles1m: [], candles5m: [],
-    tf: 1,
-    sentiment: 50,
-    activeTool: null,
-    toolTimer: null,
-    
-    // --- STRUCTURE ENGINE ---
-    zones: [], // {price, type, strength}
-    isBreaking: false,
-    basePrice: 0
+    tf: 1, sentiment: 50,
+    activeTool: null, toolTimer: null,
+    // Mesin Struktur
+    zones: [], 
 };
 
 const CHART = {
     canvas: $('chartCanvas'),
     ctx: $('chartCanvas').getContext('2d'),
-    
     init() {
         this.resize();
         window.onresize = () => this.resize();
@@ -200,74 +195,83 @@ const CHART = {
         STATE.candles1m = []; STATE.candles5m = [];
         let p = ASSETS[STATE.active].price;
         let now = Date.now();
+        // Buat 100 candle 1m
         for(let i=100; i>0; i--) {
             let t = now - (i * 60000);
-            let c = p + (Math.random()-0.5)*50;
-            STATE.candles1m.push({time: t, o:p, h:Math.max(p,c)+5, l:Math.min(p,c)-5, c:c});
+            let c = p + (Math.random()-0.5)*40;
+            let o = p;
+            let h = Math.max(o,c) + Math.random()*5;
+            let l = Math.min(o,c) - Math.random()*5;
+            STATE.candles1m.push({time: t, o, h, l, c});
             p = c;
         }
+        // Agregasi ke 5m
+        for(let i=0; i<STATE.candles1m.length; i+=5) {
+            let slice = STATE.candles1m.slice(i, i+5);
+            STATE.candles5m.push({
+                time: slice[0].time,
+                o: slice[0].o,
+                h: Math.max(...slice.map(s=>s.h)),
+                l: Math.min(...slice.map(s=>s.l)),
+                c: slice[slice.length-1].c
+            });
+        }
         STATE.price = p;
-        STATE.basePrice = p;
-        // Initial Zone
-        STATE.zones = [{price: p, type: 'DEMAND', strength: 10}];
+        STATE.zones = [{price: p, type: 'DEMAND'}];
     },
     setTF(m) {
         STATE.tf = m;
-        $('btn-1m').className = m===1 ? "px-3 py-1 text-[10px] font-bold rounded bg-gray-700 text-white" : "px-3 py-1 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400";
-        $('btn-5m').className = m===5 ? "px-3 py-1 text-[10px] font-bold rounded bg-gray-700 text-white" : "px-3 py-1 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400";
+        $('btn-1m').className = m===1 ? "px-2 py-0.5 text-[10px] font-bold rounded bg-gray-700 text-white" : "px-2 py-0.5 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400";
+        $('btn-5m').className = m===5 ? "px-2 py-0.5 text-[10px] font-bold rounded bg-gray-700 text-white" : "px-2 py-0.5 text-[10px] font-bold rounded hover:bg-gray-800 text-gray-400";
     },
     update(price) {
-        let last = STATE.candles1m[STATE.candles1m.length-1];
-        if(!last) return;
-        last.c = price;
-        if(price > last.h) last.h = price;
-        if(price < last.l) last.l = price;
+        const up = (arr, ms) => {
+            let last = arr[arr.length-1];
+            if(Date.now() - last.time > ms) {
+                arr.push({time: Date.now(), o:price, h:price, l:price, c:price});
+                if(arr.length > 100) arr.shift();
+            } else {
+                last.c = price;
+                if(price > last.h) last.h = price;
+                if(price < last.l) last.l = price;
+            }
+        };
+        up(STATE.candles1m, 60000);
+        up(STATE.candles5m, 300000);
     },
     draw() {
-        const ctx = this.ctx;
-        const w = this.canvas.width, h = this.canvas.height;
-        ctx.fillStyle = '#020202'; ctx.fillRect(0,0,w,h);
+        const ctx = this.ctx; const w = this.canvas.width, h = this.canvas.height;
+        ctx.fillStyle = '#000'; ctx.fillRect(0,0,w,h);
         
-        const data = STATE.candles1m;
+        const data = STATE.tf === 1 ? STATE.candles1m : STATE.candles5m;
         if(data.length === 0) return;
 
         let vals = data.map(d=>[d.h, d.l]).flat();
         let min = Math.min(...vals), max = Math.max(...vals);
-        let pad = (max-min)*0.15; min-=pad; max+=pad;
+        let pad = (max-min)*0.2; min-=pad; max+=pad;
         const getY = p => h - ((p-min)/(max-min))*h;
-        const barW = (w-50)/data.length;
+        const barW = (w-40)/data.length;
 
         // Draw S/D Zones
         STATE.zones.forEach(z => {
-            ctx.fillStyle = z.type === 'SUPPLY' ? 'rgba(246, 70, 93, 0.08)' : 'rgba(14, 203, 129, 0.08)';
-            let zy = getY(z.price);
-            ctx.fillRect(0, zy-20, w, 40);
-            ctx.strokeStyle = z.type === 'SUPPLY' ? 'rgba(246, 70, 93, 0.2)' : 'rgba(14, 203, 129, 0.2)';
-            ctx.setLineDash([5, 5]);
-            ctx.strokeRect(0, zy-20, w, 40);
-            ctx.setLineDash([]);
+            ctx.fillStyle = z.type === 'SUPPLY' ? 'rgba(246, 70, 93, 0.05)' : 'rgba(14, 203, 129, 0.05)';
+            ctx.fillRect(0, getY(z.price)-15, w, 30);
         });
 
-        // Candlesticks
         data.forEach((d,i) => {
             let x = 10 + i*barW;
             let col = d.c >= d.o ? '#0ECB81' : '#F6465D';
-            ctx.strokeStyle = col; ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(x+barW/2, getY(d.h)); ctx.lineTo(x+barW/2, getY(d.l)); ctx.stroke();
+            ctx.strokeStyle = col; ctx.beginPath();
+            ctx.moveTo(x+barW/2, getY(d.h)); ctx.lineTo(x+barW/2, getY(d.l)); ctx.stroke();
             ctx.fillStyle = col;
-            let bodyH = Math.max(1, Math.abs(getY(d.o)-getY(d.c)));
-            ctx.fillRect(x+2, getY(Math.max(d.o, d.c)), barW-4, bodyH);
+            ctx.fillRect(x+1, getY(Math.max(d.o, d.c)), barW-2, Math.max(1, Math.abs(getY(d.o)-getY(d.c))));
         });
 
-        // Price Line
         let py = getY(STATE.price);
-        ctx.strokeStyle = '#fff'; ctx.setLineDash([2,4]);
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.setLineDash([2,4]);
         ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke(); ctx.setLineDash([]);
     },
-    loop() {
-        requestAnimationFrame(() => this.loop());
-        this.draw();
-    }
+    loop() { requestAnimationFrame(() => this.loop()); this.draw(); }
 };
 
 const APP = {
@@ -275,10 +279,9 @@ const APP = {
         this.setAsset();
         CHART.init();
         this.uiLoop();
-        setInterval(() => this.marketEngine(), 400);
-        setInterval(() => this.psychologyLogic(), 1000);
+        setInterval(() => this.marketTick(), 400);
+        setInterval(() => this.sentimentLogic(), 1000);
     },
-
     setAsset() {
         const val = $('asset-select').value;
         STATE.active = val;
@@ -286,104 +289,51 @@ const APP = {
         STATE.price = cfg.price;
         STATE.cash = val === 'BTC' ? 50000 : 100000000;
         STATE.portfolio = { pos: 0, avg: 0 };
-        STATE.zones = [{price: STATE.price, type: 'DEMAND', strength: 10}];
         this.resetBook();
-        this.toast(`Market: ${val} Loaded`);
+        CHART.generateHistory();
+        $('input-qty').value = val === 'BTC' ? 0.1 : 100;
+        this.toast(`Market Switched: ${val}`);
     },
-
+    editBalance() {
+        let n = prompt("Set New Cash Balance:", STATE.cash);
+        if(n && !isNaN(n)) { STATE.cash = parseFloat(n); this.toast("Balance Updated"); }
+    },
     resetBook() {
         const cfg = ASSETS[STATE.active];
         STATE.asks = []; STATE.bids = [];
         for(let i=0; i<15; i++) {
-            STATE.asks.push({price: STATE.price + ((i+1)*cfg.tick), vol: rand(1, 10) * cfg.minVol * 10});
-            STATE.bids.push({price: STATE.price - (i*cfg.tick), vol: rand(1, 10) * cfg.minVol * 10});
+            let v = rand(1, 10) * cfg.minVol * 10;
+            STATE.asks.push({price: STATE.price + ((i+1)*cfg.tick), vol: v});
+            STATE.bids.push({price: STATE.price - (i*cfg.tick), vol: v});
         }
     },
-
-    // --- MARKET BEHAVIOR ENGINE ---
-    marketEngine() {
-        const mode = $('sim-mode').value;
-        const cfg = ASSETS[STATE.active];
-        let force = 0;
-
-        // Area Check (Supply/Demand)
-        let inZone = STATE.zones.find(z => Math.abs(z.price - STATE.price) < (cfg.tick * 10));
-        
-        if (inZone) {
-            $('market-status').innerText = "Area " + inZone.type;
-            $('market-status').className = inZone.type === 'SUPPLY' ? "text-[9px] font-bold px-2 py-1 bg-red-900/30 border border-red-500 text-red-400 rounded" : "text-[9px] font-bold px-2 py-1 bg-green-900/30 border border-green-500 text-green-400 rounded";
-            force = (Math.random() - 0.5) * 0.5; // Sideways in zone
-        } else {
-            $('market-status').innerText = "Trending Phase";
-            $('market-status').className = "text-[9px] font-bold px-2 py-1 bg-blue-900/30 border border-blue-500 text-blue-400 rounded";
-        }
-
-        // Retail Psychology Force
-        if (STATE.sentiment > 75) force += 1.2; // FOMO
-        if (STATE.sentiment < 25) force -= 1.2; // Panic
-
-        // War Mode Logic
-        if (mode === 'war') {
-            document.body.classList.add('war-active');
-            if (STATE.portfolio.pos > 0) force -= 0.8; // Counter User
-        } else {
-            document.body.classList.remove('war-active');
-        }
-
-        let side = (force + (Math.random() - 0.5)) > 0 ? 'BUY' : 'SELL';
-        let vol = Math.abs(force) * cfg.minVol * 5;
-        if(vol > 0) this.execute(side, vol, false);
-
-        // Zone Creation Logic
-        if(Math.random() < 0.01) {
-            STATE.zones.push({price: STATE.price, type: Math.random() > 0.5 ? 'SUPPLY' : 'DEMAND'});
-            if(STATE.zones.length > 3) STATE.zones.shift();
-        }
-    },
-
-    psychologyLogic() {
-        let lastC = STATE.candles1m[STATE.candles1m.length-1];
-        if(!lastC) return;
-        
-        let change = lastC.c - lastC.o;
-        if(change > 0) STATE.sentiment += 2;
-        else if(change < 0) STATE.sentiment -= 2;
-
-        // Neutral Gravity
-        if(STATE.sentiment > 52) STATE.sentiment -= 1;
-        else if(STATE.sentiment < 48) STATE.sentiment += 1;
-
-        STATE.sentiment = Math.max(5, Math.min(95, STATE.sentiment));
-        
-        $('sentiment-bar').style.width = STATE.sentiment + "%";
-        $('sentiment-val').innerText = STATE.sentiment > 75 ? "EXTREME GREED (FOMO)" : STATE.sentiment < 25 ? "EXTREME FEAR (PANIC)" : "NEUTRAL";
-        $('sentiment-bar').className = `h-full transition-all duration-700 ${STATE.sentiment > 75 ? 'bg-green-500' : STATE.sentiment < 25 ? 'bg-red-500' : 'bg-yellow-500'}`;
-    },
-
     execute(side, qtyOverride=null, isUser=true) {
         let qty = qtyOverride || parseFloat($('input-qty').value);
         if(qty <= 0) return;
         const cfg = ASSETS[STATE.active];
-
-        if(isUser && qty > cfg.maxVol) {
-            this.toast("⚡ LARGE ORDER DETECTED", 'info');
-            STATE.sentiment += (side === 'BUY' ? 15 : -15);
+        
+        // Cek dana jika user
+        if(isUser) {
+            let estCost = STATE.asks[0].price * qty * (STATE.active==='BBCA'?100:1);
+            if(side === 'BUY' && STATE.cash < estCost) return this.toast("Insufficient Funds!", 'error');
+            if(side === 'SELL' && STATE.portfolio.pos < qty) return this.toast("No Position!", 'error');
+            
+            // Efek Smart Money ke Sentiment
+            if(qty > cfg.maxVol) STATE.sentiment += (side === 'BUY' ? 10 : -10);
         }
 
-        let remaining = qty;
         let books = side === 'BUY' ? STATE.asks : STATE.bids;
-        let filled = 0;
-        let totalCost = 0;
+        let filled = 0; let cost = 0;
 
-        while(remaining > 0 && books.length > 0) {
+        while(qty > 0 && books.length > 0) {
             let best = books[0];
-            let trade = Math.min(remaining, best.vol);
+            let trade = Math.min(qty, best.vol);
             STATE.price = best.price;
             CHART.update(best.price);
             best.vol -= trade;
-            remaining -= trade;
+            qty -= trade;
             filled += trade;
-            totalCost += (best.price * trade * (STATE.active === 'BBCA' ? 100 : 1));
+            cost += (best.price * trade * (STATE.active==='BBCA'?100:1));
 
             STATE.trades.unshift({time: new Date().toLocaleTimeString().split(' ')[0], price: best.price, vol: trade, side: side});
             if(STATE.trades.length > 30) STATE.trades.pop();
@@ -391,133 +341,137 @@ const APP = {
             if(best.vol <= 0.0001) {
                 books.shift();
                 let lastP = books.length ? books[books.length-1].price : STATE.price;
-                books.push({price: side === 'BUY' ? lastP + cfg.tick : lastP - cfg.tick, vol: rand(1, 10) * cfg.minVol * 10});
+                books.push({price: side === 'BUY' ? lastP + cfg.tick : lastP - cfg.tick, vol: rand(1, 20) * cfg.minVol * 5});
             }
         }
-        if(isUser) this.updatePorto(side, filled, totalCost);
+        if(isUser && filled > 0) this.updatePorto(side, filled, cost);
     },
-
     updatePorto(side, qty, val) {
         const P = STATE.portfolio;
         const mul = STATE.active==='BBCA' ? 100 : 1;
         if(side === 'BUY') {
-            if(STATE.cash < val) return this.toast("Insufficient Balance", "error");
             STATE.cash -= val;
-            let prevVal = P.pos * P.avg * mul;
+            let prevV = P.pos * P.avg * mul;
             P.pos += qty;
-            P.avg = (prevVal + val) / (P.pos * mul);
+            P.avg = (prevV + val) / (P.pos * mul);
         } else {
-            if(P.pos < qty) return this.toast("No Position to Sell", "error");
             STATE.cash += val;
             P.pos -= qty;
             if(P.pos < 0.0001) { P.pos = 0; P.avg = 0; }
         }
     },
-
-    trigger(type) {
+    marketTick() {
+        const mode = $('sim-mode').value;
         const cfg = ASSETS[STATE.active];
-        if(type === 'breakout') {
-            this.toast("🚀 INITIATING BREAKOUT...");
-            let i = 0;
-            let iv = setInterval(() => {
-                this.execute('BUY', cfg.maxVol * 2, false);
-                i++; if(i > 10) clearInterval(iv);
-            }, 100);
+        let force = 0;
+
+        // Supply/Demand Area Logic
+        let zone = STATE.zones.find(z => Math.abs(z.price - STATE.price) < (cfg.tick * 5));
+        if(zone) {
+            force = (Math.random()-0.5) * 0.2;
+            $('market-phase').innerText = "In " + zone.type + " Zone";
+        } else {
+            $('market-phase').innerText = "Price Discovery";
         }
-        if(type === 'guyur') {
-            this.toast("💀 SMART MONEY DUMPING!");
-            let i = 0;
-            let iv = setInterval(() => {
-                this.execute('SELL', cfg.maxVol * 3, false);
-                i++; if(i > 10) clearInterval(iv);
-            }, 100);
+
+        // Retail FOMO/Panic
+        if(STATE.sentiment > 70) force += 0.8;
+        if(STATE.sentiment < 30) force -= 0.8;
+
+        if(mode === 'war' && STATE.portfolio.pos !== 0) {
+            force += (STATE.portfolio.pos > 0 ? -0.5 : 0.5);
+        }
+
+        let side = (force + (Math.random()-0.5)) > 0 ? 'BUY' : 'SELL';
+        this.execute(side, cfg.minVol * rand(1,5), false);
+
+        if(Math.random() < 0.01) {
+            STATE.zones.push({price: STATE.price, type: Math.random() > 0.5 ? 'SUPPLY' : 'DEMAND'});
+            if(STATE.zones.length > 3) STATE.zones.shift();
         }
     },
-
+    sentimentLogic() {
+        let last = STATE.candles1m[STATE.candles1m.length-1];
+        if(!last) return;
+        if(last.c > last.o) STATE.sentiment += 1; else STATE.sentiment -= 1;
+        if(STATE.sentiment > 50) STATE.sentiment -= 0.5; else STATE.sentiment += 0.5;
+        STATE.sentiment = Math.max(10, Math.min(90, STATE.sentiment));
+    },
     toggleTool(type) {
-        if(STATE.activeTool === type) {
-            clearInterval(STATE.toolTimer);
-            STATE.activeTool = null;
-            this.clearStyles();
-            return;
-        }
+        if(STATE.activeTool === type) { clearInterval(STATE.toolTimer); STATE.activeTool = null; this.clearStyles(); return; }
         this.clearStyles();
         STATE.activeTool = type;
-        const btn = $(type === 'auto-buy' ? 'btn-auto-buy' : type === 'auto-sell' ? 'btn-auto-sell' : 'btn-wash');
-        btn.classList.add('war-active');
-        
+        $(type==='auto-buy'?'btn-auto-buy':type==='auto-sell'?'btn-auto-sell':'btn-wash').classList.add('active-tool');
         STATE.toolTimer = setInterval(() => {
             let q = parseFloat($('input-qty').value);
-            if(type === 'auto-buy') this.execute('BUY', q, true);
-            if(type === 'auto-sell') this.execute('SELL', q, true);
-            if(type === 'wash') {
-                this.execute('BUY', q, false);
-                this.execute('SELL', q, false);
-            }
-        }, 1000);
+            if(type==='auto-buy') this.execute('BUY', q, true);
+            if(type==='auto-sell') this.execute('SELL', q, true);
+            if(type==='wash') { this.execute('BUY', q, false); this.execute('SELL', q, false); }
+        }, 800);
     },
-
-    clearStyles() {
-        ['btn-auto-buy','btn-auto-sell','btn-wash'].forEach(id => $(id).classList.remove('war-active'));
+    trigger(type) {
+        const cfg = ASSETS[STATE.active];
+        this.toast("Initiating " + type.toUpperCase());
+        let i=0; let iv = setInterval(() => {
+            this.execute(type==='breakout'?'BUY':'SELL', cfg.maxVol, false);
+            i++; if(i>10) clearInterval(iv);
+        }, 100);
     },
-
+    clearStyles() { ['btn-auto-buy','btn-auto-sell','btn-wash'].forEach(id => $(id).classList.remove('active-tool')); },
     uiLoop() {
         requestAnimationFrame(() => this.uiLoop());
         const cfg = ASSETS[STATE.active];
         
-        $('chart-price').innerText = STATE.price.toLocaleString(undefined, {minimumFractionDigits: cfg.dec});
+        $('chart-price').innerText = STATE.price.toFixed(cfg.dec);
         $('head-cash').innerText = cfg.cur + " " + Math.floor(STATE.cash).toLocaleString();
-        $('head-pos').innerText = STATE.portfolio.pos.toFixed(STATE.active === 'BTC' ? 4 : 0);
+        $('head-pos').innerText = STATE.portfolio.pos.toFixed(STATE.active==='BTC'?3:0);
         
-        const mul = STATE.active==='BBCA' ? 100 : 1;
+        let mul = STATE.active==='BBCA'?100:1;
         let pl = (STATE.price - STATE.portfolio.avg) * STATE.portfolio.pos * mul;
-        $('head-pl').innerText = (pl >= 0 ? "+" : "") + cfg.cur + " " + Math.floor(pl).toLocaleString();
-        $('head-pl').className = `text-sm font-bold mono ${pl >= 0 ? 'text-up' : 'text-down'}`;
-        $('spread-val').innerText = "SPREAD: " + (STATE.asks[0].price - STATE.bids[0].price).toFixed(cfg.dec);
+        $('head-pl').innerText = cfg.cur + " " + Math.floor(pl).toLocaleString();
+        $('head-pl').className = `text-sm font-bold mono ${pl>=0 ? 'text-up':'text-down'}`;
+        $('sentiment-bar').style.width = STATE.sentiment + "%";
+        $('sentiment-val').innerText = STATE.sentiment > 70 ? "FOMO" : STATE.sentiment < 30 ? "PANIC" : "NEUTRAL";
 
-        // Orderbook UI
+        // Book UI
         let h = '';
-        STATE.asks.slice(0, 10).reverse().forEach(a => {
-            let w = Math.min((a.vol/(cfg.maxVol*5))*100, 100);
-            h += `<div class="grid grid-cols-3 px-3 py-0.5 relative">
+        STATE.asks.slice(0,8).reverse().forEach(a => {
+            let w = Math.min((a.vol/(cfg.maxVol*2))*100, 100);
+            h += `<div class="grid grid-cols-3 px-2 py-0.5 relative border-b border-white/5">
                 <div class="bar-ask" style="width:${w}%"></div>
-                <span class="text-gray-500 z-10">${a.vol.toFixed(STATE.active==='BTC'?2:0)}</span>
+                <span class="text-gray-400 text-right z-10 pr-2 font-mono">-</span>
                 <span class="text-down text-center z-10 font-bold">${a.price.toFixed(cfg.dec)}</span>
-                <span></span>
+                <span class="text-gray-400 text-right z-10">${a.vol.toFixed(STATE.active==='BTC'?2:0)}</span>
             </div>`;
         });
-        h += `<div class="bg-white/5 text-center text-[10px] py-1 font-bold border-y border-c">${STATE.price.toFixed(cfg.dec)}</div>`;
-        STATE.bids.slice(0, 10).forEach(b => {
-            let w = Math.min((b.vol/(cfg.maxVol*5))*100, 100);
-            h += `<div class="grid grid-cols-3 px-3 py-0.5 relative">
+        h += `<div class="text-center text-[9px] py-1 border-y border-c bg-white/5 font-bold">SPREAD: ${(STATE.asks[0].price-STATE.bids[0].price).toFixed(cfg.dec)}</div>`;
+        STATE.bids.slice(0,8).forEach(b => {
+            let w = Math.min((b.vol/(cfg.maxVol*2))*100, 100);
+            h += `<div class="grid grid-cols-3 px-2 py-0.5 relative border-b border-white/5">
                 <div class="bar-bid" style="width:${w}%"></div>
-                <span></span>
+                <span class="text-gray-400 z-10">${b.vol.toFixed(STATE.active==='BTC'?2:0)}</span>
                 <span class="text-up text-center z-10 font-bold">${b.price.toFixed(cfg.dec)}</span>
-                <span class="text-gray-500 text-right z-10">${b.vol.toFixed(STATE.active==='BTC'?2:0)}</span>
+                <span class="text-gray-400 text-right z-10">-</span>
             </div>`;
         });
         $('book-container').innerHTML = h;
 
         // Tape UI
         let th = '';
-        STATE.trades.slice(0, 20).forEach(t => {
-            th += `<div class="flex justify-between px-3 py-1 border-b border-white/5">
-                <span class="text-gray-600">${t.time}</span>
-                <span class="${t.side==='BUY'?'text-up':'text-down'} font-bold">${t.price.toFixed(cfg.dec)}</span>
-                <span class="text-gray-400">${t.vol.toFixed(STATE.active==='BTC'?3:0)}</span>
+        STATE.trades.slice(0,20).forEach(t => {
+            th += `<div class="grid grid-cols-3 px-2 py-0.5 border-b border-white/5">
+                <span class="text-gray-500">${t.time}</span>
+                <span class="text-center ${t.side==='BUY'?'text-up':'text-down'} font-bold">${t.price.toFixed(cfg.dec)}</span>
+                <span class="text-right text-gray-400">${t.vol.toFixed(STATE.active==='BTC'?2:0)}</span>
             </div>`;
         });
         $('tape-container').innerHTML = th;
     },
-
     toast(msg, type='info') {
-        const t = $('toast');
-        t.innerText = msg;
-        t.className = "show";
+        const t = $('toast'); t.innerText = msg; t.className = "show";
         setTimeout(() => t.className = "", 3000);
     }
 };
-
 window.onload = () => APP.init();
 </script>
 </body>
