@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartAlgo Pro v3.0 - Psychology & Portfolio</title>
+    <title>SmartAlgo Pro v3.1 - Institutional Fix</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -23,7 +23,7 @@
 <body class="flex h-screen w-screen text-[12px]">
 
     <aside class="w-14 bg-sidebar border-r border-stockbit flex flex-col items-center py-4 space-y-8">
-        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">P</div>
+        <div class="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white shadow-lg">SM</div>
         <div class="text-blue-500"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M11 7h2v10h-2zm-4 3h2v7H7zm8 3h2v4h-2z"/></svg></div>
     </aside>
 
@@ -39,22 +39,22 @@
                     <div class="text-green-500 font-bold mono text-xl" id="live-price">9,850</div>
                 </div>
                 <div class="border-l border-gray-800 pl-6">
-                    <span class="text-gray-500 text-[9px] block uppercase">Sentiment</span>
+                    <span class="text-gray-500 text-[9px] block uppercase">Market Psychology</span>
                     <div class="font-bold mono text-xs uppercase" id="market-sentiment">NEUTRAL</div>
                 </div>
             </div>
 
             <div class="flex items-center space-x-6 bg-black/30 p-2 rounded border border-gray-800">
                 <div class="text-right">
-                    <span class="text-gray-500 text-[9px] block uppercase">Cash Balance</span>
+                    <span class="text-gray-500 text-[9px] block uppercase">Buying Power (Cash)</span>
                     <div class="text-white font-bold mono" id="cash-balance">IDR 1,000,000,000</div>
                 </div>
                 <div class="text-right border-l border-gray-700 pl-6">
-                    <span class="text-gray-500 text-[9px] block uppercase">Total Value (Equity)</span>
+                    <span class="text-gray-500 text-[9px] block uppercase">Equity Value</span>
                     <div class="text-yellow-500 font-bold mono" id="total-equity">IDR 1,000,000,000</div>
                 </div>
                 <div class="text-right border-l border-gray-700 pl-6">
-                    <span class="text-gray-500 text-[9px] block uppercase">Realized P/L</span>
+                    <span class="text-gray-500 text-[9px] block uppercase">Profit/Loss</span>
                     <div class="font-bold mono" id="realized-pl">IDR 0</div>
                 </div>
             </div>
@@ -63,14 +63,14 @@
         <div class="flex-1 flex overflow-hidden">
             <div class="flex-1 relative bg-[#050709]">
                 <canvas id="mainChart" class="w-full h-full"></canvas>
-                <div class="absolute right-4 top-10 text-[10px] text-red-500/50 mono">SUPPLY ZONE: 9950</div>
-                <div class="absolute right-4 bottom-20 text-[10px] text-green-500/50 mono">DEMAND ZONE: 9750</div>
+                <div class="absolute right-4 top-10 text-[10px] text-red-500/50 mono">SUPPLY: 9950</div>
+                <div class="absolute right-4 bottom-20 text-[10px] text-green-500/50 mono">DEMAND: 9750</div>
             </div>
 
             <div class="w-[380px] bg-sidebar border-l border-stockbit flex flex-col">
                 <div class="p-3 flex-1 overflow-hidden flex flex-col">
                     <div class="flex justify-between items-center mb-2 px-1">
-                        <h3 class="text-[10px] font-bold text-gray-500 uppercase">Live Depth</h3>
+                        <h3 class="text-[10px] font-bold text-gray-500 uppercase italic">Institutional Terminal</h3>
                         <div class="flex space-x-4 text-[9px] mono">
                             <span class="text-blue-400">POS: <span id="my-pos">0</span> LOT</span>
                             <span class="text-orange-400">AVG: <span id="avg-price">0</span></span>
@@ -87,47 +87,45 @@
 
                 <div class="p-4 bg-card border-t border-stockbit space-y-3">
                     <div class="grid grid-cols-2 gap-2">
-                        <select id="market-mode" onchange="changeMode()" class="bg-black text-white p-2 rounded text-[10px] border border-gray-700 outline-none">
+                        <select id="market-mode" onchange="changeMode()" class="bg-black text-white p-2 rounded text-[10px] border border-gray-700">
                             <option value="normal">MODE: NORMAL</option>
                             <option value="hard">MODE: BATTLE (HARD)</option>
                         </select>
-                        <div class="flex items-center justify-center bg-black rounded border border-gray-700">
-                            <span class="text-[9px] text-gray-500 mr-2 uppercase">Speed:</span>
-                            <input type="number" id="algo-speed" value="150" class="w-12 bg-transparent text-blue-400 font-bold outline-none">
+                        <div class="flex items-center justify-center bg-black rounded border border-gray-700 px-2">
+                            <span class="text-[9px] text-gray-500 mr-2 uppercase">MS:</span>
+                            <input type="number" id="algo-speed" value="100" class="w-full bg-transparent text-blue-400 font-bold outline-none text-left">
                         </div>
                     </div>
                     
                     <div class="space-y-1">
-                        <label class="text-[9px] text-gray-500 uppercase">Order Size (Lot)</label>
+                        <label class="text-[9px] text-gray-500 uppercase">Lot Size per Tick</label>
                         <input type="number" id="order-size" value="1000" class="w-full p-2 rounded text-sm font-bold">
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2 pt-1">
-                        <button onclick="startAlgo('accum')" class="bg-green-600 py-3 rounded text-[10px] font-bold text-white hover:bg-green-500 transition">HAKA ACCUM</button>
-                        <button onclick="startAlgo('distrib')" class="bg-red-600 py-3 rounded text-[10px] font-bold text-white hover:bg-red-500 transition">HAKI DISTRIB</button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="startAlgo('accum')" class="bg-green-600 py-3 rounded text-[10px] font-bold text-white hover:bg-green-500 transition">HAKA (BUY)</button>
+                        <button onclick="startAlgo('distrib')" class="bg-red-600 py-3 rounded text-[10px] font-bold text-white hover:bg-red-500 transition">HAKI (SELL)</button>
                     </div>
-                    <button onclick="stopAlgos()" class="w-full py-2 bg-gray-800 text-white rounded text-[10px] font-bold hover:bg-gray-700">EMERGENCY STOP</button>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="startAlgo('wash')" class="bg-blue-600/20 border border-blue-600/50 text-blue-400 py-2 rounded text-[10px] font-bold uppercase">Wash Volume</button>
+                        <button onclick="stopAlgos()" class="bg-gray-800 text-white py-2 rounded text-[10px] font-bold uppercase">Stop Algo</button>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
     <script>
-        // --- CORE DATA ---
+        // --- DATA STATE ---
         let currentPrice = 9850;
-        let cash = 1000000000; // 1 Miliar Saldo Awal
-        let initialCash = 1000000000;
+        let cash = 1000000000;
         let myPos = 0, myAvg = 0, myCost = 0, realizedPL = 0;
         let bookData = { asks: [], bids: [] };
         let history = [];
-        let algoInterval = null;
-        let marketInterval = null;
-        let mode = 'normal';
-        let sentiment = 'NEUTRAL';
+        let algoInterval = null, marketInterval = null;
+        let mode = 'normal', sentiment = 'NEUTRAL';
 
-        // Zone S/R
-        const SUPPORT = 9750;
-        const RESIST = 9950;
+        const SUPPORT = 9750, RESIST = 9950;
 
         // --- CHART ENGINE ---
         const canvas = document.getElementById('mainChart');
@@ -141,8 +139,7 @@
                 history.push({ open, close, high: Math.max(open, close)+5, low: Math.min(open, close)-5 });
                 p = close;
             }
-            resize();
-            animate();
+            resize(); animate();
         }
 
         function resize() {
@@ -153,32 +150,31 @@
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const padding = 60;
-            const candleWidth = (canvas.width - padding*2) / history.length;
-            const maxP = Math.max(...history.map(h => h.high)) + 20;
-            const minP = Math.min(...history.map(h => h.low)) - 20;
+            const pad = 60;
+            const candleW = (canvas.width - pad*2) / history.length;
+            const prices = history.map(h => [h.high, h.low]).flat();
+            const maxP = Math.max(...prices) + 20, minP = Math.min(...prices) - 20;
             const range = maxP - minP;
 
-            const getY = (p) => canvas.height - padding - ((p - minP) / range) * (canvas.height - padding*2);
+            const getY = (p) => canvas.height - pad - ((p - minP) / range) * (canvas.height - pad*2);
 
             history.forEach((c, i) => {
-                const x = padding + i * candleWidth;
+                const x = pad + i * candleW;
                 const color = c.close >= c.open ? '#22c55e' : '#ef4444';
                 ctx.strokeStyle = color;
                 ctx.beginPath();
-                ctx.moveTo(x + candleWidth/2, getY(c.high));
-                ctx.lineTo(x + candleWidth/2, getY(c.low));
+                ctx.moveTo(x + candleW/2, getY(c.high));
+                ctx.lineTo(x + candleW/2, getY(c.low));
                 ctx.stroke();
                 ctx.fillStyle = color;
-                ctx.fillRect(x + 2, getY(Math.max(c.open, c.close)), candleWidth - 4, Math.max(Math.abs(getY(c.open) - getY(c.close)), 1));
+                ctx.fillRect(x + 2, getY(Math.max(c.open, c.close)), candleW - 4, Math.max(Math.abs(getY(c.open) - getY(c.close)), 1));
             });
             requestAnimationFrame(animate);
         }
 
-        // --- MARKET LOGIC WITH PSYCHOLOGY ---
+        // --- MARKET LOGIC ---
         function initMarket() {
-            bookData.asks = [];
-            bookData.bids = [];
+            bookData.asks = []; bookData.bids = [];
             for(let i=0; i<15; i++) {
                 bookData.asks.push({ price: currentPrice + ((i+1)*2), vol: randVol(), freq: randFreq() });
                 bookData.bids.push({ price: currentPrice - (i*2), vol: randVol(), freq: randFreq() });
@@ -191,45 +187,28 @@
 
         function runMarketEngine() {
             if(marketInterval) clearInterval(marketInterval);
-            const baseSpeed = mode === 'hard' ? 100 : 500;
+            const speed = mode === 'hard' ? 100 : 500;
 
             marketInterval = setInterval(() => {
-                // Logic S/R & Fear/Greed
                 let retailAction = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                let noiseSize = Math.random() * 500;
+                let noise = Math.random() * 300;
 
-                // Support/Demand Logic (Retail buys more at support)
-                if (currentPrice <= SUPPORT + 10) {
-                    retailAction = 'BUY'; 
-                    noiseSize *= 5; // Support Power
-                    sentiment = "STRONG DEMAND";
-                } 
-                // Resistance/Supply Logic (Retail sells more at resistance)
-                else if (currentPrice >= RESIST - 10) {
-                    retailAction = 'SELL';
-                    noiseSize *= 5; // Supply Power
-                    sentiment = "HEAVY SUPPLY";
-                }
-                // Fear & Greed Logic
+                // Support/Resistance Logic
+                if (currentPrice <= SUPPORT + 10) { retailAction = 'BUY'; noise *= 6; sentiment = "STRONG DEMAND"; }
+                else if (currentPrice >= RESIST - 10) { retailAction = 'SELL'; noise *= 6; sentiment = "HEAVY SUPPLY"; }
                 else {
-                    let priceChange = history[history.length-1].close - history[history.length-5].close;
-                    if(priceChange > 20) {
-                        retailAction = 'BUY'; noiseSize *= 3; sentiment = "GREED / FOMO";
-                    } else if(priceChange < -20) {
-                        retailAction = 'SELL'; noiseSize *= 3; sentiment = "FEAR / PANIC";
-                    } else {
-                        sentiment = "NEUTRAL";
-                    }
+                    let diff = history[history.length-1].close - history[history.length-5].close;
+                    if(diff > 20) { retailAction = 'BUY'; noise *= 3; sentiment = "FOMO RISING"; }
+                    else if(diff < -20) { retailAction = 'SELL'; noise *= 3; sentiment = "PANIC SELLING"; }
+                    else sentiment = "STABLE";
                 }
 
-                executeTrade(retailAction, Math.floor(noiseSize), false);
-                
-                // Refill Liquidity
-                bookData.asks.forEach(a => a.vol += Math.floor(Math.random()*150));
-                bookData.bids.forEach(b => b.vol += Math.floor(Math.random()*150));
-                
+                executeTrade(retailAction, Math.floor(noise), false);
+                // Liquidity Refill
+                bookData.asks.forEach(a => a.vol += Math.floor(Math.random()*100));
+                bookData.bids.forEach(b => b.vol += Math.floor(Math.random()*100));
                 renderBook();
-            }, baseSpeed);
+            }, speed);
         }
 
         function executeTrade(side, amount, isSmartMoney) {
@@ -237,19 +216,14 @@
 
             if(side === 'BUY') {
                 let target = bookData.asks[0];
-                let priceToPay = target.price;
-                if(isSmartMoney && cash < (priceToPay * amount * 100)) {
-                    stopAlgos(); return; // Out of money
-                }
+                if(isSmartMoney && cash < (target.price * amount * 100)) return stopAlgos();
 
                 if(amount >= target.vol) {
-                    let volDone = target.vol;
+                    let filled = target.vol;
                     currentPrice = target.price;
-                    if(isSmartMoney) updatePortfolio('BUY', currentPrice, volDone);
+                    if(isSmartMoney) updatePortfolio('BUY', currentPrice, filled);
                     bookData.asks.shift();
-                    bookData.asks.push({ price: bookData.asks[bookData.asks.length-1].price + 2, vol: randVol(), freq: randFreq() });
-                    bookData.bids.unshift({ price: currentPrice, vol: randVol()/2, freq: 1 });
-                    bookData.bids.pop();
+                    bookData.asks.push({ price: bookData.asks[bookData.asks.length-1].price+2, vol: randVol(), freq: randFreq() });
                 } else {
                     target.vol -= amount;
                     currentPrice = target.price;
@@ -258,13 +232,11 @@
             } else {
                 let target = bookData.bids[0];
                 if(amount >= target.vol) {
-                    let volDone = target.vol;
+                    let filled = target.vol;
                     currentPrice = target.price;
-                    if(isSmartMoney) updatePortfolio('SELL', currentPrice, volDone);
+                    if(isSmartMoney) updatePortfolio('SELL', currentPrice, filled);
                     bookData.bids.shift();
-                    bookData.bids.push({ price: bookData.bids[bookData.bids.length-1].price - 2, vol: randVol(), freq: randFreq() });
-                    bookData.asks.unshift({ price: currentPrice, vol: randVol()/2, freq: 1 });
-                    bookData.asks.pop();
+                    bookData.bids.push({ price: bookData.bids[bookData.bids.length-1].price-2, vol: randVol(), freq: randFreq() });
                 } else {
                     target.vol -= amount;
                     currentPrice = target.price;
@@ -272,7 +244,7 @@
                 }
             }
 
-            // Sync History
+            // Sync to History
             let last = history[history.length-1];
             last.close = currentPrice;
             last.high = Math.max(last.high, currentPrice);
@@ -280,48 +252,36 @@
             updateUI();
         }
 
-        // --- PORTFOLIO SYSTEM ---
+        // --- PORTFOLIO & UI ---
         function updatePortfolio(side, price, lot) {
-            let totalValue = price * lot * 100;
+            const val = price * lot * 100;
             if(side === 'BUY') {
-                cash -= totalValue;
-                myCost += totalValue;
+                cash -= val;
+                myCost += val;
                 myPos += lot;
                 myAvg = myCost / (myPos * 100);
             } else {
                 if(myPos > 0) {
-                    let sellLot = Math.min(lot, myPos);
-                    let sellValue = price * sellLot * 100;
-                    let costOfSell = myAvg * sellLot * 100;
-                    
-                    cash += sellValue;
-                    realizedPL += (sellValue - costOfSell);
-                    myPos -= sellLot;
-                    
-                    if(myPos === 0) { myCost = 0; myAvg = 0; }
-                    else myCost = myAvg * myPos * 100;
+                    let sLot = Math.min(lot, myPos);
+                    let sVal = price * sLot * 100;
+                    let costBasis = myAvg * sLot * 100;
+                    cash += sVal;
+                    realizedPL += (sVal - costBasis);
+                    myPos -= sLot;
+                    myCost = myPos > 0 ? myAvg * myPos * 100 : 0;
                 }
             }
         }
 
         function updateUI() {
-            // Price & Sentiment
-            const lp = document.getElementById('live-price');
-            lp.innerText = currentPrice.toLocaleString();
-            const sentEl = document.getElementById('market-sentiment');
-            sentEl.innerText = sentiment;
-            sentEl.className = `font-bold mono text-xs uppercase ${sentiment.includes('FEAR') ? 'panic-red' : sentiment.includes('GREED') ? 'fomo-green' : 'text-gray-400'}`;
-
-            // Portfolio
+            document.getElementById('live-price').innerText = currentPrice.toLocaleString();
+            document.getElementById('market-sentiment').innerText = sentiment;
             document.getElementById('cash-balance').innerText = `IDR ${Math.floor(cash).toLocaleString()}`;
-            let unrealized = (currentPrice - myAvg) * myPos * 100;
-            if(myPos === 0) unrealized = 0;
+            
             let equity = cash + (myPos * currentPrice * 100);
             document.getElementById('total-equity').innerText = `IDR ${Math.floor(equity).toLocaleString()}`;
             document.getElementById('realized-pl').innerText = `IDR ${Math.floor(realizedPL).toLocaleString()}`;
             document.getElementById('realized-pl').className = `font-bold mono ${realizedPL >= 0 ? 'text-green-500' : 'text-red-500'}`;
-
-            // Trade Stats
             document.getElementById('my-pos').innerText = myPos.toLocaleString();
             document.getElementById('avg-price').innerText = Math.round(myAvg).toLocaleString();
         }
@@ -329,43 +289,37 @@
         function renderBook() {
             const list = document.getElementById('order-book-list');
             let html = '';
-            
-            // Render ASKS (Offers)
-            [...bookData.asks].reverse().forEach(item => {
+            [...bookData.asks].reverse().forEach(a => {
                 html += `<div class="grid grid-cols-4 px-2 py-[2px] border-r-2 border-red-500/20 bg-red-500/5">
-                    <span class="text-gray-600 text-[9px]">${item.freq}</span>
-                    <span></span>
-                    <span class="text-red-500 font-bold text-center">${item.price.toLocaleString()}</span>
-                    <span class="text-right text-gray-300 font-bold">${item.vol.toLocaleString()}</span>
+                    <span class="text-gray-600 text-[9px]">${a.freq}</span><span></span>
+                    <span class="text-red-500 font-bold text-center">${a.price.toLocaleString()}</span>
+                    <span class="text-right text-gray-300 font-bold">${a.vol.toLocaleString()}</span>
                 </div>`;
             });
-
-            // Mid Spread
             html += `<div class="bg-blue-600/10 text-white py-1 text-center font-bold my-1 border-y border-blue-500/20">${currentPrice.toLocaleString()}</div>`;
-
-            // Render BIDS (Corrected & Displayed)
-            bookData.bids.forEach(item => {
+            bookData.bids.forEach(b => {
                 html += `<div class="grid grid-cols-4 px-2 py-[2px] border-l-2 border-green-500/20 bg-green-500/5">
-                    <span class="text-gray-300 font-bold">${item.vol.toLocaleString()}</span>
-                    <span class="text-green-500 font-bold text-center">${item.price.toLocaleString()}</span>
-                    <span></span>
-                    <span class="text-gray-600 text-[9px] text-right">${item.freq}</span>
+                    <span class="text-gray-300 font-bold">${b.vol.toLocaleString()}</span>
+                    <span class="text-green-500 font-bold text-center">${b.price.toLocaleString()}</span>
+                    <span></span><span class="text-gray-600 text-[9px] text-right">${b.freq}</span>
                 </div>`;
             });
             list.innerHTML = html;
         }
 
-        // --- COMMANDS ---
+        // --- ALGO COMMANDS ---
         function startAlgo(m) {
             stopAlgos();
             const speed = parseInt(document.getElementById('algo-speed').value);
             const sz = parseInt(document.getElementById('order-size').value);
+            
             algoInterval = setInterval(() => {
                 if(m === 'accum') executeTrade('BUY', sz, true);
                 if(m === 'distrib') executeTrade('SELL', sz, true);
                 if(m === 'wash') {
+                    // Wash Trade: Beli dan Jual di harga yang sama secepat mungkin
                     executeTrade('BUY', sz, true);
-                    setTimeout(() => executeTrade('SELL', sz, true), speed/2);
+                    setTimeout(() => executeTrade('SELL', sz, true), 10);
                 }
             }, speed);
         }
@@ -373,17 +327,12 @@
         function stopAlgos() { clearInterval(algoInterval); }
         function changeMode() { mode = document.getElementById('market-mode').value; runMarketEngine(); }
 
-        // New Candle Logic
         setInterval(() => {
             history.shift();
             history.push({ open: currentPrice, close: currentPrice, high: currentPrice, low: currentPrice });
         }, 10000);
 
-        // INIT
-        initChart();
-        initMarket();
-        updateUI();
-
+        initChart(); initMarket(); updateUI();
     </script>
 </body>
 </html>
