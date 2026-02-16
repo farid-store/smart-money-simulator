@@ -3,217 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Money Simulator | Pro Trading Terminal</title>
+    <title>SmartAlgo Pro Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; background-color: #0b0e11; color: #eaecef; }
-        .order-bar-bid { background: rgba(0, 192, 118, 0.2); transition: width 0.3s; }
-        .order-bar-ask { background: rgba(248, 73, 96, 0.2); transition: width 0.3s; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #3b3e46; border-radius: 10px; }
+        body { font-family: 'Inter', sans-serif; background-color: #080a0c; color: #d1d4dc; overflow: hidden; }
+        .mono { font-family: 'Roboto Mono', monospace; }
+        .border-stockbit { border-color: #1e222d; }
+        .bg-sidebar { background-color: #131722; }
+        .bg-card { background-color: #1c202b; }
+        input[type="range"] { accent-color: #2962ff; }
     </style>
 </head>
-<body class="h-screen overflow-hidden flex flex-col">
+<body class="flex h-screen w-screen">
 
-    <nav class="border-b border-gray-800 px-6 py-3 flex justify-between items-center bg-[#161a1e]">
-        <div class="flex items-center space-x-8">
-            <h1 class="text-xl font-bold text-yellow-500 tracking-tighter uppercase">SMART<span class="text-white">ALGO</span></h1>
-            <div class="flex space-x-6 text-sm italic text-gray-400">
-                <div>Ticker: <span class="text-white font-mono">$DUMMY</span></div>
-                <div>Price: <span id="last-price" class="text-green-400 font-mono">1,250.00</span></div>
-                <div>Vol: <span id="total-vol" class="text-white font-mono">1.2M</span></div>
+    <aside class="w-16 bg-sidebar border-r border-stockbit flex flex-col items-center py-4 space-y-6">
+        <div class="w-10 h-10 bg-blue-600 rounded flex items-center justify-center font-bold text-white italic">SA</div>
+        <div class="text-gray-500 hover:text-white cursor-pointer"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></div>
+        <div class="text-blue-500 cursor-pointer"><svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3v18h18V3H3zm16 16H5V5h14v14zM11 7h2v10h-2V7zM7 10h2v7H7v-7zm8 3h2v4h-2v-4z"></path></svg></div>
+    </aside>
+
+    <main class="flex-1 flex flex-col">
+        <header class="h-14 bg-sidebar border-b border-stockbit flex items-center px-6 justify-between">
+            <div class="flex items-center space-x-6">
+                <span class="font-bold text-lg text-white">$BBCA <span class="text-gray-500 font-normal text-sm">BANK CENTRAL ASIA</span></span>
+                <div class="flex bg-gray-800 rounded p-0.5 text-xs">
+                    <button onclick="changeTimeframe('1m')" id="tf1m" class="px-3 py-1 bg-gray-700 text-white rounded">1m</button>
+                    <button onclick="changeTimeframe('5m')" id="tf5m" class="px-3 py-1 text-gray-400 hover:text-white">5m</button>
+                </div>
+                <div class="text-green-500 font-bold mono">9.850,00 (+1.25%)</div>
             </div>
-        </div>
-        <div class="flex items-center space-x-4">
-            <span class="text-xs bg-gray-700 px-2 py-1 rounded">INSTITUTIONAL MODE</span>
-            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-        </div>
-    </nav>
-
-    <main class="flex-1 flex overflow-hidden">
-        
-        <div class="flex-1 flex flex-col border-r border-gray-800 bg-[#0b0e11] p-4">
-            <div class="flex justify-between items-center mb-4">
-                <span class="text-sm font-semibold text-gray-400">REAL-TIME PRICE ACTION</span>
-                <div class="flex space-x-2">
-                    <button class="text-xs bg-gray-800 px-2 py-1 rounded">1m</button>
-                    <button class="text-xs bg-gray-800 px-2 py-1 rounded">5m</button>
-                    <button class="text-xs border border-yellow-500 text-yellow-500 px-2 py-1 rounded">Live</button>
+            <div class="flex items-center space-x-4">
+                <div class="text-xs text-right text-gray-400">
+                    <div>PORTFOLIO VALUE</div>
+                    <div class="text-white font-bold mono">IDR 1,250,500,000</div>
                 </div>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold transition">TRADE</button>
             </div>
-            <div id="chart-container" class="flex-1 relative flex items-end space-x-1 border-b border-gray-800 pb-2">
-                </div>
-        </div>
+        </header>
 
-        <div class="w-80 border-r border-gray-800 flex flex-col bg-[#161a1e]">
-            <div class="p-3 border-b border-gray-800 text-xs font-bold uppercase tracking-widest text-gray-500 text-center">Order Book (Retail)</div>
-            
-            <div class="flex-1 overflow-hidden flex flex-col-reverse p-2" id="ask-book">
-                </div>
-
-            <div class="py-2 bg-gray-900 text-center border-y border-gray-800">
-                <span id="mid-price" class="text-lg font-mono font-bold text-yellow-500">1,250</span>
+        <div class="flex-1 flex overflow-hidden">
+            <div class="flex-1 relative border-r border-stockbit" id="chart-parent">
+                <div id="tv-chart" class="w-full h-full"></div>
             </div>
 
-            <div class="flex-1 overflow-hidden p-2" id="bid-book">
-                </div>
-        </div>
-
-        <div class="w-96 p-6 space-y-6 bg-[#161a1e] overflow-y-auto">
-            <div>
-                <h3 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-wider">Smart Money Execution</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="executeAlgo('pump')" class="bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded text-sm transition shadow-lg shadow-green-900/20">ACCUMULATE (PUMP)</button>
-                    <button onclick="executeAlgo('dump')" class="bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded text-sm transition shadow-lg shadow-red-900/20">DISTRIBUTE (DUMP)</button>
-                </div>
-            </div>
-
-            <div class="bg-gray-800/50 p-4 rounded-lg border border-gray-700">
-                <h3 class="text-xs font-bold text-yellow-500 mb-3 uppercase">Algo Attack Modes</h3>
-                <div class="space-y-3">
-                    <button onclick="executeAlgo('sl-hunt')" class="w-full text-left p-3 bg-gray-900 hover:bg-gray-800 rounded border border-gray-700 text-xs flex justify-between items-center group">
-                        <span>🎯 STOP-LOSS HUNTING (Sweep Bids)</span>
-                        <span class="text-gray-500 group-hover:text-white">Run ></span>
-                    </button>
-                    <button onclick="executeAlgo('spoof')" class="w-full text-left p-3 bg-gray-900 hover:bg-gray-800 rounded border border-gray-700 text-xs flex justify-between items-center group">
-                        <span>👻 SPOOFING (Fake Walls)</span>
-                        <span class="text-gray-500 group-hover:text-white">Run ></span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="text-xs text-gray-500 italic leading-relaxed">
-                <p><strong>Simulator Note:</strong> "Accumulate" akan menghabiskan offer retail secara agresif. "SL Hunt" akan memicu cascade selling dengan menekan harga ke area support retail.</p>
-            </div>
-
-            <div>
-                <h3 class="text-xs font-bold text-gray-400 mb-3 uppercase tracking-wider">Live Tape</h3>
-                <div id="trade-history" class="text-[10px] font-mono space-y-1 h-40 overflow-y-auto">
+            <div class="w-96 bg-sidebar flex flex-col">
+                <div class="flex-1 flex flex-col p-4 overflow-hidden">
+                    <h3 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Order Book</h3>
+                    <div class="flex justify-between text-[10px] text-gray-500 mb-1 px-2">
+                        <span>BID VOL</span><span>PRICE</span><span>OFFER VOL</span>
                     </div>
+                    <div id="order-book-list" class="flex-1 overflow-y-auto space-y-0.5 mono text-[11px]">
+                        </div>
+                </div>
+
+                <div class="h-[450px] bg-card border-t border-stockbit p-4 space-y-4 shadow-2xl">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-yellow-500 uppercase">Algo Controller</h3>
+                        <span class="text-[10px] bg-red-900/30 text-red-400 px-2 py-0.5 rounded animate-pulse font-bold">LIVE MODE</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-[11px]">
+                        <div class="space-y-1">
+                            <label class="text-gray-400">Retail Lot Size</label>
+                            <input type="number" id="retail-size" value="500" class="w-full bg-gray-900 border border-gray-700 p-1.5 rounded outline-none focus:border-blue-500">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-gray-400">Algo Delay (ms)</label>
+                            <input type="number" id="algo-delay" value="200" class="w-full bg-gray-900 border border-gray-700 p-1.5 rounded outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="flex justify-between text-[11px]">
+                            <label class="text-gray-400">Attack Intensity (Volume)</label>
+                            <span id="intensity-val" class="text-blue-400">x5</span>
+                        </div>
+                        <input type="range" id="intensity" min="1" max="20" value="5" class="w-full h-1">
+                    </div>
+
+                    <div class="space-y-2 pt-2">
+                        <button onclick="startAlgo('accumulation')" class="w-full py-3 bg-green-600/20 border border-green-600 text-green-500 font-bold rounded hover:bg-green-600 hover:text-white transition uppercase text-xs">Accumulate (Stealth Buy)</button>
+                        <button onclick="startAlgo('distribution')" class="w-full py-3 bg-red-600/20 border border-red-600 text-red-500 font-bold rounded hover:bg-red-600 hover:text-white transition uppercase text-xs">Distribute (Dump All)</button>
+                        <button onclick="startAlgo('wash')" class="w-full py-3 bg-blue-600/20 border border-blue-600 text-blue-500 font-bold rounded hover:bg-blue-600 hover:text-white transition uppercase text-xs">Wash Trading (Fake Vol)</button>
+                        <button onclick="stopAlgos()" class="w-full py-2 bg-gray-800 text-gray-400 font-bold rounded hover:bg-gray-700 transition uppercase text-[10px]">Panic Stop Algos</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
     <script>
-        // --- Market State ---
-        let currentPrice = 1250;
-        let orderBook = { bids: [], asks: [] };
-        let history = [];
-        const chartContainer = document.getElementById('chart-container');
+        // --- Initialization & Chart Setup ---
+        const chartElement = document.getElementById('tv-chart');
+        const chart = LightweightCharts.createChart(chartElement, {
+            layout: { background: { color: '#131722' }, textColor: '#d1d4dc' },
+            grid: { vertLines: { color: '#1e222d' }, horzLines: { color: '#1e222d' } },
+            crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+            rightPriceScale: { borderColor: '#1e222d' },
+            timeScale: { borderColor: '#1e222d', timeVisible: true, secondsVisible: false }
+        });
 
-        // --- Core Functions ---
+        const candleSeries = chart.addCandlestickSeries({
+            upColor: '#089981', downColor: '#f23645', borderVisible: false,
+            wickUpColor: '#089981', wickDownColor: '#f23645'
+        });
 
-        function initOrderBook() {
-            orderBook.bids = [];
-            orderBook.asks = [];
-            for(let i=1; i<=15; i++) {
-                orderBook.asks.push({ price: currentPrice + (i * 2), vol: Math.floor(Math.random() * 500) + 100 });
-                orderBook.bids.push({ price: currentPrice - (i * 2), vol: Math.floor(Math.random() * 500) + 100 });
-            }
+        // Initial Data
+        let currentPrice = 9850;
+        let data = [];
+        let time = Math.floor(Date.now() / 1000) - 3600;
+
+        for (let i = 0; i < 100; i++) {
+            const open = currentPrice + (Math.random() - 0.5) * 20;
+            const close = open + (Math.random() - 0.5) * 20;
+            data.push({ time: time + (i * 60), open, high: Math.max(open, close) + 5, low: Math.min(open, close) - 5, close });
+            currentPrice = close;
+        }
+        candleSeries.setData(data);
+
+        // --- Core Market Logic ---
+        let algoInterval = null;
+        let lastCandle = data[data.length - 1];
+
+        function updatePrice(newPrice) {
+            currentPrice = newPrice;
+            const last = { ...lastCandle };
+            if (newPrice > last.high) last.high = newPrice;
+            if (newPrice < last.low) last.low = newPrice;
+            last.close = newPrice;
+            candleSeries.update(last);
+            lastCandle = last;
             renderOrderBook();
         }
 
         function renderOrderBook() {
-            const askContainer = document.getElementById('ask-book');
-            const bidContainer = document.getElementById('bid-book');
+            const list = document.getElementById('order-book-list');
+            let html = '';
+            const retailBase = parseInt(document.getElementById('retail-size').value);
             
-            askContainer.innerHTML = orderBook.asks.map(a => `
-                <div class="relative flex justify-between text-[11px] py-0.5 px-2 mb-0.5">
-                    <div class="order-bar-ask absolute right-0 top-0 h-full" style="width: ${a.vol/10}%"></div>
-                    <span class="text-red-400 font-mono z-10">${a.price.toLocaleString()}</span>
-                    <span class="text-gray-300 z-10">${a.vol}</span>
-                </div>
-            `).join('');
-
-            bidContainer.innerHTML = orderBook.bids.map(b => `
-                <div class="relative flex justify-between text-[11px] py-0.5 px-2 mb-0.5">
-                    <div class="order-bar-bid absolute left-0 top-0 h-full" style="width: ${b.vol/10}%"></div>
-                    <span class="text-green-400 font-mono z-10">${b.price.toLocaleString()}</span>
-                    <span class="text-gray-300 z-10">${b.vol}</span>
-                </div>
-            `).join('');
-
-            document.getElementById('mid-price').innerText = currentPrice.toLocaleString();
-            document.getElementById('last-price').innerText = currentPrice.toLocaleString();
-        }
-
-        function logTrade(side, price, qty, type = "RETAIL") {
-            const historyDiv = document.getElementById('trade-history');
-            const color = side === 'BUY' ? 'text-green-400' : 'text-red-400';
-            const bgColor = type === 'SMART' ? 'bg-yellow-900/20' : '';
-            const html = `
-                <div class="flex justify-between py-1 border-b border-gray-800 ${bgColor}">
-                    <span class="${color}">[${side}]</span>
-                    <span>${price.toLocaleString()}</span>
-                    <span class="text-gray-500">${qty}</span>
-                    <span class="${type === 'SMART' ? 'text-yellow-500' : 'text-gray-600'}">${type}</span>
-                </div>
-            `;
-            historyDiv.insertAdjacentHTML('afterbegin', html);
-        }
-
-        function addCandle(price, open) {
-            const height = Math.abs(price - open) * 2 + 10;
-            const color = price >= open ? 'bg-green-500' : 'bg-red-500';
-            const candle = document.createElement('div');
-            candle.className = `w-4 ${color} rounded-t-sm transition-all duration-500`;
-            candle.style.height = `${height}px`;
-            chartContainer.appendChild(candle);
-            if(chartContainer.children.length > 30) chartContainer.removeChild(chartContainer.firstChild);
-        }
-
-        // --- Smart Money Algos ---
-
-        async function executeAlgo(type) {
-            let openPrice = currentPrice;
+            // Generate Asks (Sellers) - Green/Red logic swapped for professional feel
+            for (let i = 10; i >= 1; i--) {
+                const p = currentPrice + (i * 2);
+                const v = Math.floor(Math.random() * retailBase) + (retailBase/2);
+                html += `
+                <div class="flex justify-between items-center px-2 hover:bg-red-900/10 h-6">
+                    <span class="text-gray-600"></span>
+                    <span class="text-red-500 font-bold">${p.toLocaleString()}</span>
+                    <span class="text-gray-400 w-20 text-right">${v.toLocaleString()}</span>
+                </div>`;
+            }
             
-            if(type === 'pump') {
-                // Smart Money sweeps the Ask side
-                for(let i=0; i<8; i++) {
-                    let target = orderBook.asks[0];
-                    currentPrice = target.price;
-                    logTrade('BUY', currentPrice, target.vol, 'SMART');
-                    orderBook.asks.shift();
-                    orderBook.asks.push({ price: currentPrice + 30, vol: Math.floor(Math.random() * 300) });
-                    renderOrderBook();
-                    await new Promise(r => setTimeout(r, 100));
-                }
-            } 
-            else if (type === 'dump') {
-                for(let i=0; i<8; i++) {
-                    let target = orderBook.bids[0];
-                    currentPrice = target.price;
-                    logTrade('SELL', currentPrice, target.vol, 'SMART');
-                    orderBook.bids.shift();
-                    orderBook.bids.push({ price: currentPrice - 30, vol: Math.floor(Math.random() * 300) });
-                    renderOrderBook();
-                    await new Promise(r => setTimeout(r, 100));
-                }
+            html += `<div class="text-center py-2 bg-gray-900 font-bold text-white border-y border-stockbit my-1">${currentPrice.toLocaleString()}</div>`;
+            
+            // Generate Bids (Buyers)
+            for (let i = 1; i <= 10; i++) {
+                const p = currentPrice - (i * 2);
+                const v = Math.floor(Math.random() * retailBase) + (retailBase/2);
+                html += `
+                <div class="flex justify-between items-center px-2 hover:bg-green-900/10 h-6">
+                    <span class="text-gray-400 w-20">${v.toLocaleString()}</span>
+                    <span class="text-green-500 font-bold">${p.toLocaleString()}</span>
+                    <span></span>
+                </div>`;
             }
-            else if (type === 'sl-hunt') {
-                // Rapid drop to trigger "retail fear"
-                currentPrice -= 50;
-                logTrade('SELL', currentPrice, 2500, 'SMART_ATTACK');
-                initOrderBook(); // Regenerate book at lower price
-            }
-
-            addCandle(currentPrice, openPrice);
+            list.innerHTML = html;
         }
 
-        // --- Retail Simulation Engine ---
+        // --- Algos ---
+        function startAlgo(type) {
+            stopAlgos();
+            const delay = parseInt(document.getElementById('algo-delay').value);
+            const intensity = parseInt(document.getElementById('intensity').value);
+
+            algoInterval = setInterval(() => {
+                let move = 0;
+                if(type === 'accumulation') move = Math.random() * (2 * intensity);
+                if(type === 'distribution') move = (Math.random() * (2 * intensity)) * -1;
+                if(type === 'wash') move = (Math.random() - 0.5) * 5;
+                
+                updatePrice(currentPrice + move);
+            }, delay);
+        }
+
+        function stopAlgos() {
+            if (algoInterval) clearInterval(algoInterval);
+        }
+
+        function changeTimeframe(tf) {
+            ['tf1m', 'tf5m'].forEach(id => document.getElementById(id).classList.remove('bg-gray-700', 'text-white'));
+            document.getElementById('tf' + tf).classList.add('bg-gray-700', 'text-white');
+            // Logic for timeframe data simulation would go here
+        }
+
+        // --- Interaction UI ---
+        document.getElementById('intensity').oninput = function() {
+            document.getElementById('intensity-val').innerText = 'x' + this.value;
+        };
+
+        // Auto Retail Noise
         setInterval(() => {
-            // Noise: Retail buying/selling small amounts
-            const side = Math.random() > 0.5 ? 'bids' : 'asks';
-            const index = Math.floor(Math.random() * 5);
-            orderBook[side][index].vol += Math.floor(Math.random() * 50) - 20;
-            if(orderBook[side][index].vol < 10) orderBook[side][index].vol = 100;
-            
-            renderOrderBook();
-        }, 800);
+            if(!algoInterval) {
+                const noise = (Math.random() - 0.5) * 2;
+                updatePrice(currentPrice + noise);
+            }
+        }, 1000);
 
-        // Bootstrap
-        initOrderBook();
+        renderOrderBook();
+        
+        // Handle Resize
+        window.addEventListener('resize', () => {
+            chart.applyOptions({ width: chartElement.clientWidth, height: chartElement.clientHeight });
+        });
     </script>
 </body>
 </html>
