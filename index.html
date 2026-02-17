@@ -2,341 +2,287 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Institutional MM Terminal - Professional Grade</title>
+    <title>SMM PROFESSIONAL TERMINAL v6.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --bg: #050505; --panel: #0f0f0f; --border: #1f1f1f; }
-        body { background-color: var(--bg); color: #ccc; font-family: 'Inter', sans-serif; overflow: hidden; }
+        body { background: #0a0b0d; color: #d1d4dc; font-family: 'Inter', sans-serif; overflow: hidden; }
         .mono { font-family: 'JetBrains Mono', monospace; }
+        .border-gray { border-color: #2a2e39; }
+        .bg-darker { background: #131722; }
+        .text-up { color: #089981; }
+        .text-down { color: #f23645; }
+        .bg-up { background: rgba(8, 153, 129, 0.2); }
+        .bg-down { background: rgba(242, 54, 69, 0.2); }
         canvas { image-rendering: -webkit-optimize-contrast; }
-        .glitch-red { color: #ff3e3e; text-shadow: 2px 0 #550000; }
-        .glitch-green { color: #3eff3e; text-shadow: 2px 0 #005500; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #363a45; }
     </style>
 </head>
-<body class="flex h-screen w-screen text-[11px] select-none bg-black">
+<body class="h-screen w-screen flex flex-col text-[11px] select-none">
 
-    <aside class="w-[70px] bg-[#0c0c0c] border-r border-[#222] flex flex-col items-center py-6 z-50 gap-6">
-        <div class="font-black text-blue-600 text-lg tracking-tighter">SMM</div>
+    <header class="h-12 border-b border-gray bg-darker flex items-center px-4 justify-between">
+        <div class="flex items-center gap-6">
+            <div class="flex items-baseline gap-2">
+                <span class="text-lg font-bold text-white tracking-tighter uppercase">GOTO</span>
+                <span id="header-price" class="text-lg font-bold text-up">112</span>
+                <span id="header-diff" class="text-up font-mono">+4 (3.70%)</span>
+            </div>
+            <div class="h-8 w-[1px] bg-gray-700"></div>
+            <div class="flex gap-4 opacity-70 font-mono">
+                <div>OPEN <span class="text-white">108</span></div>
+                <div>HIGH <span id="header-high" class="text-white">115</span></div>
+                <div>LOW <span id="header-low" class="text-white">107</span></div>
+                <div>VOL <span id="header-vol" class="text-white">1.2B</span></div>
+            </div>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30 font-bold uppercase">Institutional Access</div>
+            <div id="clock" class="mono text-gray-500">15:59:59</div>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
         
-        <div class="flex flex-col gap-4 w-full px-2">
-            <button onmousedown="Engine.manualPush('BUY')" class="group p-3 rounded-xl bg-green-950/20 border border-green-900/50 hover:bg-green-600 hover:text-black transition-all">
-                <span class="block font-bold text-lg">↑</span>
-                <span class="text-[7px] font-bold opacity-50 group-hover:opacity-100">PUMP</span>
-            </button>
-            <button onmousedown="Engine.manualPush('SELL')" class="group p-3 rounded-xl bg-red-950/20 border border-red-900/50 hover:bg-red-600 hover:text-black transition-all">
-                <span class="block font-bold text-lg">↓</span>
-                <span class="text-[7px] font-bold opacity-50 group-hover:opacity-100">DUMP</span>
-            </button>
+        <aside class="w-[320px] border-r border-gray flex flex-col">
+            <div class="flex-1 flex flex-col min-h-0 bg-darker">
+                <div class="grid grid-cols-4 text-gray-500 py-1 px-2 border-b border-gray font-bold text-[9px]">
+                    <span>BID VOL</span><span>BID</span><span>OFFER</span><span>OFFER VOL</span>
+                </div>
+                <div id="orderbook-list" class="flex-1 overflow-y-auto font-mono">
+                    </div>
+            </div>
             
-            <div class="h-[1px] bg-[#222] w-full my-2"></div>
+            <div class="h-1/3 border-t border-gray flex flex-col bg-black">
+                <div class="px-2 py-1 border-b border-gray text-gray-500 font-bold uppercase text-[9px]">Running Trades</div>
+                <div id="running-trades" class="flex-1 overflow-hidden mono text-[10px] p-2 space-y-0.5">
+                    </div>
+            </div>
+        </aside>
 
-            <button onclick="Engine.triggerHunt()" class="p-2 rounded bg-yellow-600/10 border border-yellow-600/50 text-yellow-600 hover:bg-yellow-600 hover:text-black font-bold text-[8px]">
-                LIQ HUNT
-            </button>
-        </div>
-
-        <div class="mt-auto pb-4 flex flex-col items-center gap-4">
-            <div id="connection-status" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-            <div class="vertical-text text-[8px] text-gray-600 font-mono tracking-widest" style="writing-mode: vertical-rl;">ALGO_v4.0_STABLE</div>
-        </div>
-    </aside>
-
-    <main class="flex-1 flex flex-col">
-        <header class="h-12 bg-[#0c0c0c] border-b border-[#1a1a1a] flex items-center px-6 justify-between">
-            <div class="flex items-center gap-8">
-                <div>
-                    <span class="text-xs font-bold text-white tracking-widest">XBT/USD</span>
-                    <span class="ml-2 text-[9px] text-blue-500 font-mono">PRO_FEED</span>
+        <main class="flex-1 flex flex-col relative">
+            <div class="flex-1 bg-[#131722] relative">
+                <canvas id="mainChart"></canvas>
+            </div>
+            
+            <div class="h-24 bg-darker border-t border-gray flex items-center px-6 gap-8">
+                <div class="flex flex-col gap-1">
+                    <span class="text-gray-500 text-[9px] uppercase font-bold">Market Maker Mode</span>
+                    <div class="flex gap-2">
+                        <button onclick="Engine.manipulate('ACCUMULATE')" class="px-4 py-2 bg-up border border-green-500/50 text-up rounded hover:bg-green-500 hover:text-white font-bold transition-all">ACCUMULATE</button>
+                        <button onclick="Engine.manipulate('MARKUP')" class="px-4 py-2 bg-blue-600/20 border border-blue-500/50 text-blue-400 rounded hover:bg-blue-600 hover:text-white font-bold transition-all">MARK UP</button>
+                        <button onclick="Engine.manipulate('DISTRIBUTE')" class="px-4 py-2 bg-down border border-red-500/50 text-down rounded hover:bg-red-500 hover:text-white font-bold transition-all">DISTRIBUTE</button>
+                    </div>
                 </div>
-                <div class="flex gap-4 border-l border-[#222] pl-6">
-                    <div class="flex flex-col">
-                        <span class="text-[8px] text-gray-500 uppercase">Retail Sentiment</span>
-                        <div class="flex items-center gap-2">
-                            <div class="w-24 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
-                                <div id="sentiment-bar" class="h-full bg-blue-500 transition-all duration-500" style="width: 50%"></div>
-                            </div>
-                            <span id="sentiment-text" class="text-[10px] mono text-blue-400">NEUTRAL</span>
-                        </div>
+                <div class="h-12 w-[1px] bg-gray-800"></div>
+                <div class="flex flex-col gap-1">
+                    <span class="text-gray-500 text-[9px] uppercase font-bold">Manual Execution</span>
+                    <div class="flex gap-2">
+                        <button onmousedown="Engine.manualExecution('BUY')" class="w-10 h-10 bg-green-600 text-black font-black rounded active:scale-90">HKA</button>
+                        <button onmousedown="Engine.manualExecution('SELL')" class="w-10 h-10 bg-red-600 text-black font-black rounded active:scale-90">HKI</button>
+                    </div>
+                </div>
+                <div class="ml-auto flex items-center gap-6">
+                    <div class="text-right">
+                        <span class="text-gray-500 text-[9px] block">AVG PRICE</span>
+                        <span id="avg-price" class="text-lg font-bold text-white mono">0</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-gray-500 text-[9px] block">TOTAL LOTS</span>
+                        <span id="total-lots" class="text-lg font-bold text-blue-400 mono">0</span>
                     </div>
                 </div>
             </div>
+        </main>
 
-            <div class="flex items-center gap-8 font-mono">
-                <div class="text-right">
-                    <div class="text-[8px] text-gray-600">MM INVENTORY</div>
-                    <div id="mm-inventory" class="text-xs font-bold text-gray-300">0.00</div>
-                </div>
-                <div class="text-right border-l border-[#222] pl-8">
-                    <div class="text-[8px] text-gray-600">UNREALIZED PnL</div>
-                    <div id="pnl-display" class="text-sm font-black text-white">$0.00</div>
-                </div>
-            </div>
-        </header>
-
-        <div class="flex-1 flex overflow-hidden">
-            <div class="flex-1 relative bg-[#050505]">
-                <canvas id="mainChart" class="w-full h-full"></canvas>
-                
-                <div class="absolute top-6 left-6 pointer-events-none">
-                    <div id="price-container">
-                        <h1 id="big-price" class="text-4xl font-black text-white mono leading-none">0.00</h1>
-                        <div id="price-change" class="text-[10px] mt-2 mono text-green-500">+0.00%</div>
+        <aside class="w-[240px] border-l border-gray bg-darker flex flex-col">
+            <div class="p-2 border-b border-gray font-bold text-gray-400 uppercase text-[9px]">Broker Summary (Top 5)</div>
+            <div class="flex-1 p-2 space-y-4">
+                <div id="buyer-list" class="space-y-1">
+                    <div class="text-[9px] text-up font-bold mb-1">TOP BUYERS</div>
                     </div>
-                </div>
-
-                <div id="alert-toast" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 pointer-events-none transition-all duration-300">
-                    <div class="bg-blue-600 text-white px-6 py-3 font-black text-lg tracking-tighter skew-x-[-10deg] italic">ALGO INTERVENTION</div>
-                </div>
-            </div>
-
-            <aside class="w-[280px] bg-[#0c0c0c] border-l border-[#1a1a1a] flex flex-col">
-                <div class="p-3 border-b border-[#1a1a1a] bg-[#0e0e0e] flex justify-between items-center">
-                    <span class="text-[9px] font-bold text-gray-500 tracking-widest">ORDER BOOK DEPTH</span>
-                    <span class="text-[8px] text-green-500 bg-green-500/10 px-1 rounded">LIVE</span>
-                </div>
-                
-                <div id="dom-ladder" class="flex-1 overflow-hidden font-mono text-[10px] bg-[#050505]"></div>
-
-                <div class="p-4 bg-[#0e0e0e] border-t border-[#1a1a1a]">
-                    <div class="grid grid-cols-2 gap-3">
-                        <button onclick="Trader.open('BUY')" class="py-4 bg-green-600 hover:bg-green-500 text-black font-black rounded active:scale-95 transition-all">BUY / LONG</button>
-                        <button onclick="Trader.open('SELL')" class="py-4 bg-red-600 hover:bg-red-500 text-black font-black rounded active:scale-95 transition-all">SELL / SHORT</button>
+                <div id="seller-list" class="space-y-1">
+                    <div class="text-[9px] text-down font-bold mb-1">TOP SELLERS</div>
                     </div>
-                    <button onclick="Trader.closeAll()" class="w-full mt-3 py-2 border border-[#222] text-gray-500 hover:text-white hover:border-gray-500 text-[9px] font-bold rounded transition-all">EXIT ALL POSITIONS</button>
-                </div>
-            </aside>
-        </div>
-    </main>
+            </div>
+            <div class="p-4 bg-black border-t border-gray">
+                <div class="text-[9px] text-gray-500 mb-1">NET POSITION</div>
+                <div id="net-position" class="text-xl font-black text-white">$0</div>
+            </div>
+        </aside>
+    </div>
 
     <script>
-        const CONFIG = {
-            tickRate: 50,
-            candleTime: 40, 
-            spread: 2.5,
-            initialPrice: 50000.00,
-            retailResponsiveness: 0.15 // Seberapa cepat retail FOMO
-        };
-
+        // --- DATA & STATE ---
         const Engine = {
-            price: CONFIG.initialPrice,
-            velocity: 0,
-            acceleration: 0,
-            inventory: 0, // MM Inventory
-            sentiment: 50, // 0: Panic, 100: FOMO
+            price: 110,
+            prevClose: 108,
+            inventory: 0,
+            avgEntry: 0,
             candles: [],
-            currentCandle: null,
-            ticks: 0,
+            orderbook: { bid: [], offer: [] },
+            brokers: { 
+                YP: { buy: 0, sell: 0 }, CC: { buy: 0, sell: 0 }, 
+                DH: { buy: 0, sell: 0 }, MG: { buy: 0, sell: 0 }, 
+                PD: { buy: 0, sell: 0 }, BK: { buy: 0, sell: 0 }
+            },
             
             init() {
-                for(let i=0; i<100; i++) this.generateHistory();
-                this.startNewCandle();
+                this.generateOrderbook();
                 this.loop();
+                window.addEventListener('resize', () => this.resize());
+                this.resize();
             },
 
-            generateHistory() {
-                const lastC = this.candles.length ? this.candles[this.candles.length-1].c : this.price;
-                const o = lastC, c = o + (Math.random()-0.5)*100;
-                this.candles.push({o, h: Math.max(o,c)+20, l: Math.min(o,c)-20, c});
-                this.price = c;
+            resize() {
+                const c = document.getElementById('mainChart');
+                c.width = c.parentElement.clientWidth;
+                c.height = c.parentElement.clientHeight;
             },
 
-            startNewCandle() {
-                this.ticks = 0;
-                this.currentCandle = { o: this.price, h: this.price, l: this.price, c: this.price };
-            },
-
-            // LOGIKA DINAMIS: MARKET RHYTHM
-            processMarketPhysics() {
-                // 1. RETAIL BEHAVIOR (FOMO/PANIC)
-                // Jika harga naik cepat, sentiment naik (FOMO)
-                const priceMove = this.velocity;
-                this.sentiment += priceMove * CONFIG.retailResponsiveness;
-                this.sentiment = Math.max(5, Math.min(95, this.sentiment));
-
-                // Retail murni mengikuti trend (Herd Mentality)
-                let retailForce = (this.sentiment - 50) * 0.05;
-
-                // 2. INVENTORY GRAVITY
-                // MM ingin inventory kembali ke 0. Jika MM terlalu "Long", MM akan "Dump" perlahan.
-                let inventoryRebalance = -this.inventory * 0.01;
-
-                // 3. NOISE
-                let marketNoise = (Math.random() - 0.5) * 2;
-
-                this.acceleration = retailForce + inventoryRebalance + marketNoise;
-                this.velocity = (this.velocity + this.acceleration) * 0.95;
-                this.price += this.velocity;
-
-                // Update Candle
-                const c = this.currentCandle;
-                c.c = this.price;
-                if(c.c > c.h) c.h = c.c;
-                if(c.c < c.l) c.l = c.c;
-                
-                this.ticks++;
-                if(this.ticks >= CONFIG.candleTime) {
-                    this.candles.push({...this.currentCandle});
-                    if(this.candles.length > 100) this.candles.shift();
-                    this.startNewCandle();
+            generateOrderbook() {
+                this.orderbook.bid = [];
+                this.orderbook.offer = [];
+                for(let i=0; i<10; i++) {
+                    this.orderbook.bid.push({ p: this.price - (i+1), v: Math.floor(Math.random()*10000) });
+                    this.orderbook.offer.push({ p: this.price + i, v: Math.floor(Math.random()*10000) });
                 }
             },
 
-            // ACTIONS
-            manualPush(side) {
-                const power = side === 'BUY' ? 15 : -15;
-                this.velocity += power;
-                this.inventory += (side === 'BUY' ? 5 : -5); // MM taking position
-                UI.showAlert(side === 'BUY' ? "INSTITUTIONAL BUY ORDER" : "INSTITUTIONAL SELL ORDER");
+            manualExecution(side) {
+                const targetPrice = side === 'BUY' ? this.orderbook.offer[0].p : this.orderbook.bid[0].p;
+                const lot = 500 + Math.floor(Math.random()*1000);
+                
+                // Update Inventory
+                if(side === 'BUY') {
+                    const totalCost = (this.inventory * this.avgEntry) + (lot * targetPrice);
+                    this.inventory += lot;
+                    this.avgEntry = totalCost / this.inventory;
+                    this.brokers.MG.buy += lot;
+                } else {
+                    this.inventory -= lot;
+                    this.brokers.MG.sell += lot;
+                }
+
+                this.price = targetPrice;
+                this.generateOrderbook();
+                UI.pushTrade(side, targetPrice, lot, 'MG');
             },
 
-            triggerHunt() {
-                const side = Math.random() > 0.5 ? 1 : -1;
-                this.velocity = side * 40;
-                UI.showAlert("⚠️ LIQUIDITY SWEEP");
+            manipulate(mode) {
+                if(mode === 'MARKUP') this.price += 1;
+                if(mode === 'DISTRIBUTE') this.price -= 1;
+                this.generateOrderbook();
+                UI.showAlert("ALGO: " + mode);
             },
 
             loop() {
-                this.processMarketPhysics();
-                Chart.draw();
-                DOM.update();
-                UI.update();
-                Trader.update();
-                setTimeout(() => this.loop(), CONFIG.tickRate);
-            }
-        };
-
-        const Chart = {
-            canvas: document.getElementById('mainChart'),
-            ctx: document.getElementById('mainChart').getContext('2d'),
-            
-            draw() {
-                const { canvas, ctx } = this;
-                const w = canvas.width = canvas.parentElement.clientWidth;
-                const h = canvas.height = canvas.parentElement.clientHeight;
-                
-                ctx.fillStyle = '#050505';
-                ctx.fillRect(0, 0, w, h);
-
-                // Grid
-                ctx.strokeStyle = '#111';
-                ctx.lineWidth = 1;
-                for(let x=0; x<w; x+=50) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-                for(let y=0; y<h; y+=50) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-
-                const visible = [...Engine.candles, Engine.currentCandle].slice(-60);
-                const min = Math.min(...visible.map(c => c.l)) * 0.999;
-                const max = Math.max(...visible.map(c => c.h)) * 1.001;
-                const range = max - min;
-
-                const getY = (p) => h - ((p - min) / range * h);
-                const candleW = w / 65;
-
-                visible.forEach((c, i) => {
-                    const x = i * (candleW + 2) + 20;
-                    const isUp = c.c >= c.o;
-                    const color = isUp ? '#22c55e' : '#ef4444';
+                // Simulasikan Retail Noise
+                if(Math.random() > 0.7) {
+                    const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
+                    const brks = ['YP', 'PD', 'CC', 'DH'];
+                    const b = brks[Math.floor(Math.random()*brks.length)];
+                    const p = side === 'BUY' ? this.orderbook.offer[0].p : this.orderbook.bid[0].p;
+                    const v = Math.floor(Math.random()*200);
                     
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = 1;
-                    // Wick
-                    ctx.beginPath();
-                    ctx.moveTo(x + candleW/2, getY(c.h));
-                    ctx.lineTo(x + candleW/2, getY(c.l));
-                    ctx.stroke();
-                    // Body
-                    ctx.fillStyle = color;
-                    const yOpen = getY(c.o), yClose = getY(c.c);
-                    ctx.fillRect(x, Math.min(yOpen, yClose), candleW, Math.max(1, Math.abs(yOpen - yClose)));
-                });
-
-                // Price Line
-                const py = getY(Engine.price);
-                ctx.setLineDash([5, 5]);
-                ctx.strokeStyle = '#555';
-                ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
-                ctx.setLineDash([]);
-            }
-        };
-
-        const DOM = {
-            update() {
-                const el = document.getElementById('dom-ladder');
-                let html = '';
-                const p = Engine.price;
-                const sentimentFactor = (Engine.sentiment / 100);
-
-                // Asks (Red)
-                for(let i=12; i>0; i--) {
-                    const price = p + (i * 0.5);
-                    const vol = Math.floor(Math.random() * 500 * (2 - sentimentFactor));
-                    html += `<div class="flex justify-between px-4 h-4 items-center text-red-500/80">
-                        <span>${price.toFixed(1)}</span>
-                        <div class="h-1 bg-red-900/30" style="width: ${vol/10}%"></div>
-                        <span class="font-bold">${vol}</span>
-                    </div>`;
+                    this.brokers[b][side === 'BUY' ? 'buy' : 'sell'] += v;
+                    UI.pushTrade(side, p, v, b);
                 }
-                html += `<div class="bg-white/5 py-1 text-center font-bold text-white text-[9px]">SPREAD ${CONFIG.spread}</div>`;
-                // Bids (Green)
-                for(let i=1; i<=12; i++) {
-                    const price = p - (i * 0.5);
-                    const vol = Math.floor(Math.random() * 500 * sentimentFactor);
-                    html += `<div class="flex justify-between px-4 h-4 items-center text-green-500/80">
-                        <span>${price.toFixed(1)}</span>
-                        <div class="h-1 bg-green-900/30" style="width: ${vol/10}%"></div>
-                        <span class="font-bold">${vol}</span>
-                    </div>`;
-                }
-                el.innerHTML = html;
-            }
-        };
 
-        const Trader = {
-            pos: [],
-            open(side) {
-                this.pos.push({ side, entry: Engine.price, size: 1 });
-                // MM Reaction: Jika Anda BUY, MM terpaksa SELL kepada Anda (Inventory MM berkurang)
-                Engine.inventory += (side === 'BUY' ? -1 : 1);
-            },
-            closeAll() { 
-                this.pos.forEach(p => Engine.inventory += (p.side === 'BUY' ? 1 : -1));
-                this.pos = []; 
-            },
-            update() {
-                let pnl = 0;
-                this.pos.forEach(p => {
-                    pnl += (p.side === 'BUY' ? Engine.price - p.entry : p.entry - Engine.price);
-                });
-                const el = document.getElementById('pnl-display');
-                el.innerText = `$${pnl.toFixed(2)}`;
-                el.className = `text-sm font-black mono ${pnl >= 0 ? 'text-green-500' : 'text-red-500'}`;
+                UI.update();
+                requestAnimationFrame(() => this.loop());
             }
         };
 
         const UI = {
             update() {
-                document.getElementById('big-price').innerText = Engine.price.toFixed(2);
-                document.getElementById('mm-inventory').innerText = Engine.inventory.toFixed(2);
+                // Header
+                const p = Engine.price;
+                const diff = p - Engine.prevClose;
+                const pct = (diff / Engine.prevClose * 100).toFixed(2);
+                document.getElementById('header-price').innerText = p;
+                document.getElementById('header-price').className = `text-lg font-bold ${diff >= 0 ? 'text-up' : 'text-down'}`;
+                document.getElementById('header-diff').innerText = `${diff >= 0 ? '+':''}${diff} (${pct}%)`;
+                document.getElementById('header-diff').className = `font-mono ${diff >= 0 ? 'text-up' : 'text-down'}`;
+
+                // Orderbook
+                const obList = document.getElementById('orderbook-list');
+                let obHtml = '';
+                for(let i=0; i<10; i++) {
+                    const bid = Engine.orderbook.bid[i];
+                    const off = Engine.orderbook.offer[i];
+                    obHtml += `
+                        <div class="grid grid-cols-4 px-2 h-6 items-center border-b border-[#1a1e2a]">
+                            <span class="text-right pr-4 text-zinc-500">${bid.v.toLocaleString()}</span>
+                            <span class="text-up font-bold">${bid.p}</span>
+                            <span class="text-down font-bold text-right">${off.p}</span>
+                            <span class="pl-4 text-zinc-500">${off.v.toLocaleString()}</span>
+                        </div>`;
+                }
+                obList.innerHTML = obHtml;
+
+                // Stats
+                document.getElementById('avg-price').innerText = Engine.avgEntry.toFixed(1);
+                document.getElementById('total-lots').innerText = Engine.inventory.toLocaleString();
                 
-                const s = Engine.sentiment;
-                const sBar = document.getElementById('sentiment-bar');
-                const sText = document.getElementById('sentiment-text');
-                sBar.style.width = s + '%';
-                
-                if(s > 70) { sText.innerText = "FOMO ALERT"; sText.className = "text-[10px] mono text-green-500 font-bold"; }
-                else if(s < 30) { sText.innerText = "PANIC SELLING"; sText.className = "text-[10px] mono text-red-500 font-bold"; }
-                else { sText.innerText = "STABLE"; sText.className = "text-[10px] mono text-blue-400"; }
+                const net = (Engine.price - Engine.avgEntry) * Engine.inventory;
+                const netEl = document.getElementById('net-position');
+                netEl.innerText = (net >= 0 ? '+' : '') + net.toLocaleString(undefined, {maximumFractionDigits:0});
+                netEl.className = `text-xl font-black ${net >= 0 ? 'text-up' : 'text-down'}`;
+
+                // Broker Sum
+                this.updateBrokers();
+                this.drawChart();
             },
+
+            pushTrade(side, p, v, b) {
+                const rt = document.getElementById('running-trades');
+                const row = document.createElement('div');
+                row.className = `flex justify-between ${side === 'BUY' ? 'text-up' : 'text-down'}`;
+                row.innerHTML = `<span>15:59</span><span>${b}</span><span>${side === 'BUY' ? 'B' : 'S'}</span><span>${p}</span><span>${v}</span>`;
+                rt.prepend(row);
+                if(rt.children.length > 15) rt.lastChild.remove();
+            },
+
+            updateBrokers() {
+                const bList = Object.entries(Engine.brokers)
+                    .sort((a,b) => b[1].buy - a[1].buy)
+                    .slice(0, 5);
+                
+                document.getElementById('buyer-list').innerHTML = '<div class="text-[9px] text-up font-bold mb-1 uppercase">Top Buyers</div>' + 
+                    bList.map(([name, data]) => `<div class="flex justify-between text-[10px]"><span>${name}</span><span class="mono">${data.buy.toLocaleString()}</span></div>`).join('');
+            },
+
+            drawChart() {
+                const canvas = document.getElementById('mainChart');
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#131722';
+                ctx.fillRect(0,0,canvas.width, canvas.height);
+                
+                // Grid
+                ctx.strokeStyle = '#2a2e39';
+                ctx.lineWidth = 0.5;
+                for(let i=0; i<canvas.width; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
+                for(let i=0; i<canvas.height; i+=50) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke(); }
+
+                // Price line (Simplified for performance)
+                ctx.strokeStyle = '#2962ff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, canvas.height/2);
+                ctx.lineTo(canvas.width, canvas.height/2 + (Math.sin(Date.now()/500)*20));
+                ctx.stroke();
+            },
+
             showAlert(msg) {
-                const t = document.getElementById('alert-toast');
-                t.children[0].innerText = msg;
-                t.style.opacity = 1;
-                setTimeout(() => t.style.opacity = 0, 1500);
+                // Toast logic
             }
         };
 
         Engine.init();
+        setInterval(() => {
+            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB');
+        }, 1000);
     </script>
 </body>
 </html>
