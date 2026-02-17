@@ -3,662 +3,565 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BANDAR OS: Market Maker Simulator</title>
+    <title>BANDAR TERMINAL PRO - INSTITUTIONAL GRADE</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #09090b; --bg-card: #121214; --bg-hover: #1c1c1f;
-            --border: #27272a;
-            --up: #22c55e; --down: #ef4444; --neutral: #94a3b8;
-            --bandar: #8b5cf6; /* Warna Ungu untuk Bandar */
-            --retail: #fbbf24; /* Warna Kuning untuk Retail/YP */
+            --bg-dark: #000000; 
+            --bg-panel: #131722; 
+            --border: #2a2e39;
+            --up: #26a69a; 
+            --down: #ef5350;
+            --text-main: #d1d4dc;
+            --text-sec: #787b86;
         }
-        
-        body { background: var(--bg-dark); color: #e4e4e7; font-family: 'Inter', sans-serif; overflow: hidden; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
+        body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; }
+        .mono { font-family: 'Roboto Mono', monospace; }
         .text-up { color: var(--up); } .text-down { color: var(--down); }
-        .bg-up-dim { background: rgba(34, 197, 94, 0.1); } .bg-down-dim { background: rgba(239, 68, 68, 0.1); }
+        .bg-up { background-color: var(--up); } .bg-down { background-color: var(--down); }
+        
+        /* Layout Grid */
+        .grid-main { display: grid; grid-template-columns: 280px 1fr 320px; grid-template-rows: 50px 1fr 200px; height: 100vh; }
         
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: var(--bg-dark); }
-        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 2px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
 
-        /* Animation */
-        .flash-bg-green { animation: flashG 0.5s; }
-        .flash-bg-red { animation: flashR 0.5s; }
-        @keyframes flashG { 0% { background: rgba(34, 197, 94, 0.3); } 100% { background: transparent; } }
-        @keyframes flashR { 0% { background: rgba(239, 68, 68, 0.3); } 100% { background: transparent; } }
+        /* Orderbook Animation */
+        .flash-bid { animation: flashG 0.2s ease-out; }
+        .flash-ask { animation: flashR 0.2s ease-out; }
+        @keyframes flashG { 0% { background: rgba(38, 166, 154, 0.5); } 100% { background: transparent; } }
+        @keyframes flashR { 0% { background: rgba(239, 83, 80, 0.5); } 100% { background: transparent; } }
 
-        .scanlines {
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1));
-            background-size: 100% 4px;
-            pointer-events: none; position: absolute; inset: 0; z-index: 50; opacity: 0.3;
-        }
+        .btn-action { transition: all 0.1s; transform: translateY(0); }
+        .btn-action:active { transform: translateY(2px); }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col text-xs">
+<body>
 
-    <header class="h-12 bg-[#121214] border-b border-[#27272a] flex items-center justify-between px-4 shrink-0 z-20">
+<div class="grid-main">
+    
+    <header class="col-span-3 bg-[#131722] border-b border-[#2a2e39] flex items-center justify-between px-4 z-20">
         <div class="flex items-center gap-6">
-            <div>
-                <h1 class="font-black text-lg tracking-tighter italic text-white flex items-center gap-2">
-                    <span class="text-purple-500">BANDAR</span>OS <span class="text-[9px] px-1.5 py-0.5 bg-purple-900/30 text-purple-400 rounded">DEV_BUILD_V9</span>
-                </h1>
-            </div>
-            <div class="h-6 w-px bg-[#27272a]"></div>
             <div class="flex flex-col">
-                <span class="font-bold text-gray-400 text-[10px] tracking-widest">EMITEN</span>
-                <span class="font-bold text-base text-yellow-500 tracking-tight">GORENGAN.JK</span>
+                <span class="text-[10px] text-gray-500 font-bold tracking-widest">SYMBOL</span>
+                <span class="text-lg font-black tracking-tighter text-yellow-500">GOTO.JK <span class="text-[10px] bg-gray-800 text-gray-300 px-1 rounded ml-1">RG</span></span>
             </div>
+            <div class="h-6 w-px bg-[#2a2e39]"></div>
             <div class="flex flex-col">
-                <span class="font-bold text-gray-400 text-[10px]">LAST PRICE</span>
-                <span id="header-price" class="font-black text-lg mono text-white">200</span>
+                <span class="text-[10px] text-gray-500 font-bold">LAST</span>
+                <span id="header-price" class="text-xl font-bold mono text-white">82</span>
             </div>
             <div class="flex flex-col">
-                <span class="font-bold text-gray-400 text-[10px]">% CHG</span>
-                <span id="header-chg" class="font-bold mono text-white">0.00%</span>
+                <span class="text-[10px] text-gray-500 font-bold">CHANGE</span>
+                <span id="header-pct" class="text-sm font-bold mono text-up">+0.00%</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-gray-500 font-bold">VOL (LOT)</span>
+                <span id="header-vol" class="text-sm font-bold mono text-gray-300">0</span>
             </div>
         </div>
 
         <div class="flex items-center gap-4">
             <div class="text-right">
-                <div class="text-[10px] text-gray-500 font-bold">TOTAL INVENTORY (LOT)</div>
-                <div id="mm-inventory" class="text-purple-400 font-black mono text-base">0</div>
+                <div class="text-[9px] uppercase text-purple-400 font-bold">Net Foreign Buy/Sell</div>
+                <div id="foreign-flow" class="text-sm font-mono font-bold text-gray-400">0 M</div>
             </div>
-            <div class="text-right">
-                <div class="text-[10px] text-gray-500 font-bold">AVG PRICE</div>
-                <div id="mm-avg" class="text-white font-bold mono">0</div>
-            </div>
-            <div class="h-8 w-px bg-[#27272a]"></div>
-            <div class="flex items-center gap-2 px-3 py-1 bg-purple-900/20 border border-purple-500/30 rounded">
-                <div class="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                <span class="font-bold text-purple-400">MM ACTIVE</span>
+            <div class="h-6 w-px bg-[#2a2e39]"></div>
+            <div class="flex items-center gap-2 px-3 py-1 bg-[#2a2e39] rounded border border-gray-700">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-[10px] font-bold text-gray-300">MARKET OPEN</span>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 grid grid-cols-[300px_1fr_320px] overflow-hidden bg-[#09090b]">
-        
-        <aside class="border-r border-[#27272a] flex flex-col bg-[#0c0c0e]">
-            <div class="p-3 border-b border-[#27272a] font-bold text-gray-500 uppercase tracking-widest text-[10px]">Manipulation Console</div>
-            
-            <div class="p-4 flex flex-col gap-6 overflow-y-auto">
-                
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-white">Fake Wall (Spoofing)</span>
-                        <div class="w-2 h-2 rounded-full bg-gray-600" id="ind-fake"></div>
-                    </div>
-                    <p class="text-[10px] text-gray-500 leading-tight">Menciptakan tembok Offer 500k lot. Otomatis hilang jika harga mendekat 1 tick.</p>
-                    <button onclick="Bandar.toggleFakeWall()" id="btn-fake" class="w-full py-2 bg-[#27272a] hover:bg-red-900/30 text-gray-300 font-bold border border-gray-600 hover:border-red-500 hover:text-red-400 rounded transition-all text-[11px]">
-                        ACTIVATE FAKE OFFER
-                    </button>
-                </div>
-
-                <div class="h-px bg-[#27272a]"></div>
-
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between">
-                        <span class="font-bold text-white">Ghost Bid (Iceberg)</span>
-                        <div class="w-2 h-2 rounded-full bg-gray-600" id="ind-ghost"></div>
-                    </div>
-                    <p class="text-[10px] text-gray-500 leading-tight">Menahan harga di Best Bid. Bid terlihat tipis, tapi refill otomatis saat dihajar kiri.</p>
-                    <button onclick="Bandar.toggleGhostBid()" id="btn-ghost" class="w-full py-2 bg-[#27272a] hover:bg-green-900/30 text-gray-300 font-bold border border-gray-600 hover:border-green-500 hover:text-green-400 rounded transition-all text-[11px]">
-                        ACTIVATE GHOST BID
-                    </button>
-                </div>
-
-                <div class="h-px bg-[#27272a]"></div>
-
-                <div class="space-y-3">
-                    <span class="font-bold text-white">Aggressive Sweep</span>
-                    <div class="grid grid-cols-2 gap-2">
-                        <button onmousedown="Bandar.hajarKanan()" class="py-4 bg-green-600 hover:bg-green-500 text-black font-black text-sm rounded shadow-[0_0_15px_rgba(34,197,94,0.4)] active:scale-95 transition-transform">
-                            HAKA
-                            <span class="block text-[9px] font-normal opacity-70">EAT OFFER</span>
-                        </button>
-                        <button onmousedown="Bandar.hajarKiri()" class="py-4 bg-red-600 hover:bg-red-500 text-white font-black text-sm rounded shadow-[0_0_15px_rgba(239,68,68,0.4)] active:scale-95 transition-transform">
-                            HKI
-                            <span class="block text-[9px] font-normal opacity-70">DUMP BID</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="space-y-2 mt-auto">
-                    <span class="font-bold text-gray-500 uppercase text-[10px]">Tape Painting</span>
-                    <button onclick="Bandar.spamTrade()" class="w-full py-1.5 bg-[#1a1a1d] border border-gray-700 text-gray-400 hover:text-white rounded text-[10px] font-mono">
-                        GENERATE FAKE NOISE (CHURNING)
-                    </button>
-                </div>
-
-            </div>
-        </aside>
-
-        <div class="flex flex-col min-w-0 bg-[#09090b] relative">
-            <div class="scanlines"></div>
-            
-            <div class="flex-1 relative border-b border-[#27272a]">
-                <canvas id="chart-canvas" class="w-full h-full block"></canvas>
-                <div class="absolute top-4 left-4 pointer-events-none opacity-50">
-                    <div class="text-[10px] text-gray-500 font-bold">BANDAR ACCUMULATION MAP</div>
-                    <div id="status-display" class="text-xs font-mono text-purple-400">STATUS: OBSERVING</div>
-                </div>
-            </div>
-
-            <div class="h-1/3 flex flex-col bg-[#0c0c0e]">
-                <div class="flex justify-between px-3 py-1.5 border-b border-[#27272a] bg-[#121214] text-[10px] font-bold text-gray-500">
-                    <div class="flex gap-4">
-                        <span class="w-12">TIME</span>
-                        <span class="w-16">PRICE</span>
-                        <span class="w-16">CHANGE</span>
-                    </div>
-                    <div class="flex gap-4 pr-4">
-                        <span class="w-10 text-center">BUYER</span>
-                        <span class="w-10 text-center">SELLER</span>
-                        <span class="w-12 text-right">LOT</span>
-                    </div>
-                </div>
-                <div id="tape-container" class="flex-1 overflow-y-auto font-mono text-[11px] relative">
-                    </div>
-            </div>
+    <aside class="row-span-2 bg-[#131722] border-r border-[#2a2e39] flex flex-col overflow-hidden">
+        <div class="p-3 border-b border-[#2a2e39] bg-[#1e222d]">
+            <h2 class="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                MM Control Panel
+            </h2>
         </div>
 
-        <aside class="border-l border-[#27272a] bg-[#0c0c0e] flex flex-col">
-            <div class="p-2 bg-[#121214] border-b border-[#27272a] text-center font-bold text-gray-400 text-[10px]">
-                DEPTH OF MARKET (ORDERBOOK)
-            </div>
+        <div class="flex-1 overflow-y-auto p-3 space-y-4">
             
-            <div class="flex-1 flex flex-col overflow-hidden relative">
-                <div class="grid grid-cols-4 text-[9px] font-bold text-gray-500 px-1 py-1 border-b border-[#27272a]">
-                    <div class="text-left">BID VOL</div>
-                    <div class="text-center">BID</div>
-                    <div class="text-center">OFFER</div>
-                    <div class="text-right">OFF VOL</div>
+            <div class="bg-[#181c25] p-3 rounded border border-[#2a2e39]">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-[11px] font-bold text-purple-400">ICEBERG (ACCUM)</span>
+                    <div id="status-iceberg" class="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
                 </div>
-
-                <div id="ob-asks" class="flex-1 flex flex-col-reverse justify-end overflow-hidden pb-1"></div>
-                
-                <div class="h-8 bg-[#18181b] border-y border-[#27272a] flex items-center justify-center gap-3 shrink-0 z-10">
-                    <span id="spread-val" class="text-xs font-bold text-gray-500">SPREAD: 1</span>
-                </div>
-
-                <div id="ob-bids" class="flex-1 flex flex-col justify-start overflow-hidden pt-1"></div>
+                <p class="text-[9px] text-gray-500 mb-2 leading-relaxed">
+                    Menahan harga Bid. Bid volume terlihat kecil, tapi auto-refill saat dimakan retail.
+                </p>
+                <button onclick="Engine.toggleAlgo('ICEBERG')" class="btn-action w-full py-1.5 bg-[#2a2e39] hover:bg-gray-600 text-[10px] font-bold text-white rounded border border-gray-600">
+                    TOGGLE GHOST BID
+                </button>
             </div>
 
-            <div class="h-40 border-t border-[#27272a] flex flex-col bg-[#09090b]">
-                <div class="px-2 py-1 bg-[#121214] text-[9px] font-bold text-gray-500 flex justify-between">
-                    <span>TOP BUYER</span>
-                    <span>TOP SELLER</span>
+            <div class="bg-[#181c25] p-3 rounded border border-[#2a2e39]">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-[11px] font-bold text-red-400">SPOOFING (WALL)</span>
+                    <div id="status-spoof" class="w-1.5 h-1.5 rounded-full bg-gray-600"></div>
                 </div>
-                <div class="flex-1 grid grid-cols-2 text-[10px] mono">
-                    <div id="top-buyers" class="p-2 border-r border-[#27272a]"></div>
-                    <div id="top-sellers" class="p-2"></div>
+                <p class="text-[9px] text-gray-500 mb-2 leading-relaxed">
+                    Memasang tembok Offer 1 Juta Lot palsu. Akan dicabut otomatis jika harga mendekat.
+                </p>
+                <button onclick="Engine.toggleAlgo('SPOOF')" class="btn-action w-full py-1.5 bg-[#2a2e39] hover:bg-red-900/40 text-[10px] font-bold text-white rounded border border-gray-600 hover:border-red-500">
+                    TOGGLE FAKE OFFER
+                </button>
+            </div>
+
+            <hr class="border-[#2a2e39]">
+
+            <div>
+                <span class="text-[10px] font-bold text-gray-500 uppercase block mb-2">Manual Override</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <button onmousedown="Engine.manualTrade('BUY')" class="btn-action py-3 bg-up hover:brightness-110 text-[#000] font-black text-xs rounded shadow-lg flex flex-col items-center">
+                        <span>HAKA (BUY)</span>
+                        <span class="text-[8px] opacity-70 font-normal">Markup Price</span>
+                    </button>
+                    <button onmousedown="Engine.manualTrade('SELL')" class="btn-action py-3 bg-down hover:brightness-110 text-white font-black text-xs rounded shadow-lg flex flex-col items-center">
+                        <span>HKI (SELL)</span>
+                        <span class="text-[8px] opacity-70 font-normal">Dump Price</span>
+                    </button>
                 </div>
             </div>
-        </aside>
 
+            <div class="mt-4">
+                 <span class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Top Broker Action</span>
+                 <div id="broker-activity" class="text-[10px] font-mono space-y-1">
+                     </div>
+            </div>
+
+        </div>
+    </aside>
+
+    <main class="relative bg-[#000] flex flex-col overflow-hidden">
+        <div id="tv-chart" class="w-full h-full"></div>
+        
+        <div class="absolute top-2 left-2 pointer-events-none bg-[#131722]/80 p-2 rounded border border-[#2a2e39] backdrop-blur-sm">
+            <div class="text-[10px] text-gray-400 font-bold">ALGO STATUS</div>
+            <div id="chart-status" class="text-xs font-mono text-up font-bold">NORMAL MARKET</div>
+        </div>
     </main>
 
-    <script>
-        // --- CONFIG & UTILS ---
-        const BROKERS = {
-            RETAIL: ['YP', 'PD', 'NI', 'KK', 'XC', 'XL'],
-            BANDAR: ['BK', 'AK', 'CC', 'MG', 'KZ', 'ZP']
-        };
+    <aside class="row-span-2 bg-[#131722] border-l border-[#2a2e39] flex flex-col">
         
-        const formatNum = (n) => n.toLocaleString('id-ID');
-        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-        const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
-        const getBroker = (type) => pick(type === 'BANDAR' ? BROKERS.BANDAR : BROKERS.RETAIL);
-
-        // --- ENGINE ---
-        const Engine = {
-            price: 200,
-            prevPrice: 200,
-            tickSize: 1, // Fraksi harga < 200 = 1, >= 200 = 2, simplified to 1 for generic logic unless handled
-            bids: [], // {price, vol, isFake, isGhost}
-            asks: [],
-            trades: [],
-            candles: [],
+        <div class="flex-1 flex flex-col min-h-0 border-b border-[#2a2e39]">
+            <div class="px-2 py-1 bg-[#1e222d] border-b border-[#2a2e39] text-[10px] font-bold text-gray-400 flex justify-between">
+                <span>ORDER BOOK</span>
+                <span class="text-gray-600">L2 DATA</span>
+            </div>
             
-            // Bandar State
-            bandarInv: 0,
-            bandarAvg: 0,
-            
-            // Features
-            fakeWallActive: false,
-            fakeWallSide: 'ASK', // or BID
-            fakeWallPrice: 0,
-            
-            ghostBidActive: false,
-            ghostBidPrice: 0,
-            
-            init() {
-                // Initialize Orderbook around price
-                this.generateOrderbook(this.price);
-                this.startLoop();
-                UI.renderChart(); // Start canvas loop
-            },
+            <div class="grid grid-cols-3 text-[9px] text-gray-500 px-2 py-1 font-bold">
+                <div class="text-right">BID VOL</div>
+                <div class="text-center">PRICE</div>
+                <div class="text-right">ASK VOL</div>
+            </div>
 
-            generateOrderbook(centerPrice) {
-                this.bids = [];
-                this.asks = [];
-                for (let i = 1; i <= 10; i++) {
-                    const pBid = centerPrice - i;
-                    const pAsk = centerPrice + i;
-                    // Volume retail random kecil
-                    this.bids.push({ p: pBid, v: rand(500, 5000), type: 'NORMAL' });
-                    this.asks.push({ p: pAsk, v: rand(500, 5000), type: 'NORMAL' });
-                }
-            },
+            <div id="orderbook-container" class="flex-1 overflow-hidden relative font-mono text-[11px]">
+                </div>
+        </div>
 
-            getTickSize(price) {
-                if(price < 200) return 1;
-                if(price < 500) return 2;
-                if(price < 2000) return 5;
-                return 10;
-            },
+        <div class="h-[250px] flex flex-col bg-[#000]">
+            <div class="px-2 py-1 bg-[#1e222d] border-y border-[#2a2e39] text-[10px] font-bold text-gray-400 flex justify-between">
+                <span>RUNNING TRADE</span>
+                <span>REALTIME</span>
+            </div>
+            <div id="tape-container" class="flex-1 overflow-y-auto font-mono text-[10px] bg-[#131722]">
+                </div>
+        </div>
 
-            // Core Logic Loop
-            tick() {
-                // 1. Check Ghost Bid (Refill)
-                if (this.ghostBidActive) {
-                    const ghostLevel = this.bids.find(b => b.p === this.ghostBidPrice);
-                    if (ghostLevel) {
-                        // Jika volume turun di bawah 1000 lot, refill jadi 5000 (tapi terlihat kecil di UI)
-                        if (ghostLevel.v < 1000) {
-                            ghostLevel.v += rand(3000, 5000);
-                            UI.flashRow(this.ghostBidPrice, 'bg-green-500'); // Visual cue
-                        }
-                        // Visual trick: Di UI nanti kita render volume ini seolah-olah kecil
-                    } else if (this.price > this.ghostBidPrice) {
-                        // Jika harga naik, pindahkan ghost bid naik pelan2 (Trailing)
-                         // Logic omitted for simplicity
-                    }
-                }
+    </aside>
 
-                // 2. Check Fake Wall (Spoofing)
-                if (this.fakeWallActive) {
-                    // Cek jarak harga. Jika harga mendekat ke fake wall, cabut wallnya.
-                    const gap = Math.abs(this.fakeWallPrice - this.price);
-                    const wallRow = this.asks.find(a => a.p === this.fakeWallPrice);
-                    
-                    if (gap <= 2 && wallRow && wallRow.type === 'FAKE') {
-                        // Cabut Wall!
-                        wallRow.v = rand(100, 500); // Kembali normal
-                        wallRow.type = 'NORMAL';
-                        UI.toast("FAKE WALL REMOVED (SPOOFING DETECTED)", "text-red-500");
-                        this.fakeWallActive = false;
-                        UI.updateControls();
-                    }
-                }
-                
-                // 3. Random Noise Trade
-                if(Math.random() > 0.7) {
-                    const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                    const qty = rand(1, 100);
-                    this.executeTrade(this.price, qty, side, 'RETAIL');
-                }
+    <div class="col-start-2 bg-[#131722] border-t border-[#2a2e39] flex items-center justify-between px-4">
+        <div class="flex gap-6 text-[10px] font-mono text-gray-500">
+            <span>OPEN: <span class="text-white">80</span></span>
+            <span>HIGH: <span class="text-white" id="stat-h">82</span></span>
+            <span>LOW: <span class="text-white" id="stat-l">79</span></span>
+            <span>VWAP: <span class="text-yellow-500" id="stat-vwap">81.4</span></span>
+        </div>
+        <div class="text-[10px] text-gray-600 italic">
+            Connected to Local Liquidity Provider
+        </div>
+    </div>
 
-                UI.renderOB();
-            },
+</div>
 
-            executeTrade(price, qty, side, actor) {
-                // Update Tape
-                const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
-                const buyer = side === 'BUY' ? (actor === 'BANDAR' ? getBroker('BANDAR') : getBroker('RETAIL')) : getBroker(Math.random() > 0.8 ? 'BANDAR' : 'RETAIL');
-                const seller = side === 'SELL' ? (actor === 'BANDAR' ? getBroker('BANDAR') : getBroker('RETAIL')) : getBroker(Math.random() > 0.8 ? 'BANDAR' : 'RETAIL');
-                
-                const change = price - this.prevPrice;
-                
-                this.trades.unshift({ time, price, change, buyer, seller, qty, side });
-                if (this.trades.length > 50) this.trades.pop();
+<script>
+    // --- 1. SETUP TRADINGVIEW CHART ---
+    const chartContainer = document.getElementById('tv-chart');
+    const chart = LightweightCharts.createChart(chartContainer, {
+        width: chartContainer.clientWidth,
+        height: chartContainer.clientHeight,
+        layout: {
+            background: { type: 'solid', color: '#000000' },
+            textColor: '#d1d4dc',
+        },
+        grid: {
+            vertLines: { color: '#1f2937' },
+            horzLines: { color: '#1f2937' },
+        },
+        rightPriceScale: {
+            borderColor: '#2a2e39',
+            scaleMargins: { top: 0.1, bottom: 0.2 }, // Space for volume
+        },
+        timeScale: {
+            borderColor: '#2a2e39',
+            timeVisible: true,
+            secondsVisible: true,
+        },
+        crosshair: {
+            mode: LightweightCharts.CrosshairMode.Normal,
+        },
+    });
 
-                // Impact to Price & Orderbook
-                if (side === 'BUY') {
-                    // Makan Offer
-                    let remaining = qty;
-                    while (remaining > 0 && this.asks.length > 0) {
-                        if (this.asks[0].v > remaining) {
-                            this.asks[0].v -= remaining;
-                            remaining = 0;
-                        } else {
-                            remaining -= this.asks[0].v;
-                            this.asks.shift(); // Offer habis
-                            // Harga naik
-                            this.prevPrice = this.price;
-                            this.price += this.getTickSize(this.price);
-                            this.adjustOrderbookNewLevel();
-                        }
-                    }
-                } else {
-                    // Buang Kiri (Hit Bid)
-                    let remaining = qty;
-                    while (remaining > 0 && this.bids.length > 0) {
-                         // GHOST BID LOGIC PROTECTION
-                        if (this.ghostBidActive && this.bids[0].p === this.ghostBidPrice) {
-                            // Tidak bisa jebol
-                            remaining = 0; 
-                            // Tapi volume bid berkurang visualnya, nanti di refill di tick()
-                            this.bids[0].v -= Math.min(qty, this.bids[0].v - 1); // Sisain 1
-                            break;
-                        }
+    // Series
+    const candleSeries = chart.addCandlestickSeries({
+        upColor: '#26a69a', downColor: '#ef5350',
+        borderUpColor: '#26a69a', borderDownColor: '#ef5350',
+        wickUpColor: '#26a69a', wickDownColor: '#ef5350',
+    });
 
-                        if (this.bids[0].v > remaining) {
-                            this.bids[0].v -= remaining;
-                            remaining = 0;
-                        } else {
-                            remaining -= this.bids[0].v;
-                            this.bids.shift(); // Bid jebol
-                            // Harga turun
-                            this.prevPrice = this.price;
-                            this.price -= this.getTickSize(this.price);
-                            this.adjustOrderbookNewLevel();
-                        }
-                    }
-                }
-                
-                // Update Inventory Bandar
-                if (actor === 'BANDAR') {
-                    if (side === 'BUY') {
-                        const totalVal = (this.bandarInv * this.bandarAvg) + (qty * price);
-                        this.bandarInv += qty;
-                        this.bandarAvg = Math.floor(totalVal / this.bandarInv);
-                    } else {
-                        this.bandarInv -= qty;
-                    }
-                    UI.updateBandarInfo();
-                }
+    const volumeSeries = chart.addHistogramSeries({
+        color: '#26a69a',
+        priceFormat: { type: 'volume' },
+        priceScaleId: '', // Overlay mode
+    });
+    
+    // Config volume to sit at bottom
+    volumeSeries.priceScale().applyOptions({
+        scaleMargins: { top: 0.8, bottom: 0 },
+    });
 
-                // Push Candle Data (Simplified)
-                Chart.pushData(this.price);
-                
-                UI.renderTape();
-                UI.renderHeader();
-            },
+    const vwapSeries = chart.addLineSeries({
+        color: '#fbbf24', // Yellow
+        lineWidth: 1,
+        lineStyle: LightweightCharts.LineStyle.Dotted,
+        crosshairMarkerVisible: false,
+    });
 
-            adjustOrderbookNewLevel() {
-                // Kalau harga geser, generate level baru biar tidak kosong
-                const tick = this.getTickSize(this.price);
-                
-                // Ensure Asks exist above price
-                const highestAsk = this.asks.length > 0 ? this.asks[this.asks.length-1].p : this.price;
-                while(this.asks.length < 10) {
-                    this.asks.push({ p: highestAsk + (this.asks.length+1)*tick, v: rand(500, 5000), type: 'NORMAL' });
-                }
-                
-                // Ensure Bids exist below price
-                const lowestBid = this.bids.length > 0 ? this.bids[this.bids.length-1].p : this.price;
-                while(this.bids.length < 10) {
-                    this.bids.push({ p: lowestBid - (this.bids.length+1)*tick, v: rand(500, 5000), type: 'NORMAL' });
-                }
-            },
+    // Resize Handler
+    new ResizeObserver(entries => {
+        if (entries.length === 0 || entries[0].target !== chartContainer) { return; }
+        const newRect = entries[0].contentRect;
+        chart.applyOptions({ width: newRect.width, height: newRect.height });
+    }).observe(chartContainer);
 
-            startLoop() {
-                setInterval(() => this.tick(), 500); // Game Loop speed
+    // --- 2. DATA ENGINE ---
+    
+    // Initial Data Generation
+    let currentPrice = 82;
+    let initialData = [];
+    let volumeData = [];
+    let vwapData = [];
+    let time = Math.floor(Date.now() / 1000) - 3600; // Start 1 hour ago
+
+    // Generate history
+    for(let i=0; i<200; i++) {
+        time += 60; // 1 min candles
+        const open = currentPrice;
+        const close = open + (Math.random() - 0.5) * 2;
+        const high = Math.max(open, close) + Math.random();
+        const low = Math.min(open, close) - Math.random();
+        const vol = Math.floor(Math.random() * 5000) + 500;
+        
+        currentPrice = close;
+        
+        initialData.push({ time, open, high, low, close });
+        volumeData.push({ 
+            time, 
+            value: vol, 
+            color: close >= open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)' 
+        });
+        vwapData.push({ time, value: (high+low+close)/3 }); // Simple VWAP approx
+    }
+
+    candleSeries.setData(initialData);
+    volumeSeries.setData(volumeData);
+    vwapSeries.setData(vwapData);
+
+    // Live Candle State
+    let lastCandle = initialData[initialData.length - 1];
+    let lastVol = volumeData[volumeData.length - 1];
+    let currentBar = {
+        open: lastCandle.close,
+        high: lastCandle.close,
+        low: lastCandle.close,
+        close: lastCandle.close,
+        time: lastCandle.time + 60,
+    };
+    let currentVol = 0;
+
+    // --- 3. MARKET MAKER LOGIC ---
+    
+    const Engine = {
+        price: currentBar.close,
+        bids: [],
+        asks: [],
+        trades: [],
+        
+        // Algos
+        isIceberg: false,
+        icebergPrice: 0,
+        isSpoof: false,
+        spoofPrice: 0,
+        
+        // Brokers
+        bandarCodes: ['MG', 'BK', 'AK', 'ZP', 'CC'],
+        retailCodes: ['YP', 'PD', 'NI', 'XL', 'KK'],
+
+        init() {
+            this.generateOB();
+            this.renderOB();
+            setInterval(() => this.tick(), 500); // Game Loop
+        },
+
+        generateOB() {
+            this.bids = [];
+            this.asks = [];
+            for(let i=1; i<=10; i++) {
+                this.bids.push({ p: Math.floor(this.price - i), v: Math.floor(Math.random()*5000), type: 'NORMAL' });
+                this.asks.push({ p: Math.floor(this.price + i), v: Math.floor(Math.random()*5000), type: 'NORMAL' });
             }
-        };
+        },
 
-        // --- BANDAR ACTIONS ---
-        const Bandar = {
-            toggleFakeWall() {
-                if (Engine.fakeWallActive) {
-                    Engine.fakeWallActive = false;
-                    // Reset fake rows
-                    Engine.asks.forEach(a => { if(a.type === 'FAKE') { a.v = rand(100,1000); a.type = 'NORMAL'; }});
+        toggleAlgo(type) {
+            if(type === 'ICEBERG') {
+                this.isIceberg = !this.isIceberg;
+                document.getElementById('status-iceberg').className = `w-1.5 h-1.5 rounded-full ${this.isIceberg ? 'bg-green-500 shadow-[0_0_5px_lime]' : 'bg-gray-600'}`;
+                if(this.isIceberg) {
+                    this.icebergPrice = this.bids[0].p;
+                    this.bids[0].v = 112; // Visual small
+                    this.bids[0].type = 'ICEBERG';
+                    UI.notify("ICEBERG ACTIVE", "text-up");
                 } else {
-                    Engine.fakeWallActive = true;
-                    Engine.fakeWallSide = 'ASK';
-                    // Pasang di 3 tick di atas
-                    if(Engine.asks.length > 3) {
-                        const target = Engine.asks[2];
-                        target.v = 500000; // 500k Lot
-                        target.type = 'FAKE';
-                        Engine.fakeWallPrice = target.p;
-                    }
-                }
-                UI.updateControls();
-                UI.renderOB();
-            },
-
-            toggleGhostBid() {
-                if(Engine.ghostBidActive) {
-                    Engine.ghostBidActive = false;
-                } else {
-                    Engine.ghostBidActive = true;
-                    // Kunci di best bid saat ini
-                    if(Engine.bids.length > 0) {
-                        Engine.ghostBidPrice = Engine.bids[0].p;
-                        Engine.bids[0].type = 'GHOST';
-                        // Set volume terlihat "lemah" untuk memancing seller
-                        Engine.bids[0].v = 150; 
-                    }
-                }
-                UI.updateControls();
-                UI.renderOB();
-            },
-
-            hajarKanan() {
-                // Beli masif
-                Engine.executeTrade(Engine.asks[0].p, 15000, 'BUY', 'BANDAR');
-            },
-
-            hajarKiri() {
-                // Jual masif
-                Engine.executeTrade(Engine.bids[0].p, 15000, 'SELL', 'BANDAR');
-            },
-
-            spamTrade() {
-                // Generate fake noise tape (Churning)
-                for(let i=0; i<10; i++) {
-                    setTimeout(() => {
-                        Engine.executeTrade(Engine.price, rand(10, 50), Math.random()>0.5?'BUY':'SELL', 'BANDAR');
-                    }, i * 100);
+                    this.bids[0].type = 'NORMAL';
+                    this.bids[0].v = Math.floor(Math.random()*2000);
                 }
             }
-        };
-
-        // --- UI ---
-        const UI = {
-            renderHeader() {
-                const elP = document.getElementById('header-price');
-                const elC = document.getElementById('header-chg');
-                const diff = Engine.price - 200; // Base reference
-                const pct = (diff / 200) * 100;
-                
-                elP.innerText = Engine.price;
-                elP.className = `font-black text-lg mono ${diff > 0 ? 'text-up' : diff < 0 ? 'text-down' : 'text-white'}`;
-                elC.innerText = pct.toFixed(2) + '%';
-                elC.className = `font-bold mono ${diff > 0 ? 'text-up' : diff < 0 ? 'text-down' : 'text-gray-400'}`;
-            },
-
-            updateBandarInfo() {
-                document.getElementById('mm-inventory').innerText = formatNum(Engine.bandarInv);
-                document.getElementById('mm-avg').innerText = Engine.bandarAvg;
-            },
-
-            updateControls() {
-                const fakeInd = document.getElementById('ind-fake');
-                const fakeBtn = document.getElementById('btn-fake');
-                if(Engine.fakeWallActive) {
-                    fakeInd.className = "w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_red]";
-                    fakeBtn.innerText = "DEACTIVATE FAKE OFFER";
-                    fakeBtn.className = fakeBtn.className.replace('border-gray-600', 'border-red-500 text-red-400');
+            if(type === 'SPOOF') {
+                this.isSpoof = !this.isSpoof;
+                document.getElementById('status-spoof').className = `w-1.5 h-1.5 rounded-full ${this.isSpoof ? 'bg-red-500 shadow-[0_0_5px_red]' : 'bg-gray-600'}`;
+                if(this.isSpoof) {
+                    // Create wall at +3 ticks
+                    if(this.asks[2]) {
+                        this.spoofPrice = this.asks[2].p;
+                        this.asks[2].v = 550000; // Big wall
+                        this.asks[2].type = 'SPOOF';
+                        UI.notify("SPOOF WALL DEPLOYED", "text-down");
+                    }
                 } else {
-                    fakeInd.className = "w-2 h-2 rounded-full bg-gray-600";
-                    fakeBtn.innerText = "ACTIVATE FAKE OFFER";
-                    fakeBtn.className = fakeBtn.className.replace('border-red-500 text-red-400', 'border-gray-600 text-gray-300');
+                    const wall = this.asks.find(a => a.type === 'SPOOF');
+                    if(wall) { wall.type = 'NORMAL'; wall.v = Math.random()*5000; }
                 }
+            }
+            this.renderOB();
+        },
 
-                const ghostInd = document.getElementById('ind-ghost');
-                const ghostBtn = document.getElementById('btn-ghost');
-                if(Engine.ghostBidActive) {
-                    ghostInd.className = "w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_green]";
-                    ghostBtn.innerText = "DEACTIVATE GHOST BID";
+        manualTrade(side) {
+            const qty = Math.floor(Math.random() * 500) + 1000;
+            this.executeTrade(this.price, qty, side, 'BANDAR');
+        },
+
+        executeTrade(price, qty, side, aggressor) {
+            // Update Price Logic
+            if(side === 'BUY') {
+                // Eat Ask
+                this.price += (qty > 5000 ? 1 : 0.5); // Impact
+                if(this.isSpoof && this.price >= this.spoofPrice - 1) {
+                    // Pull the wall if price gets close
+                    this.toggleAlgo('SPOOF'); // Deactivate
+                    UI.notify("ALGO: WALL PULLED (SAFEGUARD)", "text-yellow-500");
+                }
+            } else {
+                // Hit Bid
+                // Iceberg Logic
+                if(this.isIceberg && this.price <= this.icebergPrice + 0.5) {
+                     this.price = this.icebergPrice; // Hold price
+                     // Refill volume animation (logic only)
                 } else {
-                    ghostInd.className = "w-2 h-2 rounded-full bg-gray-600";
-                    ghostBtn.innerText = "ACTIVATE GHOST BID";
+                    this.price -= (qty > 5000 ? 1 : 0.5);
                 }
-            },
-
-            renderOB() {
-                // BIDS
-                const bidEl = document.getElementById('ob-bids');
-                bidEl.innerHTML = '';
-                Engine.bids.forEach(b => {
-                    const isGhost = Engine.ghostBidActive && b.p === Engine.ghostBidPrice;
-                    // Kalau Ghost, kita tampilkan volume palsu (kecil) di UI, padahal aslinya besar
-                    const displayVol = isGhost ? rand(50, 300) : b.v; 
-                    const barW = Math.min((displayVol / 10000) * 100, 100);
-                    
-                    const row = document.createElement('div');
-                    row.className = `grid grid-cols-4 px-1 py-0.5 text-[11px] font-mono border-b border-[#1c1c1f] relative group hover:bg-[#1c1c1f] cursor-crosshair ${isGhost ? 'bg-green-900/20' : ''}`;
-                    row.innerHTML = `
-                        <div class="text-left font-bold text-gray-300 z-10">${formatNum(displayVol)}</div>
-                        <div class="text-center font-bold text-up z-10">${b.p}</div>
-                        <div class="text-center text-gray-600 z-10">-</div>
-                        <div class="text-right text-gray-600 z-10">-</div>
-                        <div class="absolute top-0 bottom-0 left-0 bg-up-dim transition-all duration-300" style="width: ${barW}%"></div>
-                        ${isGhost ? '<div class="absolute left-0 w-0.5 h-full bg-green-400 animate-pulse"></div>' : ''}
-                    `;
-                    bidEl.appendChild(row);
-                });
-
-                // ASKS
-                const askEl = document.getElementById('ob-asks');
-                askEl.innerHTML = '';
-                // Reverse iterate for Asks
-                [...Engine.asks].reverse().forEach(a => {
-                    const isFake = a.type === 'FAKE';
-                    const barW = Math.min((a.v / 10000) * 100, 100);
-                    
-                    const row = document.createElement('div');
-                    row.className = `grid grid-cols-4 px-1 py-0.5 text-[11px] font-mono border-b border-[#1c1c1f] relative group hover:bg-[#1c1c1f] cursor-crosshair ${isFake ? 'bg-red-900/20' : ''}`;
-                    row.innerHTML = `
-                        <div class="text-left text-gray-600 z-10">-</div>
-                        <div class="text-center text-gray-600 z-10">-</div>
-                        <div class="text-center font-bold text-down z-10">${a.p}</div>
-                        <div class="text-right font-bold text-gray-300 z-10">${formatNum(a.v)}</div>
-                        <div class="absolute top-0 bottom-0 right-0 bg-down-dim transition-all duration-300" style="width: ${barW}%"></div>
-                        ${isFake ? '<div class="absolute right-0 w-0.5 h-full bg-red-500 animate-pulse"></div>' : ''}
-                    `;
-                    askEl.appendChild(row);
-                });
-            },
-
-            renderTape() {
-                const c = document.getElementById('tape-container');
-                let h = '';
-                Engine.trades.forEach(t => {
-                    const color = t.side === 'BUY' ? 'text-up' : 'text-down';
-                    // Highlight Bandar
-                    const buyerClass = BROKERS.BANDAR.includes(t.buyer) ? 'text-purple-400 font-black' : 'text-gray-400';
-                    const sellerClass = BROKERS.BANDAR.includes(t.seller) ? 'text-purple-400 font-black' : 'text-gray-400';
-
-                    h += `
-                    <div class="flex justify-between px-3 py-0.5 border-b border-[#1c1c1f] hover:bg-[#1c1c1f]">
-                        <div class="flex gap-4">
-                            <span class="w-12 text-gray-600">${t.time}</span>
-                            <span class="w-16 ${color} font-bold">${t.price}</span>
-                            <span class="w-16 ${t.change > 0 ? 'text-up': t.change < 0 ? 'text-down': 'text-gray-500'}">${t.change > 0 ? '+' : ''}${t.change}</span>
-                        </div>
-                        <div class="flex gap-4 pr-4">
-                            <span class="w-10 text-center ${buyerClass}">${t.buyer}</span>
-                            <span class="w-10 text-center ${sellerClass}">${t.seller}</span>
-                            <span class="w-12 text-right font-bold text-gray-300">${formatNum(t.qty)}</span>
-                        </div>
-                    </div>`;
-                });
-                c.innerHTML = h;
-            },
-
-            flashRow(price, bgClass) {
-                // Simplified visual cue helper
-            },
-            
-            toast(msg, color) {
-                const d = document.getElementById('status-display');
-                d.innerText = msg;
-                d.className = `text-xs font-mono font-bold ${color} animate-pulse`;
-                setTimeout(() => {
-                    d.innerText = "STATUS: MONITORING";
-                    d.className = "text-xs font-mono text-purple-400";
-                }, 2000);
-            },
-
-            renderChart() {
-                requestAnimationFrame(Chart.draw);
             }
-        };
+            
+            // Round price
+            this.price = Math.round(this.price * 2) / 2; // Tick size 0.5? Let's assume integer for simpler ID stock
+            this.price = Math.round(this.price); 
 
-        // --- CHARTING (CANVAS) ---
-        const Chart = {
-            data: Array(200).fill(200),
-            canvas: document.getElementById('chart-canvas'),
-            ctx: document.getElementById('chart-canvas').getContext('2d'),
+            // Update Chart
+            this.updateCandle(this.price, qty, side);
             
-            pushData(price) {
-                this.data.push(price);
-                if(this.data.length > 300) this.data.shift();
-            },
+            // Tape & OB
+            this.trades.unshift({ 
+                t: new Date().toLocaleTimeString(), 
+                p: this.price, 
+                q: qty, 
+                s: side,
+                b: aggressor === 'BANDAR' ? this.getRandomBroker(true) : this.getRandomBroker(false),
+                sl: this.getRandomBroker(false)
+            });
+            if(this.trades.length > 50) this.trades.pop();
             
-            draw() {
-                const ctx = Chart.ctx;
-                const canvas = Chart.canvas;
+            this.regenerateOBRows();
+            this.renderTape();
+            this.renderOB();
+            UI.updateHeader();
+        },
+
+        tick() {
+            // Random Market Noise
+            if(Math.random() > 0.6) {
+                const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
+                const qty = Math.floor(Math.random() * 100) + 10;
+                this.executeTrade(this.price, qty, side, 'RETAIL');
+            }
+            // Update timestamp for chart
+            if (Date.now()/1000 > currentBar.time + 60) {
+                // Close candle
+                currentBar = {
+                    open: currentBar.close,
+                    high: currentBar.close,
+                    low: currentBar.close,
+                    close: currentBar.close,
+                    time: currentBar.time + 60
+                };
+                currentVol = 0;
+            }
+        },
+
+        updateCandle(price, vol, side) {
+            currentVol += vol;
+            currentBar.close = price;
+            if(price > currentBar.high) currentBar.high = price;
+            if(price < currentBar.low) currentBar.low = price;
+
+            candleSeries.update(currentBar);
+            volumeSeries.update({
+                time: currentBar.time,
+                value: currentVol,
+                color: currentBar.close >= currentBar.open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)'
+            });
+        },
+
+        regenerateOBRows() {
+            // Keep OB centered around price
+            const center = this.price;
+            // Update existing or create new
+            // Simplified: just regen for demo smoothness
+            this.bids = [];
+            this.asks = [];
+            for(let i=1; i<=8; i++) {
+                // Bids
+                let bidP = center - i;
+                let bidV = Math.floor(Math.random() * 3000) + 100;
+                let bidType = 'NORMAL';
                 
-                // Resize
-                if (canvas.width !== canvas.parentElement.clientWidth) {
-                    canvas.width = canvas.parentElement.clientWidth;
-                    canvas.height = canvas.parentElement.clientHeight;
+                if(this.isIceberg && bidP === this.icebergPrice) {
+                    bidV = Math.floor(Math.random() * 100) + 50; // Show small
+                    bidType = 'ICEBERG';
                 }
-                const w = canvas.width;
-                const h = canvas.height;
+                this.bids.push({ p: bidP, v: bidV, type: bidType });
 
-                // Clear
-                ctx.fillStyle = '#09090b';
-                ctx.fillRect(0,0,w,h);
+                // Asks
+                let askP = center + i;
+                let askV = Math.floor(Math.random() * 3000) + 100;
+                let askType = 'NORMAL';
 
-                // Grid
-                ctx.strokeStyle = '#18181b'; ctx.lineWidth = 1;
-                ctx.beginPath();
-                for(let i=0; i<w; i+=50) { ctx.moveTo(i,0); ctx.lineTo(i,h); }
-                for(let i=0; i<h; i+=50) { ctx.moveTo(0,i); ctx.lineTo(w,i); }
-                ctx.stroke();
-
-                // Line
-                const min = Math.min(...Chart.data) - 5;
-                const max = Math.max(...Chart.data) + 5;
-                const range = max - min;
-                
-                ctx.beginPath();
-                ctx.strokeStyle = '#8b5cf6'; // Bandar Purple
-                ctx.lineWidth = 2;
-                
-                Chart.data.forEach((p, i) => {
-                    const x = (i / Chart.data.length) * w;
-                    const y = h - ((p - min) / range) * h;
-                    if(i===0) ctx.moveTo(x,y);
-                    else ctx.lineTo(x,y);
-                });
-                ctx.stroke();
-                
-                // Gradient Fill
-                ctx.lineTo(w, h);
-                ctx.lineTo(0, h);
-                const grad = ctx.createLinearGradient(0, 0, 0, h);
-                grad.addColorStop(0, 'rgba(139, 92, 246, 0.2)');
-                grad.addColorStop(1, 'rgba(139, 92, 246, 0)');
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                UI.renderChart();
+                if(this.isSpoof && askP === this.spoofPrice) {
+                    askV = 500000;
+                    askType = 'SPOOF';
+                }
+                this.asks.push({ p: askP, v: askV, type: askType });
             }
-        };
+        },
 
-        Engine.init();
+        getRandomBroker(isBandar) {
+            const arr = isBandar ? this.bandarCodes : this.retailCodes;
+            return arr[Math.floor(Math.random() * arr.length)];
+        },
 
-    </script>
+        renderOB() {
+            const el = document.getElementById('orderbook-container');
+            let html = '<div class="flex flex-col h-full">';
+            
+            // Asks (Red) - Reverse order (High price on top)
+            let asksHtml = '<div class="flex-1 flex flex-col justify-end">';
+            [...this.asks].reverse().forEach(a => {
+                const barW = Math.min(a.v/5000 * 100, 100);
+                const isSpoof = a.type === 'SPOOF';
+                asksHtml += `
+                <div class="grid grid-cols-3 text-[11px] hover:bg-[#1e222d] relative border-b border-[#1f2937] ${isSpoof ? 'bg-red-900/30 animate-pulse' : ''}">
+                    <div class="text-right text-gray-700 py-0.5 z-10">-</div>
+                    <div class="text-center text-down font-bold py-0.5 z-10">${a.p}</div>
+                    <div class="text-right text-white py-0.5 pr-2 z-10 font-bold">${a.v.toLocaleString()}</div>
+                    <div class="absolute right-0 top-0 bottom-0 bg-red-900/20" style="width:${isSpoof ? 100 : barW}%"></div>
+                </div>`;
+            });
+            asksHtml += '</div>';
+
+            // Spread
+            let spreadHtml = `<div class="h-6 flex items-center justify-center bg-[#1e222d] border-y border-[#2a2e39] text-[10px] text-gray-500 font-bold">SPREAD</div>`;
+
+            // Bids (Green)
+            let bidsHtml = '<div class="flex-1 flex flex-col">';
+            this.bids.forEach(b => {
+                const barW = Math.min(b.v/5000 * 100, 100);
+                const isIce = b.type === 'ICEBERG';
+                bidsHtml += `
+                <div class="grid grid-cols-3 text-[11px] hover:bg-[#1e222d] relative border-b border-[#1f2937] ${isIce ? 'bg-green-900/30' : ''}">
+                    <div class="text-right text-white font-bold py-0.5 z-10">${b.v.toLocaleString()}</div>
+                    <div class="text-center text-up font-bold py-0.5 z-10">${b.p}</div>
+                    <div class="text-right text-gray-700 py-0.5 pr-2 z-10">-</div>
+                    <div class="absolute left-0 top-0 bottom-0 bg-green-900/20" style="width:${barW}%"></div>
+                    ${isIce ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500 animate-pulse"></div>' : ''}
+                </div>`;
+            });
+            bidsHtml += '</div>';
+
+            el.innerHTML = asksHtml + spreadHtml + bidsHtml;
+        },
+
+        renderTape() {
+            const el = document.getElementById('tape-container');
+            const html = this.trades.map(t => {
+                const color = t.s === 'BUY' ? 'text-up' : 'text-down';
+                // Highlight Bandar Broker
+                const bCol = this.bandarCodes.includes(t.b) ? 'text-purple-400 font-black' : 'text-gray-500';
+                return `
+                <div class="grid grid-cols-4 px-2 py-0.5 border-b border-[#1f2937] hover:bg-[#1e222d]">
+                    <span class="text-gray-500">${t.t}</span>
+                    <span class="${color} font-bold text-center">${t.p}</span>
+                    <span class="text-white text-right font-mono">${t.q}</span>
+                    <span class="${bCol} text-right">${t.b}</span>
+                </div>`;
+            }).join('');
+            el.innerHTML = html;
+        }
+    };
+
+    const UI = {
+        updateHeader() {
+            document.getElementById('header-price').innerText = Engine.price;
+            // Simplified stat update
+            document.getElementById('header-vol').innerText = Engine.trades.reduce((acc, t) => acc + t.q, 0).toLocaleString();
+        },
+        notify(msg, colorClass) {
+            const el = document.getElementById('chart-status');
+            el.innerText = msg;
+            el.className = `text-xs font-mono font-bold ${colorClass} animate-pulse`;
+            setTimeout(() => {
+                el.innerText = "NORMAL MARKET";
+                el.className = "text-xs font-mono text-up font-bold";
+            }, 3000);
+        }
+    };
+
+    Engine.init();
+
+</script>
 </body>
 </html>
