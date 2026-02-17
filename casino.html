@@ -3,236 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ocean Emperor Deluxe</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <title>Ocean Emperor: Ultimate Weapon Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --neon-blue: #00f3ff;
             --neon-gold: #ffd700;
             --neon-red: #ff0055;
-            --glass-bg: rgba(0, 15, 30, 0.65);
-            --border-glow: 0 0 10px rgba(0, 243, 255, 0.5);
+            --neon-green: #00ff66;
+            --glass-bg: rgba(0, 15, 30, 0.75);
         }
 
         body {
-            margin: 0;
-            overflow: hidden;
-            background: #000;
+            margin: 0; overflow: hidden; background: #000;
             font-family: 'Rajdhani', sans-serif;
-            user-select: none;
-            cursor: none; /* Kita ganti kursor default */
+            user-select: none; cursor: crosshair;
         }
 
-        /* --- GAME CANVAS --- */
-        canvas {
-            display: block;
-            background: radial-gradient(circle at center, #0b3d66 0%, #000411 100%);
-        }
+        canvas { display: block; background: radial-gradient(circle at center, #0b3d66 0%, #000411 100%); }
 
-        /* --- CUSTOM CURSOR --- */
-        #cursor-hair {
-            position: absolute;
-            width: 40px; height: 40px;
-            border: 2px solid var(--neon-red);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            z-index: 9999;
-            box-shadow: 0 0 10px var(--neon-red);
-            transition: transform 0.1s;
-        }
-        #cursor-hair::after {
-            content: ''; position: absolute;
-            top: 50%; left: 50%;
-            width: 4px; height: 4px;
-            background: var(--neon-red);
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-        }
-
-        /* --- UI LAYOUT --- */
+        /* UI LAYER */
         #ui-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
             display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        /* TOP BAR */
-        .top-bar {
+        /* TOP HUD */
+        .hud-top {
             display: flex; justify-content: space-between; padding: 20px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
         }
 
-        .jackpot-ticker {
-            color: var(--neon-gold);
-            font-size: 24px; font-weight: bold;
-            text-shadow: 0 0 15px var(--neon-gold);
-            letter-spacing: 2px;
+        .weapon-timer-bar {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            width: 300px; height: 10px; background: #333; border-radius: 5px;
+            display: none; border: 1px solid white; overflow: hidden;
+        }
+        .weapon-fill {
+            height: 100%; background: var(--neon-red); width: 100%;
+            transition: width 0.1s linear;
         }
 
-        /* BOTTOM CONTROL PANEL */
-        .control-panel {
+        /* BOTTOM HUD */
+        .hud-bottom {
             pointer-events: auto;
-            background: var(--glass-bg);
-            backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255,255,255,0.1);
+            background: var(--glass-bg); backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255,255,255,0.2);
             padding: 15px 40px;
-            display: flex; align-items: center; justify-content: center; gap: 30px;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-            position: relative;
-            z-index: 100;
+            display: flex; align-items: center; justify-content: center; gap: 40px;
         }
 
-        /* COMPONENTS */
-        .balance-box {
-            position: relative;
-            background: rgba(0,0,0,0.5);
-            padding: 10px 25px;
-            border-radius: 8px;
-            border: 1px solid var(--neon-gold);
-            color: var(--neon-gold);
-            font-size: 28px;
-            font-weight: 700;
-            min-width: 150px; text-align: right;
-            box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.1);
+        .stat-box {
+            text-align: center; color: white;
         }
-        .balance-label {
-            font-size: 12px; color: #aaa; position: absolute; top: -8px; left: 10px; background: #060b14; padding: 0 5px;
+        .stat-val {
+            font-size: 28px; font-weight: 900; color: var(--neon-gold);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
         }
-
-        .btn-group { display: flex; align-items: center; gap: 10px; }
+        .stat-label { font-size: 12px; color: #aaa; letter-spacing: 2px; }
 
         .btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid var(--neon-blue);
-            color: var(--neon-blue);
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-family: 'Rajdhani'; font-weight: bold; font-size: 16px;
-            cursor: pointer;
+            background: transparent; border: 1px solid var(--neon-blue);
+            color: var(--neon-blue); padding: 10px 20px;
+            font-family: inherit; font-weight: bold; cursor: pointer;
             transition: 0.2s;
-            text-transform: uppercase;
         }
-        .btn:hover { background: rgba(0, 243, 255, 0.2); box-shadow: 0 0 15px var(--neon-blue); }
-        .btn:active { transform: scale(0.95); }
+        .btn:hover { background: var(--neon-blue); color: black; }
+        .btn.active { background: var(--neon-green); color: black; border-color: var(--neon-green); }
 
-        .btn.active {
-            background: var(--neon-blue);
-            color: black;
-            box-shadow: 0 0 20px var(--neon-blue);
-        }
-
-        .bet-adjust {
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .bet-val { font-size: 20px; color: white; font-weight: bold; margin: 0 10px; }
-
-        /* Floating Damage Text */
+        /* Floating Text Animation */
         .floater {
-            position: absolute; pointer-events: none;
-            font-weight: 900; font-size: 24px;
-            animation: floatUp 0.8s forwards ease-out;
-            text-shadow: 2px 2px 0px #000;
+            position: absolute; font-weight: 900; font-size: 24px;
+            animation: floatUp 1s forwards; text-shadow: 2px 2px 0 #000;
         }
-
         @keyframes floatUp {
             0% { transform: translateY(0) scale(0.5); opacity: 0; }
-            20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
-            100% { transform: translateY(-80px) scale(1); opacity: 0; }
+            20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
         }
-
-        /* Screen Shake */
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake { 
-            10%, 90% { transform: translate3d(-1px, 0, 0); } 
-            20%, 80% { transform: translate3d(2px, 0, 0); } 
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 
-            40%, 60% { transform: translate3d(4px, 0, 0); } 
-        }
-
+        
+        /* Shake Screen */
+        .shake { animation: shake 0.5s; }
+        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(0,0); } }
     </style>
 </head>
 <body>
 
-<div id="cursor-hair"></div>
-
 <canvas id="gameCanvas"></canvas>
 
 <div id="ui-layer">
-    <div class="top-bar">
-        <div class="jackpot-ticker">GRAND JACKPOT: 💎 5,402,100</div>
+    <div class="hud-top">
+        <div class="stat-box" style="text-align: left;">
+            <div class="stat-label">GRAND JACKPOT</div>
+            <div class="stat-val">💎 9,999,999</div>
+        </div>
     </div>
 
-    <div class="control-panel">
-        <div class="btn-group">
-            <button class="btn" onclick="adjustBet(-10)">-</button>
-            <div class="bet-adjust">
-                <span style="font-size: 10px; color: #888;">BET</span>
-                <span class="bet-val" id="bet-display">10</span>
+    <div id="weapon-timer" class="weapon-timer-bar">
+        <div id="weapon-fill" class="weapon-fill"></div>
+    </div>
+
+    <div class="hud-bottom">
+        <div class="stat-box">
+            <div class="stat-label">SALDO</div>
+            <div class="stat-val" id="balance">10,000</div>
+        </div>
+        
+        <div class="stat-box">
+            <button class="btn" id="btn-auto" onclick="toggleAuto()">AUTO FIRE: OFF</button>
+        </div>
+
+        <div class="stat-box">
+            <div class="stat-label">BET</div>
+            <div class="stat-val" style="color: white; font-size: 20px;">
+                <span style="cursor:pointer" onclick="changeBet(-10)">[-]</span> 
+                <span id="bet">10</span> 
+                <span style="cursor:pointer" onclick="changeBet(10)">[+]</span>
             </div>
-            <button class="btn" onclick="adjustBet(10)">+</button>
         </div>
-
-        <div class="balance-box" id="balance-container">
-            <span class="balance-label">CREDIT</span>
-            <span id="balance">10000</span>
-        </div>
-
-        <button class="btn" id="btn-auto" onclick="toggleAuto()">
-            AUTO SHOOT: <span id="auto-status">OFF</span>
-        </button>
     </div>
 </div>
 
 <script>
-    /* --- CONFIG & STATE --- */
+    /**
+     * ==========================================
+     * KONFIGURASI ASET (GAMBAR)
+     * ==========================================
+     * Jika Anda ingin menggunakan gambar asli, isi URL di dalam tanda kutip.
+     * Jika kosong (""), game akan menggambar bentuk prosedural (Canvas Shape).
+     */
+    const ASSETS = {
+        bg: "",                 // URL Background image
+        fish_small: "",         // URL Ikan Kecil
+        fish_med: "",           // URL Ikan Sedang
+        fish_boss: "",          // URL Boss
+        fish_drill: "",         // URL Ikan Spesial (Drop Drill)
+        fish_bomb: "",          // URL Ikan Spesial (Drop Bomb)
+        fish_jackpot: "",       // URL Ikan Count Up
+        bullet_normal: "",      // URL Peluru Biasa
+        bullet_drill: "",       // URL Peluru Drill
+        bullet_bomb: "",        // URL Bom Bergerak
+        coin: ""                // URL Koin
+    };
+
+    // Preload Images Helper
+    const images = {};
+    for (let key in ASSETS) {
+        if (ASSETS[key]) {
+            const img = new Image();
+            img.src = ASSETS[key];
+            images[key] = img;
+        }
+    }
+
+    // --- GAME ENGINE SETUP ---
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const cursor = document.getElementById('cursor-hair');
-    const balanceEl = document.getElementById('balance');
-    const balanceContainer = document.getElementById('balance-container');
-
+    
     let width, height;
-    let balance = 10000;
-    let bet = 10;
-    
-    // Auto Shoot State
-    let isAuto = false;
-    let autoInterval = null;
-    let lastShotTime = 0;
-    
-    // Mouse State
-    let mouse = { x: 0, y: 0, down: false };
-
-    // Resize
-    function resize() {
-        width = canvas.width = window.innerWidth;
-        height = canvas.height = window.innerHeight;
-    }
+    function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize);
     resize();
 
-    // Mouse Tracking
-    window.addEventListener('mousemove', e => {
-        mouse.x = e.clientX;
-        mouse.y = e.clientY;
-        cursor.style.left = e.clientX + 'px';
-        cursor.style.top = e.clientY + 'px';
-    });
-    
-    // Click Handling (Manual Shoot)
-    window.addEventListener('mousedown', (e) => {
-        if(e.target.closest('.control-panel')) return; // Jangan nembak kalau klik UI
-        mouse.down = true;
-        if(!isAuto) shoot();
-    });
-    window.addEventListener('mouseup', () => mouse.down = false);
+    // --- STATE VARIABLES ---
+    let balance = 10000;
+    let bet = 10;
+    let autoFire = false;
+    let mouse = { x: width/2, y: height/2, down: false };
 
-    /* --- GAME OBJECTS --- */
-    const bullets = [];
+    // Weapon State
+    let specialWeapon = null; // 'drill' or 'bomb'
+    let specialTimer = 0;     // Frames remaining
+    let specialMaxTime = 0;   // Untuk progress bar
+
+    // Entities Arrays
     const fishes = [];
+    const bullets = [];
     const particles = [];
-    const coins = []; // Coin flying animation
+    const texts = [];
 
     // --- CLASSES ---
 
@@ -243,31 +192,51 @@
 
         reset() {
             this.id = Math.random();
-            this.h = Math.random() * (height - 200) + 50; // Height
+            this.y = Math.random() * (height - 200) + 100;
             this.dir = Math.random() > 0.5 ? 1 : -1;
             this.x = this.dir === 1 ? -100 : width + 100;
-            this.y = this.h;
             
-            // Randomize Type
+            // Tentukan Tipe Ikan & Probabilitas
             const r = Math.random();
-            if (r < 0.05) {
-                this.type = 'boss'; this.hp = 50; this.maxHp = 50; this.val = 500;
-                this.speed = 0.5; this.size = 60; this.color = '#ffd700';
+            this.scale = 1;
+            this.angle = 0;
+            this.countUpVal = 0;
+
+            if (r < 0.02) {
+                this.type = 'drill_fish'; // DROP DRILL
+                this.hp = 30; this.maxHp = 30; this.val = 200;
+                this.speed = 1.5; this.size = 40; this.color = '#00f3ff';
+            } else if (r < 0.04) {
+                this.type = 'bomb_fish'; // DROP BOMB
+                this.hp = 30; this.maxHp = 30; this.val = 200;
+                this.speed = 1.5; this.size = 40; this.color = '#ff0055';
+            } else if (r < 0.07) {
+                this.type = 'jackpot'; // COUNT UP
+                this.hp = 50; this.maxHp = 50; this.baseVal = 100; this.val = 100;
+                this.speed = 0.8; this.size = 45; this.color = '#ffd700';
             } else if (r < 0.2) {
-                this.type = 'med'; this.hp = 10; this.maxHp = 10; this.val = 50;
-                this.speed = 1.5; this.size = 35; this.color = '#ff0055';
+                this.type = 'boss';
+                this.hp = 80; this.maxHp = 80; this.val = 500;
+                this.speed = 0.5; this.size = 60; this.color = '#ff9900';
             } else {
-                this.type = 'sml'; this.hp = 2; this.maxHp = 2; this.val = 10;
-                this.speed = 2.5; this.size = 20; this.color = '#00f3ff';
+                this.type = 'normal';
+                this.hp = 3; this.maxHp = 3; this.val = 10;
+                this.speed = 2 + Math.random(); this.size = 20; this.color = '#ffffff';
             }
-            this.wiggleOffset = Math.random() * 100;
         }
 
         update() {
             this.x += this.speed * this.dir;
-            this.y = this.h + Math.sin((this.x + this.wiggleOffset) * 0.01) * 20;
-            
-            // Out of bounds
+            this.y += Math.sin(this.x * 0.01) * 1.5; // Gerakan bergelombang
+
+            // Logic Count Up Fish
+            if (this.type === 'jackpot') {
+                if (Math.floor(Date.now() / 100) % 5 === 0) { // Setiap 0.5 detik
+                    this.val += 5; // Nilai naik terus
+                }
+            }
+
+            // Respawn jika keluar layar
             if ((this.dir === 1 && this.x > width + 100) || (this.dir === -1 && this.x < -100)) {
                 this.reset();
             }
@@ -276,362 +245,353 @@
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
-            ctx.scale(this.dir, 1); // Flip based on direction
+            ctx.scale(this.dir, 1);
 
-            // Glow Effect
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = this.color;
+            // 1. CEK APAKAH ADA GAMBAR ASET?
+            let imgKey = null;
+            if (this.type === 'drill_fish') imgKey = 'fish_drill';
+            else if (this.type === 'bomb_fish') imgKey = 'fish_bomb';
+            else if (this.type === 'jackpot') imgKey = 'fish_jackpot';
+            else if (this.type === 'boss') imgKey = 'fish_boss';
+            else imgKey = 'fish_small';
 
-            // Body
-            ctx.fillStyle = this.color;
-            ctx.beginPath();
-            ctx.ellipse(0, 0, this.size, this.size/1.8, 0, 0, Math.PI*2);
-            ctx.fill();
+            if (images[imgKey]) {
+                // Render Image
+                const img = images[imgKey];
+                ctx.drawImage(img, -this.size, -this.size/2, this.size*2, this.size);
+            } else {
+                // Render Procedural (Fallback jika tidak ada gambar)
+                ctx.shadowBlur = 15; ctx.shadowColor = this.color;
+                ctx.fillStyle = this.color;
+                
+                // Badan Utama
+                ctx.beginPath();
+                ctx.ellipse(0, 0, this.size, this.size/1.6, 0, 0, Math.PI*2);
+                ctx.fill();
 
-            // Tail Animation
-            const tailWag = Math.sin(Date.now() / 100 * this.speed) * 10;
-            ctx.beginPath();
-            ctx.moveTo(-this.size + 5, 0);
-            ctx.lineTo(-this.size - 20, -15 + tailWag);
-            ctx.lineTo(-this.size - 20, 15 + tailWag);
-            ctx.fill();
+                // Ekor
+                ctx.beginPath();
+                const tailWag = Math.sin(Date.now()/100 * this.speed) * 10;
+                ctx.moveTo(-this.size + 5, 0);
+                ctx.lineTo(-this.size - 20, -15 + tailWag);
+                ctx.lineTo(-this.size - 20, 15 + tailWag);
+                ctx.fill();
 
-            // Fins
-            ctx.beginPath();
-            ctx.moveTo(0, -this.size/2);
-            ctx.quadraticCurveTo(5, -this.size, 15, -this.size/2);
-            ctx.fill();
+                // Tanda Spesial
+                if (this.type === 'drill_fish') {
+                    ctx.fillStyle = 'black'; ctx.font="bold 20px Arial"; 
+                    ctx.scale(this.dir, 1); ctx.fillText("⚡", -5, 5);
+                } else if (this.type === 'bomb_fish') {
+                    ctx.fillStyle = 'black'; ctx.font="bold 20px Arial"; 
+                    ctx.scale(this.dir, 1); ctx.fillText("💣", -8, 5);
+                }
+            }
 
-            // HP Bar (Only for Boss)
-            if (this.type === 'boss') {
+            // Draw Jackpot Counter
+            if (this.type === 'jackpot') {
+                ctx.scale(this.dir, 1); // Reset flip text
+                ctx.fillStyle = '#fff'; ctx.font = "bold 16px Rajdhani";
                 ctx.shadowBlur = 0;
-                ctx.fillStyle = 'red';
-                ctx.fillRect(-30, -this.size - 20, 60, 6);
-                ctx.fillStyle = '#0f0';
-                ctx.fillRect(-30, -this.size - 20, 60 * (this.hp/this.maxHp), 6);
+                ctx.fillText(`$${this.val}`, -20, -this.size - 10);
+            }
+
+            // Boss HP Bar
+            if (this.maxHp > 10) {
+                ctx.fillStyle = 'red'; ctx.fillRect(-20, -this.size-10, 40, 4);
+                ctx.fillStyle = '#0f0'; ctx.fillRect(-20, -this.size-10, 40 * (this.hp/this.maxHp), 4);
             }
 
             ctx.restore();
         }
     }
 
-    class Bullet {
-        constructor(angle) {
-            this.x = width/2;
-            this.y = height - 80; // Cannon position
-            this.angle = angle;
-            this.speed = 12;
+    class SpecialWeapon {
+        constructor(type) {
+            this.type = type; // 'drill' or 'bomb'
             this.active = true;
-            this.damage = 1; // Base damage
+            this.x = width / 2;
+            this.y = height / 2;
+            this.vx = (Math.random() - 0.5) * 10;
+            this.vy = (Math.random() - 0.5) * 10;
+            
+            // DRILL: Bounces around screen
+            // BOMB: Floats around then explodes
+            
+            this.angle = 0;
         }
-        
+
         update() {
-            this.x += Math.cos(this.angle) * this.speed;
-            this.y += Math.sin(this.angle) * this.speed;
-            if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) this.active = false;
+            // Physics Movement
+            this.x += this.vx;
+            this.y += this.vy;
+
+            // Bounce Logic
+            if (this.x < 0 || this.x > width) this.vx *= -1;
+            if (this.y < 0 || this.y > height) this.vy *= -1;
+
+            this.angle += 0.2; // Rotation
+
+            // COLLISION DAMAGE (Continuous Damage Area)
+            fishes.forEach(f => {
+                const dist = Math.hypot(this.x - f.x, this.y - f.y);
+                const range = this.type === 'drill' ? 60 : 100;
+                
+                if (dist < range) {
+                    // Drill damage kecil tapi cepat (DPS tinggi)
+                    f.hp -= 0.5; 
+                    spawnParticle(f.x, f.y, 'hit');
+                    
+                    if (f.hp <= 0) handleFishDeath(f);
+                }
+            });
         }
 
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
             ctx.rotate(this.angle);
-            
-            // Neon Bullet
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#fff';
-            ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.arc(0,0, 6, 0, Math.PI*2); ctx.fill();
-            
-            // Trail
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = varColor('--neon-blue');
-            ctx.fillStyle = varColor('--neon-blue');
-            ctx.fillRect(-20, -4, 20, 8);
-            
+
+            if (this.type === 'drill') {
+                if(images.bullet_drill) {
+                    ctx.drawImage(images.bullet_drill, -30, -30, 60, 60);
+                } else {
+                    // Procedural Drill
+                    ctx.fillStyle = '#00f3ff'; ctx.shadowBlur = 20; ctx.shadowColor = '#00f3ff';
+                    ctx.beginPath(); 
+                    ctx.moveTo(0, -40); ctx.lineTo(15, 0); ctx.lineTo(0, 40); ctx.lineTo(-15, 0); 
+                    ctx.fill();
+                    // Sparks
+                    ctx.strokeStyle = 'white'; ctx.lineWidth = 2;
+                    ctx.beginPath(); ctx.arc(0,0, 30, 0, Math.PI*2); ctx.stroke();
+                }
+            } else {
+                if(images.bullet_bomb) {
+                    ctx.drawImage(images.bullet_bomb, -40, -40, 80, 80);
+                } else {
+                    // Procedural Bomb
+                    ctx.fillStyle = '#ff0055'; ctx.shadowBlur = 20; ctx.shadowColor = '#ff0055';
+                    ctx.beginPath(); ctx.arc(0,0, 30, 0, Math.PI*2); ctx.fill();
+                    ctx.fillStyle = 'white'; ctx.font="20px Arial"; ctx.fillText("☢", -10, 8);
+                }
+            }
             ctx.restore();
         }
     }
 
-    class Coin {
-        constructor(startX, startY, value) {
-            this.x = startX;
-            this.y = startY;
-            this.val = value;
-            this.size = 12;
-            this.life = 1;
-            
-            // Target Position (The UI Balance Box)
-            const rect = balanceContainer.getBoundingClientRect();
-            this.targetX = rect.left + rect.width / 2;
-            this.targetY = rect.top + rect.height / 2;
-            
-            // Physics
-            this.vx = (Math.random() - 0.5) * 10;
-            this.vy = -10 - Math.random() * 5; // Pop up first
+    class Bullet {
+        constructor(angle) {
+            this.x = width/2; this.y = height - 50;
+            this.vx = Math.cos(angle) * 15;
+            this.vy = Math.sin(angle) * 15;
+            this.active = true;
         }
-
         update() {
-            // First phase: Pop up
-            if (this.vy < 0 || this.life > 0.8) {
-                this.vy += 0.5; // Gravity
-                this.x += this.vx;
-                this.y += this.vy;
-            } else {
-                // Second phase: Fly to wallet
-                const dx = this.targetX - this.x;
-                const dy = this.targetY - this.y;
-                this.x += dx * 0.1; // Lerp speed
-                this.y += dy * 0.1;
-                
-                if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
-                    this.life = 0; // Arrived
-                    balance += this.val; // Add real balance
-                    updateUI();
-                    pulseWallet();
-                }
-            }
+            this.x += this.vx; this.y += this.vy;
+            if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) this.active = false;
         }
-
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
-            
-            // Spin animation
-            const scaleX = Math.sin(Date.now() / 50);
-            ctx.scale(scaleX, 1);
-            
-            ctx.shadowBlur = 5;
-            ctx.shadowColor = 'gold';
-            ctx.fillStyle = '#ffd700';
-            ctx.beginPath(); ctx.arc(0,0, this.size, 0, Math.PI*2); ctx.fill();
-            
-            ctx.fillStyle = '#b8860b';
-            ctx.beginPath(); ctx.arc(0,0, this.size * 0.7, 0, Math.PI*2); ctx.fill();
-            
-            ctx.fillStyle = '#fff';
-            ctx.font = '10px Arial';
-            ctx.fillText('$', -3, 3);
-            
+            ctx.fillStyle = '#ffd700'; ctx.shadowBlur = 10; ctx.shadowColor = 'gold';
+            ctx.beginPath(); ctx.arc(0,0, 5, 0, Math.PI*2); ctx.fill();
             ctx.restore();
         }
     }
 
-    // --- SYSTEMS ---
+    // --- GAME LOGIC FUNCTIONS ---
 
-    function varColor(name) {
-        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    function activateSpecial(type) {
+        specialWeapon = new SpecialWeapon(type);
+        specialMaxTime = (type === 'drill' ? 15 : 10) * 60; // 60 FPS
+        specialTimer = specialMaxTime;
+        
+        // Show Timer UI
+        document.getElementById('weapon-timer').style.display = 'block';
+        document.getElementById('weapon-fill').style.width = '100%';
+        
+        spawnText(type.toUpperCase() + " MODE!", width/2, height/2, '#fff');
+    }
+
+    function spawnParticle(x, y, type) {
+        // Simplified particle push
+        particles.push({x, y, life: 1, type, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5});
+    }
+
+    function spawnText(str, x, y, color) {
+        const el = document.createElement('div');
+        el.className = 'floater';
+        el.innerText = str;
+        el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.color = color;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 1000);
+    }
+
+    function handleFishDeath(f) {
+        f.hp = 0; // Ensure dead
+        
+        // 1. REWARD LOGIC
+        const win = f.val * (bet / 10);
+        balance += win;
+        spawnText(`+${Math.floor(win)}`, f.x, f.y, '#ffd700');
+        updateUI();
+
+        // 2. CHECK HIDDEN REWARDS
+        if (f.type === 'drill_fish') activateSpecial('drill');
+        if (f.type === 'bomb_fish') activateSpecial('bomb');
+        if (f.type === 'jackpot') spawnText("JACKPOT!", width/2, height/3, '#ffd700');
+
+        // 3. EXPLOSION EFFECT
+        for(let i=0; i<8; i++) spawnParticle(f.x, f.y, 'coin');
+        
+        f.reset(); // Respawn
+    }
+
+    function explodeArea() {
+        // Layar Getar
+        document.body.classList.add('shake');
+        setTimeout(() => document.body.classList.remove('shake'), 500);
+
+        // Kill Radius
+        const cx = specialWeapon.x;
+        const cy = specialWeapon.y;
+        
+        fishes.forEach(f => {
+            const dist = Math.hypot(f.x - cx, f.y - cy);
+            if (dist < 300) { // Big Boom Radius
+                handleFishDeath(f);
+            }
+        });
+
+        // Visual Boom
+        for(let i=0; i<50; i++) spawnParticle(cx, cy, 'boom');
     }
 
     function shoot() {
-        if (balance < bet) return alert("Saldo Habis!");
+        if (specialWeapon) return; // Cannot shoot manually during special mode
+        if (balance < bet) return;
         
         balance -= bet;
         updateUI();
         
-        // Recoil UI
-        const panel = document.querySelector('.control-panel');
-        panel.style.transform = "translateY(5px)";
-        setTimeout(() => panel.style.transform = "translateY(0)", 100);
-
-        // Calculate Angle
-        const dx = mouse.x - width/2;
-        const dy = mouse.y - (height - 80);
-        const angle = Math.atan2(dy, dx);
-        
+        const angle = Math.atan2(mouse.y - (height-50), mouse.x - width/2);
         bullets.push(new Bullet(angle));
-        
-        // Muzzle Flash Effect (Particle)
-        for(let i=0; i<5; i++) {
-            particles.push({
-                x: width/2 + Math.cos(angle)*50, 
-                y: height-80 + Math.sin(angle)*50,
-                vx: Math.cos(angle)*5 + (Math.random()-0.5)*5,
-                vy: Math.sin(angle)*5 + (Math.random()-0.5)*5,
-                life: 1, color: '#fff'
-            });
-        }
-    }
-
-    function toggleAuto() {
-        isAuto = !isAuto;
-        const btn = document.getElementById('btn-auto');
-        const status = document.getElementById('auto-status');
-        
-        if (isAuto) {
-            btn.classList.add('active');
-            status.innerText = "ON";
-            cursor.style.borderColor = "#00f3ff"; // Blue cursor for auto
-        } else {
-            btn.classList.remove('active');
-            status.innerText = "OFF";
-            cursor.style.borderColor = "#ff0055"; // Red cursor
-        }
-    }
-
-    function adjustBet(amount) {
-        if (bet + amount >= 10 && bet + amount <= 500) {
-            bet += amount;
-            document.getElementById('bet-display').innerText = bet;
-        }
-    }
-
-    function updateUI() {
-        balanceEl.innerText = balance.toLocaleString();
-    }
-
-    function pulseWallet() {
-        balanceContainer.style.transform = "scale(1.1)";
-        balanceContainer.style.borderColor = "#fff";
-        setTimeout(() => {
-            balanceContainer.style.transform = "scale(1)";
-            balanceContainer.style.borderColor = "#ffd700";
-        }, 100);
-    }
-
-    function spawnFloatingText(txt, x, y, color) {
-        const el = document.createElement('div');
-        el.className = 'floater';
-        el.innerText = txt;
-        el.style.left = x + 'px';
-        el.style.top = y + 'px';
-        el.style.color = color;
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 800);
     }
 
     // --- MAIN LOOP ---
 
-    // Init Spawn
+    // Init Fishes
     for(let i=0; i<15; i++) fishes.push(new Fish());
 
     function loop() {
-        // 1. Auto Shoot Logic
-        if (isAuto && mouse.down) { // Must hold click? No, usually toggle means auto-fire at cursor
-            // Actually, usually "Auto" in casino means "Always fire". 
-            // Let's make it fire continuously if toggled ON.
-            const now = Date.now();
-            if (now - lastShotTime > 200) { // Fire rate limiter
-                shoot();
-                lastShotTime = now;
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw Background (Asset or Gradient)
+        if (images.bg) {
+            ctx.drawImage(images.bg, 0, 0, width, height);
+        } else {
+            // God Rays
+            const g = ctx.createLinearGradient(0,0,0,height);
+            g.addColorStop(0, '#001e36'); g.addColorStop(1, '#000');
+            ctx.fillStyle = g; ctx.fillRect(0,0,width,height);
+        }
+
+        // 1. Handle Special Weapon
+        if (specialWeapon) {
+            specialWeapon.update();
+            specialWeapon.draw();
+            
+            specialTimer--;
+            
+            // Update Bar UI
+            const pct = (specialTimer / specialMaxTime) * 100;
+            document.getElementById('weapon-fill').style.width = pct + '%';
+
+            if (specialTimer <= 0) {
+                // Time's up!
+                explodeArea(); // BOOM di akhir durasi
+                specialWeapon = null;
+                document.getElementById('weapon-timer').style.display = 'none';
             }
         }
 
-        // 2. Clear & Background
-        ctx.clearRect(0, 0, width, height);
-        
-        // God Rays (Background Effect)
-        ctx.save();
-        ctx.globalCompositeOperation = 'overlay';
-        const grad = ctx.createLinearGradient(0, 0, width, height);
-        grad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
-        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(width/2 - 200, 0);
-        ctx.lineTo(width/2 + 200, 0);
-        ctx.lineTo(width, height);
-        ctx.lineTo(0, height);
-        ctx.fill();
-        ctx.restore();
+        // 2. Handle Auto Shoot
+        if (autoFire && !specialWeapon && balance >= bet) {
+            if (Date.now() % 200 < 20) shoot(); // Fire rate limiter
+        }
 
-        // 3. Draw Cannon Base
-        ctx.save();
-        ctx.translate(width/2, height - 80);
-        const angle = Math.atan2(mouse.y - (height - 80), mouse.x - width/2);
-        ctx.rotate(angle);
-        
-        // Cannon Barrel
-        ctx.fillStyle = '#333';
-        ctx.shadowBlur = 20; ctx.shadowColor = '#00f3ff';
-        ctx.fillRect(0, -15, 80, 30);
-        // Neon Strips
-        ctx.fillStyle = '#00f3ff';
-        ctx.fillRect(10, -5, 60, 10);
-        ctx.restore();
-
-        // Cannon Body
-        ctx.beginPath(); 
-        ctx.arc(width/2, height - 40, 60, Math.PI, 0); 
-        ctx.fillStyle = '#111'; ctx.fill();
-        ctx.lineWidth = 3; ctx.strokeStyle = '#00f3ff'; ctx.stroke();
-
-
-        // 4. Update Entities
-        
-        // Fishes
+        // 3. Update Fishes
         fishes.forEach(f => {
             f.update();
             f.draw();
         });
 
-        // Bullets
+        // 4. Update Bullets (Normal)
         for (let i = bullets.length - 1; i >= 0; i--) {
             let b = bullets[i];
             b.update();
             b.draw();
-
-            if (!b.active) { bullets.splice(i, 1); continue; }
+            
+            if(!b.active) { bullets.splice(i,1); continue; }
 
             // Collision
             for (let f of fishes) {
-                const dist = Math.hypot(b.x - f.x, b.y - f.y);
-                if (dist < f.size + 10) {
+                if (Math.hypot(b.x - f.x, b.y - f.y) < f.size + 10) {
                     b.active = false;
-                    f.hp -= 1;
-                    
-                    // Hit Effect
-                    particles.push({
-                        x: b.x, y: b.y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, 
-                        life: 1, color: '#fff'
-                    });
-
-                    if (f.hp <= 0) {
-                        // Kill Logic
-                        spawnFloatingText("+" + (f.val * (bet/10)), f.x, f.y, '#ffd700');
-                        
-                        // Spawn Flying Coins
-                        const coinCount = Math.min(10, Math.floor(f.val / 5)); // Don't spawn too many
-                        for(let k=0; k<coinCount; k++) {
-                            coins.push(new Coin(f.x, f.y, (f.val * (bet/10)) / coinCount));
-                        }
-
-                        // Screen Shake for Boss
-                        if(f.type === 'boss') document.body.classList.add('shake');
-
-                        f.reset();
-                    }
+                    f.hp--;
+                    spawnParticle(b.x, b.y, 'hit');
+                    if(f.hp <= 0) handleFishDeath(f);
                     break;
                 }
             }
         }
 
-        // Coins (Flying to wallet)
-        for (let i = coins.length - 1; i >= 0; i--) {
-            let c = coins[i];
-            c.update();
-            c.draw();
-            if (c.life === 0) coins.splice(i, 1);
-        }
-
-        // Particles
+        // 5. Particles
         for (let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
             p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-            
             ctx.globalAlpha = p.life;
-            ctx.fillStyle = p.color;
-            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
-            ctx.globalAlpha = 1;
-            
-            if (p.life <= 0) particles.splice(i, 1);
+            ctx.fillStyle = p.type === 'coin' ? 'gold' : (p.type === 'boom' ? 'orange' : 'white');
+            const size = p.type === 'boom' ? 10 : 3;
+            ctx.beginPath(); ctx.arc(p.x, p.y, size, 0, Math.PI*2); ctx.fill();
+            if(p.life <= 0) particles.splice(i,1);
         }
+        ctx.globalAlpha = 1;
 
-        // Remove Shake Class
-        if(document.body.classList.contains('shake')) {
-            setTimeout(() => document.body.classList.remove('shake'), 500);
-        }
+        // Cannon Drawing
+        const angle = Math.atan2(mouse.y - (height-50), mouse.x - width/2);
+        ctx.save();
+        ctx.translate(width/2, height-50);
+        ctx.rotate(angle);
+        ctx.fillStyle = specialWeapon ? '#ff0055' : '#333'; // Merah jika weapon aktif
+        ctx.fillRect(0, -15, 60, 30);
+        ctx.restore();
+
+        ctx.beginPath(); ctx.arc(width/2, height-50, 40, Math.PI, 0); 
+        ctx.fillStyle = '#111'; ctx.fill(); ctx.strokeStyle='#00f3ff'; ctx.stroke();
 
         requestAnimationFrame(loop);
+    }
+
+    // --- INPUTS ---
+    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('mousedown', (e) => {
+        if (!e.target.closest('.hud-bottom')) shoot();
+    });
+
+    function toggleAuto() {
+        autoFire = !autoFire;
+        const btn = document.getElementById('btn-auto');
+        btn.innerText = autoFire ? "AUTO FIRE: ON" : "AUTO FIRE: OFF";
+        btn.classList.toggle('active', autoFire);
+    }
+
+    function changeBet(val) {
+        if(bet + val >= 10) bet += val;
+        document.getElementById('bet').innerText = bet;
+    }
+
+    function updateUI() {
+        document.getElementById('balance').innerText = balance.toLocaleString();
     }
 
     loop();
