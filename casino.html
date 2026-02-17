@@ -2,115 +2,237 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Casino Hunter: Hidden Rewards</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ocean Emperor Deluxe</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;900&display=swap');
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-gold: #ffd700;
+            --neon-red: #ff0055;
+            --glass-bg: rgba(0, 15, 30, 0.65);
+            --border-glow: 0 0 10px rgba(0, 243, 255, 0.5);
+        }
 
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #000510;
-            font-family: 'Orbitron', sans-serif;
+            background: #000;
+            font-family: 'Rajdhani', sans-serif;
             user-select: none;
+            cursor: none; /* Kita ganti kursor default */
         }
 
-        #ui-layer {
+        /* --- GAME CANVAS --- */
+        canvas {
+            display: block;
+            background: radial-gradient(circle at center, #0b3d66 0%, #000411 100%);
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        #cursor-hair {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            width: 40px; height: 40px;
+            border: 2px solid var(--neon-red);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
             pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            padding: 20px;
-            box-sizing: border-box;
+            z-index: 9999;
+            box-shadow: 0 0 10px var(--neon-red);
+            transition: transform 0.1s;
+        }
+        #cursor-hair::after {
+            content: ''; position: absolute;
+            top: 50%; left: 50%;
+            width: 4px; height: 4px;
+            background: var(--neon-red);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
         }
 
-        .hud-top {
-            display: flex; justify-content: space-between; align-items: center;
+        /* --- UI LAYOUT --- */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
 
-        .balance-container {
-            background: linear-gradient(90deg, #1a1a2e, #16213e);
-            border: 2px solid #ffd700;
+        /* TOP BAR */
+        .top-bar {
+            display: flex; justify-content: space-between; padding: 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent);
+        }
+
+        .jackpot-ticker {
+            color: var(--neon-gold);
+            font-size: 24px; font-weight: bold;
+            text-shadow: 0 0 15px var(--neon-gold);
+            letter-spacing: 2px;
+        }
+
+        /* BOTTOM CONTROL PANEL */
+        .control-panel {
+            pointer-events: auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding: 15px 40px;
+            display: flex; align-items: center; justify-content: center; gap: 30px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 100;
+        }
+
+        /* COMPONENTS */
+        .balance-box {
+            position: relative;
+            background: rgba(0,0,0,0.5);
             padding: 10px 25px;
-            border-radius: 50px;
-            color: #ffd700;
-            font-size: 24px;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-            text-shadow: 0 0 5px #000;
+            border-radius: 8px;
+            border: 1px solid var(--neon-gold);
+            color: var(--neon-gold);
+            font-size: 28px;
+            font-weight: 700;
+            min-width: 150px; text-align: right;
+            box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.1);
+        }
+        .balance-label {
+            font-size: 12px; color: #aaa; position: absolute; top: -8px; left: 10px; background: #060b14; padding: 0 5px;
         }
 
-        .special-status {
-            font-size: 18px; color: #00d4ff; text-shadow: 0 0 10px #00d4ff;
-            display: none;
+        .btn-group { display: flex; align-items: center; gap: 10px; }
+
+        .btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-family: 'Rajdhani'; font-weight: bold; font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+        .btn:hover { background: rgba(0, 243, 255, 0.2); box-shadow: 0 0 15px var(--neon-blue); }
+        .btn:active { transform: scale(0.95); }
+
+        .btn.active {
+            background: var(--neon-blue);
+            color: black;
+            box-shadow: 0 0 20px var(--neon-blue);
         }
 
-        canvas { display: block; background: linear-gradient(to bottom, #02111b, #000000); }
+        .bet-adjust {
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .bet-val { font-size: 20px; color: white; font-weight: bold; margin: 0 10px; }
 
-        /* Notifikasi Pop-up */
-        .pop-msg {
-            position: absolute; font-weight: 900; font-size: 2rem;
-            color: #fff; animation: popUp 0.8s ease-out forwards;
-            pointer-events: none; -webkit-text-stroke: 1px black;
+        /* Floating Damage Text */
+        .floater {
+            position: absolute; pointer-events: none;
+            font-weight: 900; font-size: 24px;
+            animation: floatUp 0.8s forwards ease-out;
+            text-shadow: 2px 2px 0px #000;
         }
 
-        @keyframes popUp {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: translateY(-50px) scale(1); opacity: 0; }
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 0; }
+            20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1); opacity: 0; }
         }
 
-        .screen-shake { animation: shake 0.5s; }
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        /* Screen Shake */
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 
+            10%, 90% { transform: translate3d(-1px, 0, 0); } 
+            20%, 80% { transform: translate3d(2px, 0, 0); } 
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 
+            40%, 60% { transform: translate3d(4px, 0, 0); } 
         }
+
     </style>
 </head>
-<body id="gameBody">
+<body>
+
+<div id="cursor-hair"></div>
 
 <canvas id="gameCanvas"></canvas>
 
 <div id="ui-layer">
-    <div class="hud-top">
-        <div class="balance-container">🪙 <span id="balance">5000</span></div>
-        <div id="drill-status" class="special-status">⚡ DRILL MODE ACTIVATED ⚡</div>
+    <div class="top-bar">
+        <div class="jackpot-ticker">GRAND JACKPOT: 💎 5,402,100</div>
     </div>
-    <div style="text-align: center; color: #555; font-size: 12px; margin-bottom: 10px;">
-        Klik Kiri: Tembak | Klik Kanan: Ganti Senjata
+
+    <div class="control-panel">
+        <div class="btn-group">
+            <button class="btn" onclick="adjustBet(-10)">-</button>
+            <div class="bet-adjust">
+                <span style="font-size: 10px; color: #888;">BET</span>
+                <span class="bet-val" id="bet-display">10</span>
+            </div>
+            <button class="btn" onclick="adjustBet(10)">+</button>
+        </div>
+
+        <div class="balance-box" id="balance-container">
+            <span class="balance-label">CREDIT</span>
+            <span id="balance">10000</span>
+        </div>
+
+        <button class="btn" id="btn-auto" onclick="toggleAuto()">
+            AUTO SHOOT: <span id="auto-status">OFF</span>
+        </button>
     </div>
 </div>
 
 <script>
+    /* --- CONFIG & STATE --- */
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const body = document.getElementById('gameBody');
-    
+    const cursor = document.getElementById('cursor-hair');
+    const balanceEl = document.getElementById('balance');
+    const balanceContainer = document.getElementById('balance-container');
+
     let width, height;
-    function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
+    let balance = 10000;
+    let bet = 10;
+    
+    // Auto Shoot State
+    let isAuto = false;
+    let autoInterval = null;
+    let lastShotTime = 0;
+    
+    // Mouse State
+    let mouse = { x: 0, y: 0, down: false };
+
+    // Resize
+    function resize() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
     window.addEventListener('resize', resize);
     resize();
 
-    // --- STATE ---
-    let balance = 5000;
-    let particles = [];
-    let fishes = [];
-    let bullets = [];
-    let drillMode = false; // Mode senjata tembus
-    let drillTimer = 0;
+    // Mouse Tracking
+    window.addEventListener('mousemove', e => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+    });
+    
+    // Click Handling (Manual Shoot)
+    window.addEventListener('mousedown', (e) => {
+        if(e.target.closest('.control-panel')) return; // Jangan nembak kalau klik UI
+        mouse.down = true;
+        if(!isAuto) shoot();
+    });
+    window.addEventListener('mouseup', () => mouse.down = false);
 
-    const MOUSE = { x: width/2, y: height/2 };
-    canvas.addEventListener('mousemove', e => { MOUSE.x = e.clientX; MOUSE.y = e.clientY; });
+    /* --- GAME OBJECTS --- */
+    const bullets = [];
+    const fishes = [];
+    const particles = [];
+    const coins = []; // Coin flying animation
 
     // --- CLASSES ---
 
@@ -120,64 +242,33 @@
         }
 
         reset() {
-            this.y = Math.random() * (height - 150) + 50;
-            this.direction = Math.random() > 0.5 ? 1 : -1;
-            this.x = this.direction === 1 ? -100 : width + 100;
-            this.angle = 0;
+            this.id = Math.random();
+            this.h = Math.random() * (height - 200) + 50; // Height
+            this.dir = Math.random() > 0.5 ? 1 : -1;
+            this.x = this.dir === 1 ? -100 : width + 100;
+            this.y = this.h;
             
-            // TIPE IKAN (Random Probability)
-            const rand = Math.random();
-            
-            if (rand < 0.02) {
-                this.type = 'bomb'; // 2% BOM LAUT
-                this.maxHp = 10;
-                this.speed = 0.5;
-                this.size = 40;
-                this.value = 0; // Hadiahnya adalah ledakan
-                this.color = '#333';
-            } else if (rand < 0.05) {
-                this.type = 'multiplier'; // 3% IKAN MULTIPLIER (Hitungan Naik)
-                this.maxHp = 15;
-                this.speed = 1.2;
-                this.size = 35;
-                this.baseValue = 100;
-                this.currentMultiplier = 1;
-                this.color = '#ff00ff'; // Neon Pink
-            } else if (rand < 0.15) {
-                this.type = 'boss'; // 10% BOSS
-                this.maxHp = 25;
-                this.speed = 0.8;
-                this.size = 50;
-                this.value = 300;
-                this.color = '#ffd700'; // Emas
+            // Randomize Type
+            const r = Math.random();
+            if (r < 0.05) {
+                this.type = 'boss'; this.hp = 50; this.maxHp = 50; this.val = 500;
+                this.speed = 0.5; this.size = 60; this.color = '#ffd700';
+            } else if (r < 0.2) {
+                this.type = 'med'; this.hp = 10; this.maxHp = 10; this.val = 50;
+                this.speed = 1.5; this.size = 35; this.color = '#ff0055';
             } else {
-                this.type = 'normal'; // Sisa: Normal
-                this.maxHp = 2;
-                this.speed = 2 + Math.random();
-                this.size = 15 + Math.random() * 10;
-                this.value = 10 + Math.floor(this.size);
-                this.color = `hsl(${Math.random()*50 + 150}, 100%, 50%)`;
+                this.type = 'sml'; this.hp = 2; this.maxHp = 2; this.val = 10;
+                this.speed = 2.5; this.size = 20; this.color = '#00f3ff';
             }
-
-            this.hp = this.maxHp;
+            this.wiggleOffset = Math.random() * 100;
         }
 
         update() {
-            this.x += this.speed * this.direction;
+            this.x += this.speed * this.dir;
+            this.y = this.h + Math.sin((this.x + this.wiggleOffset) * 0.01) * 20;
             
-            // Gerakan Sinus (Berenang)
-            if (this.type !== 'bomb') {
-                this.y += Math.sin(this.x * 0.02) * 2;
-            }
-
-            // Logika Khusus Multiplier
-            if (this.type === 'multiplier') {
-                // Nilai naik setiap frame (simulasi random count up)
-                if (Math.random() < 0.05) this.currentMultiplier += 0.5;
-            }
-
-            // Respawn jika keluar layar
-            if ((this.direction === 1 && this.x > width + 100) || (this.direction === -1 && this.x < -100)) {
+            // Out of bounds
+            if ((this.dir === 1 && this.x > width + 100) || (this.dir === -1 && this.x < -100)) {
                 this.reset();
             }
         }
@@ -185,224 +276,295 @@
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
-            ctx.scale(this.direction, 1);
+            ctx.scale(this.dir, 1); // Flip based on direction
 
-            if (this.type === 'bomb') {
-                // VISUAL BOM LAUT
-                ctx.fillStyle = '#222';
-                ctx.beginPath(); ctx.arc(0, 0, this.size, 0, Math.PI*2); ctx.fill();
-                // Duri Bom
-                for(let i=0; i<8; i++) {
-                    ctx.rotate(Math.PI/4);
-                    ctx.fillStyle = '#555';
-                    ctx.beginPath(); ctx.moveTo(this.size, 0); ctx.lineTo(this.size+10, 5); ctx.lineTo(this.size+10, -5); ctx.fill();
-                }
-                // Ikon Tengkorak / Bahaya
+            // Glow Effect
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = this.color;
+
+            // Body
+            ctx.fillStyle = this.color;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, this.size, this.size/1.8, 0, 0, Math.PI*2);
+            ctx.fill();
+
+            // Tail Animation
+            const tailWag = Math.sin(Date.now() / 100 * this.speed) * 10;
+            ctx.beginPath();
+            ctx.moveTo(-this.size + 5, 0);
+            ctx.lineTo(-this.size - 20, -15 + tailWag);
+            ctx.lineTo(-this.size - 20, 15 + tailWag);
+            ctx.fill();
+
+            // Fins
+            ctx.beginPath();
+            ctx.moveTo(0, -this.size/2);
+            ctx.quadraticCurveTo(5, -this.size, 15, -this.size/2);
+            ctx.fill();
+
+            // HP Bar (Only for Boss)
+            if (this.type === 'boss') {
+                ctx.shadowBlur = 0;
                 ctx.fillStyle = 'red';
-                ctx.font = '20px Arial'; ctx.fillText("!", -3, 5);
-                
-                // Efek Berdenyut Merah
-                if(Math.floor(Date.now()/200)%2===0) {
-                    ctx.strokeStyle = 'red'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0,0,this.size-5,0,Math.PI*2); ctx.stroke();
-                }
-
-            } else if (this.type === 'multiplier') {
-                // VISUAL MULTIPLIER (NEON)
-                ctx.shadowBlur = 15; ctx.shadowColor = this.color;
-                ctx.fillStyle = this.color;
-                ctx.beginPath(); ctx.ellipse(0, 0, this.size, this.size/1.5, 0, 0, Math.PI*2); ctx.fill();
-                
-                // Text Count Up
-                ctx.scale(this.direction, 1); // Balik text biar kebaca
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 16px Arial';
-                ctx.fillText(`x${Math.floor(this.currentMultiplier)}`, -15, -this.size - 10);
-
-            } else {
-                // VISUAL BIASA / BOSS
-                ctx.fillStyle = this.color;
-                if(this.type === 'boss') { ctx.shadowBlur = 20; ctx.shadowColor = 'gold'; }
-                
-                ctx.beginPath(); ctx.ellipse(0, 0, this.size, this.size/2, 0, 0, Math.PI*2); ctx.fill();
-                // Ekor
-                ctx.beginPath(); ctx.moveTo(-this.size, 0); 
-                ctx.lineTo(-this.size-20, -10 + Math.sin(Date.now()/100)*10);
-                ctx.lineTo(-this.size-20, 10 + Math.sin(Date.now()/100)*10);
-                ctx.fill();
+                ctx.fillRect(-30, -this.size - 20, 60, 6);
+                ctx.fillStyle = '#0f0';
+                ctx.fillRect(-30, -this.size - 20, 60 * (this.hp/this.maxHp), 6);
             }
+
             ctx.restore();
         }
     }
 
     class Bullet {
-        constructor(angle, isDrill) {
-            this.x = width/2; this.y = height;
+        constructor(angle) {
+            this.x = width/2;
+            this.y = height - 80; // Cannon position
             this.angle = angle;
-            this.isDrill = isDrill;
-            this.speed = isDrill ? 15 : 10;
+            this.speed = 12;
             this.active = true;
-            this.vx = Math.cos(angle) * this.speed;
-            this.vy = Math.sin(angle) * this.speed;
+            this.damage = 1; // Base damage
         }
-
+        
         update() {
-            this.x += this.vx; this.y += this.vy;
-            if(this.x < 0 || this.x > width || this.y < 0 || this.y > height) this.active = false;
+            this.x += Math.cos(this.angle) * this.speed;
+            this.y += Math.sin(this.angle) * this.speed;
+            if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) this.active = false;
         }
 
         draw() {
             ctx.save();
             ctx.translate(this.x, this.y);
             ctx.rotate(this.angle);
-
-            if (this.isDrill) {
-                // VISUAL DRILL (LASER)
-                ctx.shadowBlur = 20; ctx.shadowColor = '#00d4ff';
-                ctx.fillStyle = '#e0ffff';
-                ctx.fillRect(-20, -5, 60, 10); // Badan drill
-                ctx.beginPath(); ctx.moveTo(40, -5); ctx.lineTo(60, 0); ctx.lineTo(40, 5); ctx.fill(); // Ujung
-            } else {
-                // VISUAL PELURU BIASA
-                ctx.fillStyle = '#ffcc00';
-                ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI*2); ctx.fill();
-            }
+            
+            // Neon Bullet
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#fff';
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(0,0, 6, 0, Math.PI*2); ctx.fill();
+            
+            // Trail
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = varColor('--neon-blue');
+            ctx.fillStyle = varColor('--neon-blue');
+            ctx.fillRect(-20, -4, 20, 8);
+            
             ctx.restore();
         }
     }
 
-    class Particle {
-        constructor(x, y, type) {
-            this.x = x; this.y = y; this.type = type;
+    class Coin {
+        constructor(startX, startY, value) {
+            this.x = startX;
+            this.y = startY;
+            this.val = value;
+            this.size = 12;
             this.life = 1;
-            this.vx = (Math.random()-0.5)*10;
-            this.vy = (Math.random()-0.5)*10;
-        }
-        update() {
-            this.x += this.vx; this.y += this.vy; this.life -= 0.03;
-        }
-        draw() {
-            ctx.globalAlpha = this.life;
-            if(this.type === 'coin') {
-                ctx.fillStyle = 'gold'; ctx.beginPath(); ctx.arc(this.x, this.y, 5, 0, Math.PI*2); ctx.fill();
-            } else if (this.type === 'explode') {
-                ctx.fillStyle = 'orange'; ctx.beginPath(); ctx.arc(this.x, this.y, 10, 0, Math.PI*2); ctx.fill();
-            }
-            ctx.globalAlpha = 1;
-        }
-    }
-
-    // --- GAMEPLAY FUNCTIONS ---
-
-    function triggerExplosion(x, y) {
-        // Efek Visual Shake
-        body.classList.add('screen-shake');
-        setTimeout(() => body.classList.remove('screen-shake'), 500);
-
-        // AOE Damage Logic
-        const explosionRadius = 250;
-        
-        // Visual Lingkaran Ledakan
-        const gradient = ctx.createRadialGradient(x, y, 10, x, y, explosionRadius);
-        gradient.addColorStop(0, 'white');
-        gradient.addColorStop(0.5, 'orange');
-        gradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
-        
-        // Kita simpan efek ledakan di array particles khusus jika mau (disini simplified logic)
-        // Hitung Damage Area
-        fishes.forEach(f => {
-            const dist = Math.hypot(f.x - x, f.y - y);
-            if (dist < explosionRadius) {
-                f.hp = 0; // INSTANT KILL SEMUA IKAN DI AREA
-                handleFishDeath(f, true);
-            }
-        });
-
-        // Spawn Partikel Ledakan
-        for(let i=0; i<30; i++) particles.push(new Particle(x, y, 'explode'));
-    }
-
-    function handleFishDeath(fish, chainReaction = false) {
-        let winAmount = 0;
-
-        if (fish.type === 'bomb') {
-            triggerExplosion(fish.x, fish.y);
-            showText("BOOM!", fish.x, fish.y, '#ff4444');
-        } else if (fish.type === 'multiplier') {
-            winAmount = Math.floor(fish.baseValue * fish.currentMultiplier);
-            showText(`JACKPOT x${Math.floor(fish.currentMultiplier)}`, fish.x, fish.y, '#ff00ff');
             
-            // Reward Tambahan: Aktifkan DRILL MODE
-            if (!drillMode) {
-                drillMode = true;
-                drillTimer = 500; // Frames durasi
-                document.getElementById('drill-status').style.display = 'block';
-            }
-        } else {
-            winAmount = fish.value;
-            if(!chainReaction) showText(`+${winAmount}`, fish.x, fish.y, 'gold');
+            // Target Position (The UI Balance Box)
+            const rect = balanceContainer.getBoundingClientRect();
+            this.targetX = rect.left + rect.width / 2;
+            this.targetY = rect.top + rect.height / 2;
+            
+            // Physics
+            this.vx = (Math.random() - 0.5) * 10;
+            this.vy = -10 - Math.random() * 5; // Pop up first
         }
 
-        balance += winAmount;
-        
-        // Efek Koin Jatuh
-        for(let i=0; i<5; i++) particles.push(new Particle(fish.x, fish.y, 'coin'));
-        
-        fish.reset(); // Respawn ikan baru
-        updateUI();
+        update() {
+            // First phase: Pop up
+            if (this.vy < 0 || this.life > 0.8) {
+                this.vy += 0.5; // Gravity
+                this.x += this.vx;
+                this.y += this.vy;
+            } else {
+                // Second phase: Fly to wallet
+                const dx = this.targetX - this.x;
+                const dy = this.targetY - this.y;
+                this.x += dx * 0.1; // Lerp speed
+                this.y += dy * 0.1;
+                
+                if (Math.abs(dx) < 10 && Math.abs(dy) < 10) {
+                    this.life = 0; // Arrived
+                    balance += this.val; // Add real balance
+                    updateUI();
+                    pulseWallet();
+                }
+            }
+        }
+
+        draw() {
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            
+            // Spin animation
+            const scaleX = Math.sin(Date.now() / 50);
+            ctx.scale(scaleX, 1);
+            
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'gold';
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath(); ctx.arc(0,0, this.size, 0, Math.PI*2); ctx.fill();
+            
+            ctx.fillStyle = '#b8860b';
+            ctx.beginPath(); ctx.arc(0,0, this.size * 0.7, 0, Math.PI*2); ctx.fill();
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px Arial';
+            ctx.fillText('$', -3, 3);
+            
+            ctx.restore();
+        }
     }
 
-    function showText(text, x, y, color) {
-        const el = document.createElement('div');
-        el.className = 'pop-msg';
-        el.innerText = text;
-        el.style.left = x + 'px';
-        el.style.top = y + 'px';
-        el.style.color = color;
-        body.appendChild(el);
-        setTimeout(() => el.remove(), 800);
+    // --- SYSTEMS ---
+
+    function varColor(name) {
+        return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
     }
 
     function shoot() {
-        const cost = drillMode ? 0 : 10; // Drill gratis/bonus, normal bayar 10
-        if (balance < cost) return;
-
-        balance -= cost;
+        if (balance < bet) return alert("Saldo Habis!");
+        
+        balance -= bet;
         updateUI();
+        
+        // Recoil UI
+        const panel = document.querySelector('.control-panel');
+        panel.style.transform = "translateY(5px)";
+        setTimeout(() => panel.style.transform = "translateY(0)", 100);
 
-        const angle = Math.atan2(MOUSE.y - height, MOUSE.x - width/2);
-        bullets.push(new Bullet(angle, drillMode));
+        // Calculate Angle
+        const dx = mouse.x - width/2;
+        const dy = mouse.y - (height - 80);
+        const angle = Math.atan2(dy, dx);
+        
+        bullets.push(new Bullet(angle));
+        
+        // Muzzle Flash Effect (Particle)
+        for(let i=0; i<5; i++) {
+            particles.push({
+                x: width/2 + Math.cos(angle)*50, 
+                y: height-80 + Math.sin(angle)*50,
+                vx: Math.cos(angle)*5 + (Math.random()-0.5)*5,
+                vy: Math.sin(angle)*5 + (Math.random()-0.5)*5,
+                life: 1, color: '#fff'
+            });
+        }
+    }
+
+    function toggleAuto() {
+        isAuto = !isAuto;
+        const btn = document.getElementById('btn-auto');
+        const status = document.getElementById('auto-status');
+        
+        if (isAuto) {
+            btn.classList.add('active');
+            status.innerText = "ON";
+            cursor.style.borderColor = "#00f3ff"; // Blue cursor for auto
+        } else {
+            btn.classList.remove('active');
+            status.innerText = "OFF";
+            cursor.style.borderColor = "#ff0055"; // Red cursor
+        }
+    }
+
+    function adjustBet(amount) {
+        if (bet + amount >= 10 && bet + amount <= 500) {
+            bet += amount;
+            document.getElementById('bet-display').innerText = bet;
+        }
     }
 
     function updateUI() {
-        document.getElementById('balance').innerText = balance.toLocaleString();
+        balanceEl.innerText = balance.toLocaleString();
+    }
+
+    function pulseWallet() {
+        balanceContainer.style.transform = "scale(1.1)";
+        balanceContainer.style.borderColor = "#fff";
+        setTimeout(() => {
+            balanceContainer.style.transform = "scale(1)";
+            balanceContainer.style.borderColor = "#ffd700";
+        }, 100);
+    }
+
+    function spawnFloatingText(txt, x, y, color) {
+        const el = document.createElement('div');
+        el.className = 'floater';
+        el.innerText = txt;
+        el.style.left = x + 'px';
+        el.style.top = y + 'px';
+        el.style.color = color;
+        document.body.appendChild(el);
+        setTimeout(() => el.remove(), 800);
     }
 
     // --- MAIN LOOP ---
 
-    // Init Fish
-    for(let i=0; i<20; i++) fishes.push(new Fish());
+    // Init Spawn
+    for(let i=0; i<15; i++) fishes.push(new Fish());
 
     function loop() {
-        // Clear Screen (Efek jejak)
-        ctx.fillStyle = 'rgba(0, 5, 16, 0.4)';
-        ctx.fillRect(0, 0, width, height);
-
-        // Update Drill Timer
-        if (drillMode) {
-            drillTimer--;
-            if (drillTimer <= 0) {
-                drillMode = false;
-                document.getElementById('drill-status').style.display = 'none';
+        // 1. Auto Shoot Logic
+        if (isAuto && mouse.down) { // Must hold click? No, usually toggle means auto-fire at cursor
+            // Actually, usually "Auto" in casino means "Always fire". 
+            // Let's make it fire continuously if toggled ON.
+            const now = Date.now();
+            if (now - lastShotTime > 200) { // Fire rate limiter
+                shoot();
+                lastShotTime = now;
             }
         }
 
-        // Draw Fishes
+        // 2. Clear & Background
+        ctx.clearRect(0, 0, width, height);
+        
+        // God Rays (Background Effect)
+        ctx.save();
+        ctx.globalCompositeOperation = 'overlay';
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        grad.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+        grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(width/2 - 200, 0);
+        ctx.lineTo(width/2 + 200, 0);
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.fill();
+        ctx.restore();
+
+        // 3. Draw Cannon Base
+        ctx.save();
+        ctx.translate(width/2, height - 80);
+        const angle = Math.atan2(mouse.y - (height - 80), mouse.x - width/2);
+        ctx.rotate(angle);
+        
+        // Cannon Barrel
+        ctx.fillStyle = '#333';
+        ctx.shadowBlur = 20; ctx.shadowColor = '#00f3ff';
+        ctx.fillRect(0, -15, 80, 30);
+        // Neon Strips
+        ctx.fillStyle = '#00f3ff';
+        ctx.fillRect(10, -5, 60, 10);
+        ctx.restore();
+
+        // Cannon Body
+        ctx.beginPath(); 
+        ctx.arc(width/2, height - 40, 60, Math.PI, 0); 
+        ctx.fillStyle = '#111'; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = '#00f3ff'; ctx.stroke();
+
+
+        // 4. Update Entities
+        
+        // Fishes
         fishes.forEach(f => {
             f.update();
             f.draw();
         });
 
-        // Update Bullets
+        // Bullets
         for (let i = bullets.length - 1; i >= 0; i--) {
             let b = bullets[i];
             b.update();
@@ -410,54 +572,68 @@
 
             if (!b.active) { bullets.splice(i, 1); continue; }
 
-            // Collision Check
+            // Collision
             for (let f of fishes) {
                 const dist = Math.hypot(b.x - f.x, b.y - f.y);
-                if (dist < f.size + 10) { // Hitbox toleransi
-                    f.hp -= (b.isDrill ? 5 : 1); // Drill damage besar
+                if (dist < f.size + 10) {
+                    b.active = false;
+                    f.hp -= 1;
                     
-                    // Efek Darah
-                    particles.push(new Particle(b.x, b.y, 'blood'));
+                    // Hit Effect
+                    particles.push({
+                        x: b.x, y: b.y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, 
+                        life: 1, color: '#fff'
+                    });
 
                     if (f.hp <= 0) {
-                        handleFishDeath(f);
-                    }
+                        // Kill Logic
+                        spawnFloatingText("+" + (f.val * (bet/10)), f.x, f.y, '#ffd700');
+                        
+                        // Spawn Flying Coins
+                        const coinCount = Math.min(10, Math.floor(f.val / 5)); // Don't spawn too many
+                        for(let k=0; k<coinCount; k++) {
+                            coins.push(new Coin(f.x, f.y, (f.val * (bet/10)) / coinCount));
+                        }
 
-                    // Mekanik Drill: Peluru TIDAK hilang, tembus terus
-                    if (!b.isDrill) {
-                        b.active = false; 
-                        break; 
+                        // Screen Shake for Boss
+                        if(f.type === 'boss') document.body.classList.add('shake');
+
+                        f.reset();
                     }
+                    break;
                 }
             }
+        }
+
+        // Coins (Flying to wallet)
+        for (let i = coins.length - 1; i >= 0; i--) {
+            let c = coins[i];
+            c.update();
+            c.draw();
+            if (c.life === 0) coins.splice(i, 1);
         }
 
         // Particles
         for (let i = particles.length - 1; i >= 0; i--) {
             let p = particles[i];
-            p.update();
-            p.draw();
+            p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+            
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.color;
+            ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI*2); ctx.fill();
+            ctx.globalAlpha = 1;
+            
             if (p.life <= 0) particles.splice(i, 1);
         }
 
-        // Draw Cannon Base
-        ctx.fillStyle = drillMode ? '#00d4ff' : '#444';
-        ctx.beginPath(); ctx.arc(width/2, height, 50, Math.PI, 0); ctx.fill();
-        
-        // Draw Cannon Barrel
-        const angle = Math.atan2(MOUSE.y - height, MOUSE.x - width/2);
-        ctx.save();
-        ctx.translate(width/2, height);
-        ctx.rotate(angle);
-        ctx.fillStyle = drillMode ? '#e0ffff' : '#333';
-        ctx.shadowBlur = drillMode ? 20 : 0; ctx.shadowColor = '#00d4ff';
-        ctx.fillRect(0, -15, 70, 30);
-        ctx.restore();
+        // Remove Shake Class
+        if(document.body.classList.contains('shake')) {
+            setTimeout(() => document.body.classList.remove('shake'), 500);
+        }
 
         requestAnimationFrame(loop);
     }
 
-    canvas.addEventListener('mousedown', shoot);
     loop();
 
 </script>
