@@ -3,408 +3,494 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MM PRO TERMINAL v7.0 - ARCHITECT EDITION</title>
+    <title>INSTITUTIONAL EQUITY TERMINAL v8.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        /* --- PROFESSIONAL THEME --- */
         :root {
-            --bg-base: #0b0e11; --bg-panel: #151a1e; --border: #2a2e39;
-            --text-pri: #eaecef; --text-sec: #848e9c;
-            --buy: #0ecb81; --sell: #f6465d;
-            --buy-dim: rgba(14, 203, 129, 0.15); --sell-dim: rgba(246, 70, 93, 0.15);
+            --bg-base: #121417; --bg-panel: #1b1f26; --border: #2d3440;
+            --text-pri: #f0f3f9; --text-sec: #8b94a5;
+            --up: #00b894; --down: #ff5252; /* Stock Market Colors */
+            --up-dim: rgba(0, 184, 148, 0.1); --down-dim: rgba(255, 82, 82, 0.1);
         }
         
-        body { background: var(--bg-base); color: var(--text-pri); font-family: 'Inter', sans-serif; overflow: hidden; }
+        body { background: var(--bg-base); color: var(--text-pri); font-family: 'Inter', sans-serif; overflow: hidden; user-select: none; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .text-buy { color: var(--buy); } .text-sell { color: var(--sell); }
-        .bg-buy { background-color: var(--buy); } .bg-sell { background-color: var(--sell); }
+        .text-up { color: var(--up); } .text-down { color: var(--down); }
+        .bg-up { background-color: var(--up); } .bg-down { background-color: var(--down); }
         
-        /* Layout Grid */
-        .grid-layout { display: grid; grid-template-columns: 280px 1fr 260px; grid-template-rows: 50px 1fr 200px; height: 100vh; w-full; }
+        .grid-layout { display: grid; grid-template-columns: 280px 1fr 300px; grid-template-rows: 48px 1fr 240px; height: 100vh; width: 100vw; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3c4450; border-radius: 2px; }
         
-        /* Canvas Sharpness */
-        canvas { image-rendering: crisp-edges; }
+        .flash-up { animation: flashG 0.3s; }
+        .flash-down { animation: flashR 0.3s; }
+        @keyframes flashG { 0% { background: var(--up); color:white; } 100% { background: transparent; } }
+        @keyframes flashR { 0% { background: var(--down); color:white; } 100% { background: transparent; } }
         
-        /* Utilities */
-        .panel { background: var(--bg-panel); border: 1px solid var(--border); }
-        .blink-up { animation: flashGreen 0.2s; }
-        .blink-down { animation: flashRed 0.2s; }
-        @keyframes flashGreen { 0% { background: var(--buy); color:black; } 100% { background: transparent; } }
-        @keyframes flashRed { 0% { background: var(--sell); color:white; } 100% { background: transparent; } }
+        canvas { image-rendering: pixelated; }
     </style>
 </head>
 <body>
 
     <div class="grid-layout">
-        <header class="col-span-3 bg-[#151a1e] border-b border-[#2a2e39] flex items-center justify-between px-4">
+        <header class="col-span-3 bg-[#1b1f26] border-b border-[#2d3440] flex items-center justify-between px-4">
             <div class="flex items-center gap-6">
                 <div class="flex flex-col">
-                    <span class="text-lg font-black tracking-tight text-white">BTC/USDT</span>
-                    <span class="text-[9px] text-gray-500 font-bold bg-[#2a2e39] px-1 rounded w-max">PERPETUAL</span>
+                    <span class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        <span class="bg-blue-600 text-[10px] px-1 rounded text-white">NASDAQ</span>
+                        NVDA
+                    </span>
+                    <span class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Equity • Regular Board</span>
                 </div>
-                <div class="h-8 w-[1px] bg-[#2a2e39]"></div>
+                <div class="h-8 w-[1px] bg-[#2d3440]"></div>
                 <div class="flex flex-col">
-                    <span id="price-display" class="text-2xl font-bold mono tracking-tighter text-buy">45,250.00</span>
-                    <span class="text-[10px] text-gray-400 mono">Vol: <span id="vol-display">2.4M</span></span>
+                    <span id="price-display" class="text-2xl font-bold mono tracking-tighter text-white">145.00</span>
+                    <div class="flex gap-2 text-[10px] mono">
+                        <span class="text-gray-400">Vol: <span id="vol-display" class="text-white">12.5M</span></span>
+                        <span class="text-gray-400">VWAP: <span id="vwap-display" class="text-yellow-500">144.85</span></span>
+                    </div>
                 </div>
             </div>
 
             <div class="flex flex-col items-center">
-                <span class="text-[9px] uppercase tracking-widest text-gray-500 font-bold mb-1">Market Micro-Structure</span>
-                <div id="market-phase" class="px-3 py-1 bg-[#2a2e39] rounded text-[10px] font-bold text-blue-400 mono border border-blue-500/20">
-                    PHASE: ACCUMULATION
+                <span class="text-[9px] uppercase tracking-widest text-gray-500 font-bold mb-1">Wyckoff Phase</span>
+                <div id="market-phase" class="px-3 py-0.5 bg-[#2d3440] rounded text-[10px] font-bold text-gray-300 mono border border-gray-600">
+                    RE-ACCUMULATION
                 </div>
             </div>
 
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-8">
                 <div class="text-right">
-                    <span class="text-[9px] text-gray-500 block uppercase">Net Inventory</span>
+                    <span class="text-[9px] text-gray-500 block uppercase">Net Position (Shares)</span>
                     <span id="mm-inventory" class="text-sm font-bold mono text-white">0</span>
+                    <span id="avg-price-display" class="text-[9px] text-gray-400 mono block">Avg: $0.00</span>
                 </div>
                 <div class="text-right">
-                    <span class="text-[9px] text-gray-500 block uppercase">Floating PnL</span>
+                    <span class="text-[9px] text-gray-500 block uppercase">Unrealized P/L</span>
                     <span id="mm-pnl" class="text-sm font-bold mono text-gray-500">$0.00</span>
                 </div>
-                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_#0ecb81]"></div>
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_#00b894]"></div>
             </div>
         </header>
 
-        <aside class="row-span-2 border-r border-[#2a2e39] bg-[#0b0e11] flex flex-col">
-            <div class="p-2 border-b border-[#2a2e39] flex justify-between text-[10px] text-gray-400 font-bold">
-                <span>Price(USDT)</span>
-                <span>Amount(BTC)</span>
+        <aside class="row-span-2 border-r border-[#2d3440] bg-[#121417] flex flex-col">
+            <div class="p-2 border-b border-[#2d3440] flex justify-between text-[10px] text-gray-400 font-bold uppercase">
+                <span>Bid Vol</span>
+                <span>Price</span>
+                <span>Ask Vol</span>
             </div>
             
-            <div id="ob-asks" class="flex-1 overflow-hidden flex flex-col-reverse font-mono text-[11px] relative"></div>
+            <div id="ob-asks" class="flex-1 overflow-hidden flex flex-col-reverse font-mono text-[11px] relative bg-[#15181c]"></div>
             
-            <div id="spread-box" class="h-8 flex items-center justify-center text-[11px] font-bold text-gray-300 border-y border-[#2a2e39] bg-[#151a1e]">
-                <span id="last-price" class="text-lg mr-2">45,250.00</span>
-                <span class="text-[9px] text-gray-500">Spread: 0.5</span>
+            <div class="h-10 flex items-center justify-center border-y border-[#2d3440] bg-[#1b1f26] z-10 shadow-lg">
+                <span id="last-price-sm" class="text-lg font-bold mono text-white">145.00</span>
             </div>
 
-            <div id="ob-bids" class="flex-1 overflow-hidden font-mono text-[11px] relative"></div>
+            <div id="ob-bids" class="flex-1 overflow-hidden font-mono text-[11px] relative bg-[#15181c]"></div>
         </aside>
 
-        <main class="relative bg-[#0b0e11] cursor-crosshair overflow-hidden">
+        <main class="relative bg-[#121417] cursor-crosshair overflow-hidden">
             <canvas id="chart" class="block w-full h-full"></canvas>
             
-            <div class="absolute top-4 left-4 pointer-events-none">
-                <div id="fib-status" class="text-[9px] text-yellow-500 font-mono hidden">FIB GOLDEN POCKET ACTIVE</div>
-                <div id="pattern-status" class="text-[9px] text-blue-500 font-mono mt-1"></div>
+            <div class="absolute top-4 left-4 pointer-events-none flex flex-col gap-1">
+                <div class="text-[9px] text-yellow-500 font-mono bg-yellow-900/20 px-1 rounded border border-yellow-700/30 w-max">VWAP INSTITUTIONAL</div>
+                <div id="pattern-status" class="text-[9px] text-blue-400 font-mono mt-1"></div>
             </div>
-
-            <div id="toast" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-6 py-3 bg-[#1e2329] border border-[#2a2e39] text-white font-bold text-xs rounded shadow-2xl opacity-0 transition-opacity pointer-events-none z-50">
-                MARKET UPDATE
+            
+            <div id="toast" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 px-4 py-2 bg-[#1b1f26] border border-[#2d3440] text-white font-bold text-xs rounded shadow-2xl opacity-0 transition-opacity pointer-events-none z-50 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-white"></span>
+                <span id="toast-msg">ALERT</span>
             </div>
         </main>
 
-        <aside class="row-span-2 border-l border-[#2a2e39] bg-[#151a1e] flex flex-col">
-            <div class="p-3 border-b border-[#2a2e39]">
+        <aside class="row-span-2 border-l border-[#2d3440] bg-[#1b1f26] flex flex-col">
+            <div class="p-3 border-b border-[#2d3440]">
                 <div class="flex justify-between text-[9px] text-gray-500 mb-2 uppercase font-bold">
-                    <span>Retail Sentiment</span>
-                    <span id="sentiment-val" class="text-white">50%</span>
+                    <span>Insti Flow</span>
+                    <span id="sentiment-val" class="text-white">Neutral</span>
                 </div>
-                <div class="w-full h-1 bg-[#2a2e39] rounded-full overflow-hidden">
-                    <div id="sentiment-bar" class="h-full bg-blue-500 w-1/2 transition-all duration-500"></div>
+                <div class="w-full h-1.5 bg-[#121417] rounded-full overflow-hidden">
+                    <div id="sentiment-bar" class="h-full bg-gray-500 w-1/2 transition-all duration-300"></div>
                 </div>
             </div>
 
-            <div class="flex-1 flex flex-col min-h-0 bg-[#0b0e11]">
-                <div class="px-2 py-1 text-[9px] font-bold text-gray-500 border-b border-[#2a2e39]">RECENT TRADES</div>
-                <div id="tape" class="flex-1 overflow-hidden relative font-mono text-[10px]">
-                    <div id="tape-content" class="absolute bottom-0 w-full flex flex-col-reverse"></div>
+            <div class="flex-1 flex flex-col min-h-0 bg-[#121417]">
+                <div class="px-3 py-2 text-[9px] font-bold text-gray-500 border-b border-[#2d3440] flex justify-between">
+                    <span>TIME & SALES</span>
+                    <span>SIZE</span>
+                </div>
+                <div id="tape" class="flex-1 overflow-y-auto relative font-mono text-[10px] scrollbar-thin">
+                    <div id="tape-content" class="absolute top-0 w-full flex flex-col"></div>
                 </div>
             </div>
         </aside>
 
-        <div class="col-start-2 border-t border-[#2a2e39] bg-[#151a1e] p-3 flex gap-4">
+        <div class="col-start-2 border-t border-[#2d3440] bg-[#1b1f26] p-4 flex gap-6">
             
-            <div class="w-48 border-r border-[#2a2e39] pr-4 flex flex-col justify-center">
-                <div class="text-[9px] text-gray-500 font-bold uppercase mb-1">MM Action Panel</div>
-                <div class="grid grid-cols-2 gap-2">
-                    <button onmousedown="Engine.injectVolatility(1)" class="bg-[#2a2e39] hover:bg-gray-700 text-gray-300 text-[9px] py-2 rounded font-bold border border-gray-700">
-                        VOLATILITY +
-                    </button>
-                    <button onmousedown="Engine.triggerLiquidityHunt()" class="bg-[#2a2e39] hover:bg-yellow-900/30 text-yellow-500 text-[9px] py-2 rounded font-bold border border-yellow-900/30">
-                        LIQ HUNT
-                    </button>
-                </div>
+            <div class="w-48 border-r border-[#2d3440] pr-6 flex flex-col justify-center gap-2">
+                <span class="text-[9px] text-gray-500 font-bold uppercase">Algorithm Actions</span>
+                <button onmousedown="Engine.injectBlockTrade()" class="w-full bg-[#2d3440] hover:bg-gray-700 text-gray-300 text-[10px] py-2 rounded font-bold border border-gray-600 transition-colors">
+                    BLOCK TRADE (DARK POOL)
+                </button>
+                <button onmousedown="Engine.triggerStopRun()" class="w-full bg-[#2d3440] hover:bg-red-900/30 text-red-400 text-[10px] py-2 rounded font-bold border border-red-900/30 transition-colors">
+                    TRIGGER STOP RUN
+                </button>
             </div>
 
-            <div class="flex-1 flex gap-2">
+            <div class="flex-1 flex gap-3">
                 <div class="flex-1 flex flex-col gap-1">
-                    <button onclick="Engine.executeOrder('BUY')" class="flex-1 bg-buy hover:opacity-90 text-[#0b0e11] font-black rounded text-sm transition-transform active:scale-95 flex items-center justify-center gap-2">
-                        <span>ACCUMULATE / PUMP</span>
-                        <span class="text-[9px] opacity-70">(HKA)</span>
+                    <button onclick="Engine.executeOrder('BUY')" class="flex-1 bg-up hover:brightness-110 text-[#0b0e11] font-black rounded text-sm transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(0,184,148,0.2)]">
+                        <div class="flex flex-col items-start leading-none">
+                            <span>BUY MKT</span>
+                            <span class="text-[9px] opacity-70 font-normal">Hajar Kanan (HKA)</span>
+                        </div>
                     </button>
-                    <div class="flex justify-between px-1 text-[9px] text-gray-500 font-bold">
-                        <span>INV: <span id="btn-inv-buy" class="text-buy">0</span></span>
+                    <div class="flex justify-between px-2 text-[10px] font-bold bg-[#121417] py-1 rounded border border-[#2d3440]">
+                        <span class="text-gray-500">POS: <span class="text-white" id="pos-buy">0</span></span>
                     </div>
                 </div>
 
                 <div class="flex-1 flex flex-col gap-1">
-                    <button onclick="Engine.executeOrder('SELL')" class="flex-1 bg-sell hover:opacity-90 text-white font-black rounded text-sm transition-transform active:scale-95 flex items-center justify-center gap-2">
-                        <span>DISTRIBUTE / DUMP</span>
-                        <span class="text-[9px] opacity-70">(HKI)</span>
+                    <button onclick="Engine.executeOrder('SELL')" class="flex-1 bg-down hover:brightness-110 text-white font-black rounded text-sm transition-transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(255,82,82,0.2)]">
+                        <div class="flex flex-col items-start leading-none">
+                            <span>SELL MKT</span>
+                            <span class="text-[9px] opacity-70 font-normal">Hajar Kiri (HKI)</span>
+                        </div>
                     </button>
-                    <div class="flex justify-between px-1 text-[9px] text-gray-500 font-bold">
-                        <span>INV: <span id="btn-inv-sell" class="text-sell">0</span></span>
+                    <div class="flex justify-between px-2 text-[10px] font-bold bg-[#121417] py-1 rounded border border-[#2d3440]">
+                        <span class="text-gray-500">POS: <span class="text-white" id="pos-sell">0</span></span>
                     </div>
                 </div>
             </div>
-
-            <div class="w-32 border-l border-[#2a2e39] pl-4 flex flex-col gap-2 justify-center">
-                <span class="text-[8px] text-gray-500 font-bold uppercase">Force Pattern</span>
-                <button onclick="Engine.setBias('BULL_FLAG')" class="bg-[#1e2329] hover:bg-blue-900/20 text-blue-400 text-[9px] py-1 px-2 rounded border border-blue-900/30">Bull Flag</button>
-                <button onclick="Engine.setBias('BEAR_FLAG')" class="bg-[#1e2329] hover:bg-red-900/20 text-red-400 text-[9px] py-1 px-2 rounded border border-red-900/30">Bear Flag</button>
-            </div>
+            
+             <div class="w-32 border-l border-[#2d3440] pl-6 flex flex-col justify-center gap-2">
+                 <div class="text-[9px] text-gray-500 font-bold uppercase">Trend Bias</div>
+                 <select id="bias-select" onchange="Engine.setBias(this.value)" class="bg-[#121417] text-gray-300 text-[10px] p-1 border border-[#2d3440] rounded outline-none">
+                     <option value="NEUTRAL">Neutral</option>
+                     <option value="BULLISH">Bullish Accum</option>
+                     <option value="BEARISH">Bearish Distr</option>
+                 </select>
+             </div>
         </div>
     </div>
 
     <script>
-        // --- MATH & UTILS ---
+        // --- UTILS & MATH ---
         const rnd = (min, max) => Math.random() * (max - min) + min;
         const rndInt = (min, max) => Math.floor(rnd(min, max));
-        const formatPrice = (p) => p.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const fmtMoney = (n) => n.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        const fmtVol = (n) => {
+            if(n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+            if(n >= 1000) return (n/1000).toFixed(1) + 'K';
+            return n;
+        };
 
-        // --- MARKET PHYSICS ENGINE ---
+        // --- MARKET ENGINE (The Brain) ---
         const Engine = {
-            price: 45250.00,
-            targetPrice: 45250.00,
-            velocity: 0,
-            inventory: 0, // MM Net Position
-            sentiment: 50, // 0-100 (Retail FOMO Meter)
-            
-            // Market Structure State
-            state: 'RANGE', // RANGE, TREND_UP, TREND_DOWN, BULL_FLAG, BEAR_FLAG, SPIKE
-            stateTimer: 0,
-            
-            // Technicals
+            // Core Data
+            price: 145.00,
+            tickSize: 0.05, // Stock like movement
             candles: [],
             currentCandle: null,
-            fibLevels: { h: 0, l: 0, levels: [] },
-            snrLevels: [],
+            vwap: 145.00,
+            totalVol: 0,
+            totalVolPrice: 0,
             
-            // Loop controls
-            tick: 0,
+            // Portfolio
+            shares: 0,
+            avgPrice: 0,
+            realizedPnL: 0,
             
+            // Market Logic
+            velocity: 0,
+            targetPrice: 145.00,
+            bias: 'NEUTRAL', // NEUTRAL, BULLISH, BEARISH
+            noiseLevel: 0.02,
+            
+            // Lists
+            orderbook: { bids: [], asks: [] },
+            tape: [],
+            
+            tickCounter: 0,
+
             init() {
-                // Pre-fill history
+                // Generate Initial History
                 let p = this.price;
-                for(let i=0; i<100; i++) {
+                for(let i=0; i<200; i++) {
                     const o = p;
-                    const c = o + rnd(-50, 50);
-                    const h = Math.max(o, c) + rnd(0, 30);
-                    const l = Math.min(o, c) - rnd(0, 30);
-                    this.candles.push({o, h, l, c});
+                    const c = o + (Math.random() - 0.5) * 0.5;
+                    const h = Math.max(o, c) + Math.random() * 0.2;
+                    const l = Math.min(o, c) - Math.random() * 0.2;
+                    const v = rndInt(100, 5000);
+                    this.candles.push({o, h, l, c, v, vwap: c}); // Historical approximation
                     p = c;
+                    
+                    // Init VWAP calc
+                    this.totalVol += v;
+                    this.totalVolPrice += (c * v);
                 }
                 this.price = p;
-                this.startCandle();
-                this.updateTechnicals();
+                this.vwap = this.totalVolPrice / this.totalVol;
                 
-                // Start Loop
+                this.startCandle();
+                this.generateOrderbook();
                 this.loop();
             },
 
             startCandle() {
-                this.currentCandle = { o: this.price, h: this.price, l: this.price, c: this.price, v: 0 };
-                this.tick = 0;
+                this.currentCandle = { 
+                    o: this.price, h: this.price, l: this.price, c: this.price, 
+                    v: 0, startTime: Date.now() 
+                };
             },
 
-            updateTechnicals() {
-                // Calculate Fib based on last 100 candles
-                const visible = this.candles.slice(-80);
-                let max = -Infinity, min = Infinity;
-                visible.forEach(c => {
-                    if(c.h > max) max = c.h;
-                    if(c.l < min) min = c.l;
-                });
+            updateLogic() {
+                // 1. Determine Forces
+                let force = 0;
                 
-                // Only update fib if range is significant
-                if(max - min > 200) {
-                    const diff = max - min;
-                    this.fibLevels = {
-                        h: max, l: min,
-                        levels: [
-                            { val: min + diff * 0.5, label: '0.5' },
-                            { val: min + diff * 0.618, label: '0.618' } // Golden Ratio
-                        ]
-                    };
-                }
-            },
+                // Bias Influence
+                if(this.bias === 'BULLISH') force += 0.002;
+                if(this.bias === 'BEARISH') force -= 0.002;
+                
+                // Mean Reversion to VWAP (Institutional Gravity)
+                const vwapDist = this.vwap - this.price;
+                force += vwapDist * 0.0005; 
+                
+                // Random Walk (Noise)
+                force += (Math.random() - 0.5) * this.noiseLevel;
 
-            // --- THE BRAIN: MOVEMENT LOGIC ---
-            calculateNextMove() {
-                this.stateTimer++;
+                // 2. Apply Velocity
+                this.velocity += force;
+                this.velocity *= 0.9; // Friction/Damping
+
+                // 3. Move Price (Rounded to tick size)
+                let nextPrice = this.price + this.velocity;
                 
-                // 1. STATE MANAGEMENT (Randomly switch behavior to simulate randomness)
-                if(this.stateTimer > rndInt(50, 200)) {
-                    this.stateTimer = 0;
-                    const rand = Math.random();
-                    if(rand < 0.4) this.state = 'RANGE'; // 40% Sideways
-                    else if(rand < 0.6) this.state = 'TREND_UP';
-                    else if(rand < 0.8) this.state = 'TREND_DOWN';
-                    else this.state = Math.random() > 0.5 ? 'BULL_FLAG' : 'BEAR_FLAG';
+                // Enforce Tick Size
+                nextPrice = Math.round(nextPrice / this.tickSize) * this.tickSize;
+                
+                // Check if price actually changed
+                if(Math.abs(nextPrice - this.price) > 0.001) {
+                    const direction = nextPrice > this.price ? 'UP' : 'DOWN';
+                    const changeSize = Math.abs(nextPrice - this.price);
                     
-                    UI.updateState(this.state);
+                    this.price = nextPrice;
+                    
+                    // Logic: Price moved means orders were filled
+                    const tradeSize = rndInt(100, 2000); // Shares
+                    this.recordTrade(this.price, tradeSize, direction === 'UP' ? 'BUY' : 'SELL');
+                    
+                    // Update Candle
+                    this.updateCandle(this.price, tradeSize);
+                    
+                    // Update Orderbook center
+                    this.generateOrderbook();
                 }
-
-                // 2. FORCE VECTORS
-                let momentum = 0;
-                let noise = (Math.random() - 0.5) * 5; // Basic volatility
-
-                // State Bias
-                if(this.state === 'TREND_UP') momentum = 1.5;
-                if(this.state === 'TREND_DOWN') momentum = -1.5;
-                if(this.state === 'SPIKE_UP') momentum = 8; // Violent Move
-                if(this.state === 'SPIKE_DOWN') momentum = -8;
-                
-                // Flag Logic (Contraction)
-                if(this.state === 'BULL_FLAG') {
-                    momentum = -0.3; // Slight drift down
-                    noise *= 0.5; // Lower volatility
-                }
-
-                // 3. TECHNICAL RESPECT (FIBONACCI GRAVITY)
-                // If price is near Golden Ratio, pull it in (consolidation) or reject it
-                let techGravity = 0;
-                this.fibLevels.levels.forEach(lvl => {
-                    const dist = lvl.val - this.price;
-                    if(Math.abs(dist) < 50) { // Near level
-                        techGravity = dist * 0.1; // Pull towards line
-                        UI.showFibActive(true);
-                    }
-                });
-                if(techGravity === 0) UI.showFibActive(false);
-
-                // 4. INVENTORY PRESSURE (MM Logic)
-                // If MM holds too much Long, price naturally wants to drop (supply overhang)
-                const inventoryPressure = -this.inventory * 0.05;
-
-                // 5. RETAIL SENTIMENT
-                // If FOMO (>80), Momentum increases (Herd Mentality)
-                const retailForce = (this.sentiment - 50) * 0.05;
-
-                // FINAL VELOCITY CALCULATION
-                const totalForce = momentum + techGravity + inventoryPressure + retailForce + noise;
-                
-                // Apply physics (Acceleration/Deceleration)
-                this.velocity = (this.velocity + totalForce) * 0.9; // Friction
-                this.price += this.velocity;
-            },
-
-            updateCandleLogic() {
-                const c = this.currentCandle;
-                c.c = this.price;
-                if(c.c > c.h) c.h = c.c;
-                if(c.c < c.l) c.l = c.c;
-                
-                // Volume Simulation
-                const volTick = Math.abs(this.velocity) * rnd(1, 10);
-                c.v += volTick;
-
-                // Timeframe close (e.g., every 60 frames)
-                this.tick++;
-                if(this.tick > 60) {
-                    this.candles.push({...c});
-                    if(this.candles.length > 200) this.candles.shift();
-                    this.startCandle();
-                    this.updateTechnicals(); // Recalculate Fibs on candle close
-                    this.tick = 0;
-                }
-            },
-
-            // --- MM ACTIONS ---
-            executeOrder(side) {
-                const impact = side === 'BUY' ? 25 : -25;
-                this.velocity += impact; // Impulse
-                
-                const lots = rndInt(5, 20);
-                if(side === 'BUY') {
-                    this.inventory += lots;
-                    this.sentiment += 5; // Trigger FOMO
-                } else {
-                    this.inventory -= lots;
-                    this.sentiment -= 5; // Trigger Panic
-                }
-                
-                this.sentiment = Math.max(0, Math.min(100, this.sentiment));
-                UI.showToast(side === 'BUY' ? 'INSTITUTIONAL PUMP' : 'INSTITUTIONAL DUMP');
-            },
-
-            injectVolatility(val) {
-                this.velocity += (Math.random() - 0.5) * 50;
-                UI.showToast("VOLATILITY INJECTED");
             },
             
-            triggerLiquidityHunt() {
-                // Rapidly go towards the nearest swing high/low then reverse
-                this.state = Math.random() > 0.5 ? 'SPIKE_UP' : 'SPIKE_DOWN';
-                this.stateTimer = -50; // Force short duration
-                UI.showToast("⚠️ LIQUIDITY SWEEP DETECTED");
+            updateCandle(p, vol) {
+                const c = this.currentCandle;
+                c.c = p;
+                c.v += vol;
+                if(p > c.h) c.h = p;
+                if(p < c.l) c.l = p;
+                
+                // Global VWAP Update
+                this.totalVol += vol;
+                this.totalVolPrice += (p * vol);
+                this.vwap = this.totalVolPrice / this.totalVol;
+                
+                // Close Candle logic (e.g., every 100 ticks or time based)
+                this.tickCounter++;
+                if(this.tickCounter > 100) {
+                    const finalized = {...c, vwap: this.vwap};
+                    this.candles.push(finalized);
+                    if(this.candles.length > 200) this.candles.shift();
+                    this.startCandle();
+                    this.tickCounter = 0;
+                }
             },
 
-            setBias(bias) {
-                this.state = bias;
-                this.stateTimer = 0; // Reset timer
-                UI.showToast(`FORCED PATTERN: ${bias}`);
+            recordTrade(price, size, side) {
+                const trade = {
+                    time: new Date().toLocaleTimeString('en-US', {hour12:false}),
+                    price: price,
+                    size: size,
+                    side: side
+                };
+                this.tape.unshift(trade);
+                if(this.tape.length > 30) this.tape.pop();
+                UI.renderTape();
+            },
+            
+            generateOrderbook() {
+                // Generates an orderbook centered around current price
+                // This simulates High Frequency Trading algos placing limit orders
+                this.orderbook.asks = [];
+                this.orderbook.bids = [];
+                
+                // Asks (Sellers above price)
+                for(let i=1; i<=15; i++) {
+                    const p = this.price + (i * this.tickSize);
+                    const v = Math.floor((Math.sin(i) + 2) * rnd(100, 5000)); 
+                    this.orderbook.asks.push({ p, v });
+                }
+                
+                // Bids (Buyers below price)
+                for(let i=1; i<=15; i++) {
+                    const p = this.price - (i * this.tickSize);
+                    const v = Math.floor((Math.cos(i) + 2) * rnd(100, 5000));
+                    this.orderbook.bids.push({ p, v });
+                }
+                
+                UI.renderOrderbook();
+            },
+
+            // --- USER ACTIONS ---
+            executeOrder(side) {
+                const shares = rndInt(100, 500); // Standard lot
+                const cost = shares * this.price;
+                
+                if(side === 'BUY') {
+                    // Weighted Average Update
+                    const currentTotalVal = this.shares * this.avgPrice;
+                    this.shares += shares;
+                    this.avgPrice = (currentTotalVal + cost) / this.shares;
+                    
+                    // Market Impact
+                    this.velocity += 0.05; 
+                    UI.showToast(`BOUGHT ${shares} @ ${fmtMoney(this.price)}`, 'UP');
+                } else {
+                    // For sell, we just reduce shares, avg price stays same until position flips
+                    // Handling short selling logic simply for this demo:
+                    if(this.shares === 0) this.avgPrice = this.price; // Start short
+                    this.shares -= shares;
+                    
+                    // Market Impact
+                    this.velocity -= 0.05;
+                    UI.showToast(`SOLD ${shares} @ ${fmtMoney(this.price)}`, 'DOWN');
+                }
+                
+                // Immediate trade record
+                this.recordTrade(this.price, shares, side);
+                this.updateCandle(this.price, shares);
+            },
+            
+            injectBlockTrade() {
+                // Institutional block that doesn't move price immediately but adds volume
+                const size = rndInt(50000, 100000);
+                this.updateCandle(this.price, size);
+                this.recordTrade(this.price, size, 'BUY'); // Print to tape
+                UI.showToast("DARK POOL BLOCK DETECTED", 'NEUTRAL');
+            },
+            
+            triggerStopRun() {
+                // Volatility spike
+                this.velocity = (Math.random() > 0.5 ? 1 : -1) * 0.5;
+                UI.showToast("STOP HUNT ALGO ACTIVE", 'DOWN');
+            },
+            
+            setBias(val) {
+                this.bias = val;
+                UI.updatePhase(val);
             },
 
             loop() {
-                this.calculateNextMove();
-                this.updateCandleLogic();
-                
-                // Updates
+                this.updateLogic();
                 Chart.draw();
-                UI.update();
-                Orderbook.update();
-                
+                UI.updateInfo();
                 requestAnimationFrame(this.loop.bind(this));
             }
         };
 
-        // --- ORDERBOOK VISUALIZER ---
-        const Orderbook = {
-            update() {
-                const p = Engine.price;
-                let askHtml = '', bidHtml = '';
-                
-                // Generate dynamic depth
+        // --- UI RENDERER ---
+        const UI = {
+            tapeEl: document.getElementById('tape-content'),
+            
+            renderOrderbook() {
                 // Asks
-                for(let i=8; i>=1; i--) {
-                    const price = p + (i * 2.5);
-                    const vol = (Math.sin(Date.now()/1000 + i) + 2) * rnd(0.1, 2); // Dynamic breathing volume
-                    const width = Math.min(vol * 20, 100);
+                const askEl = document.getElementById('ob-asks');
+                let askHtml = '';
+                // Reverse iterate to show highest price at top
+                [...Engine.orderbook.asks].reverse().forEach(o => {
+                    const width = Math.min((o.v / 5000)*100, 100);
                     askHtml += `
-                        <div class="flex justify-between relative px-2 py-0.5">
-                            <div class="absolute right-0 top-0 bottom-0 bg-sell-dim transition-all duration-75" style="width:${width}%"></div>
-                            <span class="z-10 text-sell">${formatPrice(price)}</span>
-                            <span class="z-10 text-gray-400">${vol.toFixed(3)}</span>
+                        <div class="flex justify-between relative px-2 py-[1px] hover:bg-[#2d3440]">
+                            <span class="z-10 text-gray-500 w-1/3 text-left">-</span>
+                            <span class="z-10 text-down w-1/3 text-center">${o.p.toFixed(2)}</span>
+                            <span class="z-10 text-gray-300 w-1/3 text-right font-bold">${o.v}</span>
+                            <div class="absolute top-0 bottom-0 right-0 bg-down-dim transition-all" style="width:${width}%"></div>
                         </div>`;
-                }
-                // Bids
-                for(let i=1; i<=8; i++) {
-                    const price = p - (i * 2.5);
-                    const vol = (Math.cos(Date.now()/1000 + i) + 2) * rnd(0.1, 2);
-                    const width = Math.min(vol * 20, 100);
-                    bidHtml += `
-                        <div class="flex justify-between relative px-2 py-0.5">
-                            <div class="absolute right-0 top-0 bottom-0 bg-buy-dim transition-all duration-75" style="width:${width}%"></div>
-                            <span class="z-10 text-buy">${formatPrice(price)}</span>
-                            <span class="z-10 text-gray-400">${vol.toFixed(3)}</span>
-                        </div>`;
-                }
+                });
+                askEl.innerHTML = askHtml;
 
-                document.getElementById('ob-asks').innerHTML = askHtml;
-                document.getElementById('ob-bids').innerHTML = bidHtml;
-                document.getElementById('last-price').innerHTML = formatPrice(p);
-                document.getElementById('last-price').className = `text-lg mr-2 mono font-bold ${Engine.velocity >= 0 ? 'text-buy' : 'text-sell'}`;
+                // Bids
+                const bidEl = document.getElementById('ob-bids');
+                let bidHtml = '';
+                Engine.orderbook.bids.forEach(o => {
+                    const width = Math.min((o.v / 5000)*100, 100);
+                    bidHtml += `
+                        <div class="flex justify-between relative px-2 py-[1px] hover:bg-[#2d3440]">
+                            <span class="z-10 text-gray-300 w-1/3 text-left font-bold">${o.v}</span>
+                            <span class="z-10 text-up w-1/3 text-center">${o.p.toFixed(2)}</span>
+                            <span class="z-10 text-gray-500 w-1/3 text-right">-</span>
+                            <div class="absolute top-0 bottom-0 left-0 bg-up-dim transition-all" style="width:${width}%"></div>
+                        </div>`;
+                });
+                bidEl.innerHTML = bidHtml;
+                
+                // Last Price Center
+                const lp = document.getElementById('last-price-sm');
+                lp.innerText = Engine.price.toFixed(2);
+                lp.className = `text-lg font-bold mono ${Engine.velocity > 0 ? 'text-up' : Engine.velocity < 0 ? 'text-down' : 'text-white'}`;
+            },
+            
+            renderTape() {
+                let html = '';
+                Engine.tape.forEach(t => {
+                    const color = t.side === 'BUY' ? 'text-up' : 'text-down';
+                    html += `
+                        <div class="flex justify-between px-3 py-1 border-b border-[#2d3440] hover:bg-[#2d3440]">
+                            <span class="text-gray-500 w-16">${t.time}</span>
+                            <span class="${color} flex-1 text-center font-bold">${t.price.toFixed(2)}</span>
+                            <span class="text-gray-300 w-16 text-right">${t.size}</span>
+                        </div>
+                    `;
+                });
+                this.tapeEl.innerHTML = html;
+            },
+            
+            updateInfo() {
+                document.getElementById('price-display').innerText = Engine.price.toFixed(2);
+                document.getElementById('vol-display').innerText = fmtVol(Engine.totalVol);
+                document.getElementById('vwap-display').innerText = Engine.vwap.toFixed(2);
+                
+                document.getElementById('mm-inventory').innerText = Engine.shares.toLocaleString();
+                document.getElementById('avg-price-display').innerText = "Avg: $" + Engine.avgPrice.toFixed(2);
+                
+                // PnL Calc
+                const pnl = (Engine.price - Engine.avgPrice) * Engine.shares;
+                const pnlEl = document.getElementById('mm-pnl');
+                pnlEl.innerText = (pnl >= 0 ? '+' : '') + "$" + fmtMoney(pnl);
+                pnlEl.className = `text-sm font-bold mono ${pnl >= 0 ? 'text-up' : 'text-down'}`;
+            },
+            
+            showToast(msg, type) {
+                const t = document.getElementById('toast');
+                const tMsg = document.getElementById('toast-msg');
+                tMsg.innerText = msg;
+                t.querySelector('span').className = `w-2 h-2 rounded-full ${type==='UP'?'bg-up':type==='DOWN'?'bg-down':'bg-white'}`;
+                t.style.opacity = 1;
+                setTimeout(() => t.style.opacity = 0, 2000);
+            },
+            
+            updatePhase(bias) {
+                const el = document.getElementById('market-phase');
+                if(bias === 'NEUTRAL') el.innerText = 'PHASE: CONSOLIDATION';
+                if(bias === 'BULLISH') el.innerText = 'PHASE: MARKUP (ACCUM)';
+                if(bias === 'BEARISH') el.innerText = 'PHASE: MARKDOWN (DISTR)';
             }
         };
 
@@ -415,134 +501,92 @@
             
             draw() {
                 const { canvas, ctx } = this;
-                canvas.width = canvas.parentElement.clientWidth;
-                canvas.height = canvas.parentElement.clientHeight;
+                // Resize handling
+                if(canvas.width !== canvas.parentElement.clientWidth) {
+                    canvas.width = canvas.parentElement.clientWidth;
+                    canvas.height = canvas.parentElement.clientHeight;
+                }
                 const w = canvas.width, h = canvas.height;
 
-                // Background
-                ctx.fillStyle = '#0b0e11'; ctx.fillRect(0,0,w,h);
+                // BG
+                ctx.fillStyle = '#121417';
+                ctx.fillRect(0,0,w,h);
                 
                 // Grid
                 ctx.strokeStyle = '#1e2329'; ctx.lineWidth = 1;
-                for(let x=0; x<w; x+=100) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-                for(let y=0; y<h; y+=60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+                ctx.beginPath();
+                for(let x=0; x<w; x+=100) { ctx.moveTo(x,0); ctx.lineTo(x,h); }
+                for(let y=0; y<h; y+=50) { ctx.moveTo(0,y); ctx.lineTo(w,y); }
+                ctx.stroke();
 
-                // Scaling
+                // Data Prep
                 const data = [...Engine.candles, Engine.currentCandle];
-                const visible = data.slice(-80); // Zoom level
+                const visible = data.slice(-100); // Show last 100 candles
                 
-                // Get range including Fibs to keep context
+                if(visible.length === 0) return;
+
+                // Scaling Y
                 let min = Math.min(...visible.map(c=>c.l));
                 let max = Math.max(...visible.map(c=>c.h));
-                const range = max - min;
-                const padding = range * 0.2;
-                min -= padding; max += padding;
-
-                const toY = (p) => h - ((p - min) / (max - min) * h);
-                const cWidth = (w / 80) * 0.7;
+                const range = max - min || 1;
+                const pad = range * 0.2;
+                min -= pad; max += pad;
                 
-                // Draw Fibonacci Lines (Logic Levels)
-                Engine.fibLevels.levels.forEach(lvl => {
-                    const y = toY(lvl.val);
-                    if(y > 0 && y < h) {
-                        ctx.strokeStyle = 'rgba(234, 179, 8, 0.3)'; // Gold low opacity
-                        ctx.setLineDash([4, 4]);
-                        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-                        ctx.fillStyle = '#eab308'; ctx.font = '10px JetBrains Mono';
-                        ctx.fillText(`FIB ${lvl.label}`, w - 60, y - 4);
-                    }
+                const toY = (p) => h - ((p - min) / (max - min + 0.0001)) * h;
+                const candleW = w / 100;
+
+                // Draw VWAP Line
+                ctx.strokeStyle = '#eab308'; ctx.lineWidth = 1.5; ctx.beginPath();
+                visible.forEach((c, i) => {
+                    const x = i * candleW + (candleW/2);
+                    const y = toY(c.vwap || c.c);
+                    if(i===0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 });
-                ctx.setLineDash([]);
+                ctx.stroke();
 
                 // Draw Candles
+                ctx.lineWidth = 1;
                 visible.forEach((c, i) => {
-                    const x = i * (w / 80) + 10;
+                    const x = i * candleW;
                     const isUp = c.c >= c.o;
-                    const color = isUp ? '#0ecb81' : '#f6465d';
+                    const color = isUp ? '#00b894' : '#ff5252';
                     
-                    ctx.fillStyle = color; ctx.strokeStyle = color;
+                    ctx.fillStyle = color; 
+                    ctx.strokeStyle = color;
                     
                     // Wick
-                    ctx.beginPath(); ctx.moveTo(x + cWidth/2, toY(c.h)); ctx.lineTo(x + cWidth/2, toY(c.l)); ctx.stroke();
+                    const cx = x + candleW/2;
+                    ctx.beginPath(); 
+                    ctx.moveTo(cx, Math.floor(toY(c.h))); 
+                    ctx.lineTo(cx, Math.floor(toY(c.l))); 
+                    ctx.stroke();
                     
                     // Body
-                    const yO = toY(c.o); const yC = toY(c.c);
+                    const yO = Math.floor(toY(c.o));
+                    const yC = Math.floor(toY(c.c));
                     const hBody = Math.max(1, Math.abs(yO - yC));
-                    ctx.fillRect(x, Math.min(yO, yC), cWidth, hBody);
+                    
+                    ctx.fillRect(x + 1, Math.min(yO, yC), candleW - 2, hBody);
                 });
 
-                // Price Line (Pulsing)
+                // Price Line
                 const yPrice = toY(Engine.price);
-                ctx.strokeStyle = '#ffffff'; ctx.setLineDash([2, 2]);
+                ctx.strokeStyle = '#fff'; ctx.setLineDash([4, 4]); ctx.lineWidth = 1;
                 ctx.beginPath(); ctx.moveTo(0, yPrice); ctx.lineTo(w, yPrice); ctx.stroke();
+                ctx.setLineDash([]);
                 
-                // Price Label
-                ctx.fillStyle = Engine.velocity >= 0 ? '#0ecb81' : '#f6465d';
-                ctx.fillRect(w-70, yPrice-10, 70, 20);
-                ctx.fillStyle = '#fff'; ctx.fillText(formatPrice(Engine.price), w-65, yPrice+4);
+                // Price Bubble
+                ctx.fillStyle = '#374151';
+                ctx.fillRect(w - 60, yPrice - 10, 60, 20);
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px JetBrains Mono';
+                ctx.fillText(Engine.price.toFixed(2), w - 50, yPrice + 4);
             }
         };
 
-        // --- UI UPDATER ---
-        const UI = {
-            update() {
-                // Header
-                document.getElementById('price-display').innerText = formatPrice(Engine.price);
-                document.getElementById('price-display').className = `text-2xl font-bold mono tracking-tighter ${Engine.velocity >= 0 ? 'text-buy' : 'text-sell'}`;
-                
-                // MM Stats
-                document.getElementById('mm-inventory').innerText = Engine.inventory + " BTC";
-                const pnl = (Engine.price - 45250) * Engine.inventory;
-                const elPnl = document.getElementById('mm-pnl');
-                elPnl.innerText = (pnl>=0?'+':'') + "$" + pnl.toFixed(2);
-                elPnl.className = `text-sm font-bold mono ${pnl>=0?'text-buy':'text-sell'}`;
-
-                // Sentiment
-                const s = Engine.sentiment;
-                document.getElementById('sentiment-val').innerText = s.toFixed(0) + "%";
-                document.getElementById('sentiment-val').className = s > 70 ? 'text-buy blink-up' : s < 30 ? 'text-sell blink-down' : 'text-white';
-                document.getElementById('sentiment-bar').style.width = s + "%";
-                document.getElementById('sentiment-bar').className = `h-full transition-all duration-500 ${s > 60 ? 'bg-buy' : s < 40 ? 'bg-sell' : 'bg-blue-500'}`;
-
-                // Random Tape Simulation
-                if(Math.random() > 0.7) {
-                    this.addTapeItem();
-                }
-            },
-
-            addTapeItem() {
-                const el = document.getElementById('tape-content');
-                const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                const price = Engine.price;
-                const vol = (Math.random() * 0.5).toFixed(4);
-                
-                const div = document.createElement('div');
-                div.className = `flex justify-between px-2 py-0.5 border-b border-[#2a2e39] ${side==='BUY'?'text-buy':'text-sell'}`;
-                div.innerHTML = `<span>${formatPrice(price)}</span><span>${vol}</span><span class="text-right">${new Date().toLocaleTimeString().split(' ')[0]}</span>`;
-                
-                el.appendChild(div);
-                if(el.children.length > 20) el.removeChild(el.firstChild);
-            },
-
-            updateState(state) {
-                document.getElementById('market-phase').innerText = "PHASE: " + state.replace('_', ' ');
-            },
-
-            showFibActive(isActive) {
-                const el = document.getElementById('fib-status');
-                el.style.display = isActive ? 'block' : 'none';
-            },
-
-            showToast(msg) {
-                const t = document.getElementById('toast');
-                t.innerText = msg;
-                t.style.opacity = 1;
-                setTimeout(() => t.style.opacity = 0, 1500);
-            }
-        };
-
-        // --- START ---
+        // Start
         Engine.init();
+
     </script>
 </body>
 </html>
