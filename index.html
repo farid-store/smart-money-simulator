@@ -2,287 +2,569 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>SMM PROFESSIONAL TERMINAL v6.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOCKBIT PRO - MARKET MAKER TERMINAL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { background: #0a0b0d; color: #d1d4dc; font-family: 'Inter', sans-serif; overflow: hidden; }
+        :root {
+            --bg-main: #131722; --bg-panel: #1e222d; --bg-dark: #0a0b0d;
+            --text-main: #d1d4dc; --text-muted: #787b86;
+            --up: #089981; --down: #f23645; --up-bg: rgba(8, 153, 129, 0.15); --down-bg: rgba(242, 54, 69, 0.15);
+        }
+        body { background-color: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .border-gray { border-color: #2a2e39; }
-        .bg-darker { background: #131722; }
-        .text-up { color: #089981; }
-        .text-down { color: #f23645; }
-        .bg-up { background: rgba(8, 153, 129, 0.2); }
-        .bg-down { background: rgba(242, 54, 69, 0.2); }
-        canvas { image-rendering: -webkit-optimize-contrast; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #363a45; }
+        
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #363a45; border-radius: 2px; }
+
+        /* Animation Classes */
+        .flash-up { animation: flashGreen 0.5s ease-out; }
+        .flash-down { animation: flashRed 0.5s ease-out; }
+        
+        @keyframes flashGreen { 0% { background-color: rgba(8, 153, 129, 0.5); } 100% { background-color: transparent; } }
+        @keyframes flashRed { 0% { background-color: rgba(242, 54, 69, 0.5); } 100% { background-color: transparent; } }
+
+        .crt-line { pointer-events: none; background: rgba(18, 16, 16, 0); }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col text-[11px] select-none">
+<body class="flex flex-col h-screen w-screen text-xs select-none">
 
-    <header class="h-12 border-b border-gray bg-darker flex items-center px-4 justify-between">
+    <header class="h-12 bg-[#131722] border-b border-[#2a2e39] flex items-center justify-between px-4 z-20">
         <div class="flex items-center gap-6">
-            <div class="flex items-baseline gap-2">
-                <span class="text-lg font-bold text-white tracking-tighter uppercase">GOTO</span>
-                <span id="header-price" class="text-lg font-bold text-up">112</span>
-                <span id="header-diff" class="text-up font-mono">+4 (3.70%)</span>
+            <div class="flex flex-col">
+                <div class="flex items-baseline gap-2">
+                    <h1 class="text-lg font-black tracking-tighter text-white">BBCA</h1>
+                    <span class="text-[10px] text-[#787b86] font-bold bg-[#2a2e39] px-1 rounded">JKT</span>
+                </div>
+                <span class="text-[9px] text-[#787b86]">BANK CENTRAL ASIA TBK</span>
             </div>
-            <div class="h-8 w-[1px] bg-gray-700"></div>
-            <div class="flex gap-4 opacity-70 font-mono">
-                <div>OPEN <span class="text-white">108</span></div>
-                <div>HIGH <span id="header-high" class="text-white">115</span></div>
-                <div>LOW <span id="header-low" class="text-white">107</span></div>
-                <div>VOL <span id="header-vol" class="text-white">1.2B</span></div>
+            
+            <div class="h-8 w-[1px] bg-[#2a2e39]"></div>
+
+            <div class="flex flex-col">
+                <span id="header-price" class="text-xl font-bold font-mono tracking-tight text-[#089981]">9,250</span>
+            </div>
+            <div class="flex flex-col font-mono text-[10px]">
+                <span id="header-change" class="text-[#089981] font-bold">+125 (1.37%)</span>
+                <span class="text-[#787b86]">Vol: <span id="header-vol" class="text-white">1.2M</span></span>
             </div>
         </div>
+
+        <div class="flex flex-col items-center w-64">
+            <div class="flex justify-between w-full text-[9px] text-[#787b86] mb-1 font-bold uppercase">
+                <span>Panic</span>
+                <span id="sentiment-label" class="text-white">Neutral</span>
+                <span>FOMO</span>
+            </div>
+            <div class="w-full h-1.5 bg-[#2a2e39] rounded-full overflow-hidden relative">
+                <div id="sentiment-bar" class="absolute h-full w-1/3 bg-blue-500 transition-all duration-300 left-1/3"></div>
+            </div>
+        </div>
+
         <div class="flex items-center gap-4">
-            <div class="bg-blue-600/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30 font-bold uppercase">Institutional Access</div>
-            <div id="clock" class="mono text-gray-500">15:59:59</div>
+            <div class="text-right">
+                <div class="text-[9px] text-[#787b86]">MM NET EXPOSURE</div>
+                <div id="mm-exposure" class="font-mono font-bold text-white">0 Lot</div>
+            </div>
+            <div class="text-right">
+                <div class="text-[9px] text-[#787b86]">REALIZED PnL</div>
+                <div id="mm-pnl" class="font-mono font-bold text-[#787b86]">$0</div>
+            </div>
         </div>
     </header>
 
     <div class="flex-1 flex overflow-hidden">
         
-        <aside class="w-[320px] border-r border-gray flex flex-col">
-            <div class="flex-1 flex flex-col min-h-0 bg-darker">
-                <div class="grid grid-cols-4 text-gray-500 py-1 px-2 border-b border-gray font-bold text-[9px]">
-                    <span>BID VOL</span><span>BID</span><span>OFFER</span><span>OFFER VOL</span>
-                </div>
-                <div id="orderbook-list" class="flex-1 overflow-y-auto font-mono">
-                    </div>
-            </div>
+        <aside class="w-[300px] bg-[#131722] border-r border-[#2a2e39] flex flex-col">
             
-            <div class="h-1/3 border-t border-gray flex flex-col bg-black">
-                <div class="px-2 py-1 border-b border-gray text-gray-500 font-bold uppercase text-[9px]">Running Trades</div>
-                <div id="running-trades" class="flex-1 overflow-hidden mono text-[10px] p-2 space-y-0.5">
-                    </div>
+            <div class="grid grid-cols-2 text-[10px] font-bold text-[#787b86] border-b border-[#2a2e39]">
+                <div class="py-1 px-2 border-r border-[#2a2e39] text-center">BID</div>
+                <div class="py-1 px-2 text-center">OFFER</div>
+            </div>
+
+            <div id="orderbook" class="flex-1 overflow-hidden relative font-mono text-[11px] bg-[#131722]">
+                </div>
+
+            <div class="h-[200px] border-t border-[#2a2e39] flex flex-col bg-[#131722]">
+                <div class="px-2 py-1 text-[9px] font-bold text-[#787b86] border-b border-[#2a2e39] flex justify-between">
+                    <span>RUNNING TRADE</span>
+                    <span class="text-blue-500">REALTIME</span>
+                </div>
+                <div class="flex text-[9px] text-[#5d606b] px-2 py-0.5 border-b border-[#2a2e39]">
+                    <span class="w-10">Time</span>
+                    <span class="w-12">Price</span>
+                    <span class="w-10 text-right">Vol</span>
+                    <span class="flex-1 text-right">Broker</span>
+                </div>
+                <div id="tape" class="flex-1 overflow-hidden relative">
+                    <div id="tape-content" class="absolute w-full flex flex-col-reverse bottom-0 px-2 font-mono text-[10px]"></div>
+                </div>
             </div>
         </aside>
 
-        <main class="flex-1 flex flex-col relative">
-            <div class="flex-1 bg-[#131722] relative">
-                <canvas id="mainChart"></canvas>
-            </div>
+        <main class="flex-1 flex flex-col relative bg-[#0a0b0d]">
+            <canvas id="chart-canvas" class="w-full h-full block"></canvas>
             
-            <div class="h-24 bg-darker border-t border-gray flex items-center px-6 gap-8">
-                <div class="flex flex-col gap-1">
-                    <span class="text-gray-500 text-[9px] uppercase font-bold">Market Maker Mode</span>
-                    <div class="flex gap-2">
-                        <button onclick="Engine.manipulate('ACCUMULATE')" class="px-4 py-2 bg-up border border-green-500/50 text-up rounded hover:bg-green-500 hover:text-white font-bold transition-all">ACCUMULATE</button>
-                        <button onclick="Engine.manipulate('MARKUP')" class="px-4 py-2 bg-blue-600/20 border border-blue-500/50 text-blue-400 rounded hover:bg-blue-600 hover:text-white font-bold transition-all">MARK UP</button>
-                        <button onclick="Engine.manipulate('DISTRIBUTE')" class="px-4 py-2 bg-down border border-red-500/50 text-down rounded hover:bg-red-500 hover:text-white font-bold transition-all">DISTRIBUTE</button>
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 p-2 bg-[#1e222d] rounded-lg border border-[#2a2e39] shadow-2xl z-10">
+                <div class="flex flex-col gap-1 px-2 border-r border-[#2a2e39]">
+                    <span class="text-[8px] text-[#787b86] font-bold uppercase">Accumulation</span>
+                    <button onclick="Engine.executeAlgo('ABSORB')" class="px-4 py-2 bg-[#2a2e39] hover:bg-[#363a45] text-white text-[10px] font-bold rounded transition">
+                        ABSORB (BID)
+                    </button>
+                </div>
+                <div class="flex flex-col gap-1 px-2 border-r border-[#2a2e39]">
+                    <span class="text-[8px] text-[#787b86] font-bold uppercase">Manipulation</span>
+                    <div class="flex gap-1">
+                        <button onclick="Engine.executeAlgo('MARKUP')" class="px-4 py-2 bg-[#089981] hover:bg-[#067a65] text-white text-[10px] font-bold rounded transition shadow-[0_0_10px_rgba(8,153,129,0.3)]">
+                            MARK UP
+                        </button>
+                        <button onclick="Engine.executeAlgo('MARKDOWN')" class="px-4 py-2 bg-[#f23645] hover:bg-[#c92a37] text-white text-[10px] font-bold rounded transition shadow-[0_0_10px_rgba(242,54,69,0.3)]">
+                            MARK DOWN
+                        </button>
                     </div>
                 </div>
-                <div class="h-12 w-[1px] bg-gray-800"></div>
-                <div class="flex flex-col gap-1">
-                    <span class="text-gray-500 text-[9px] uppercase font-bold">Manual Execution</span>
-                    <div class="flex gap-2">
-                        <button onmousedown="Engine.manualExecution('BUY')" class="w-10 h-10 bg-green-600 text-black font-black rounded active:scale-90">HKA</button>
-                        <button onmousedown="Engine.manualExecution('SELL')" class="w-10 h-10 bg-red-600 text-black font-black rounded active:scale-90">HKI</button>
-                    </div>
+                <div class="flex flex-col gap-1 px-2">
+                    <span class="text-[8px] text-[#787b86] font-bold uppercase">Distribution</span>
+                    <button onclick="Engine.executeAlgo('DUMP')" class="px-4 py-2 bg-[#2a2e39] hover:bg-red-900 text-red-400 border border-red-900/50 text-[10px] font-bold rounded transition">
+                        PANIC DUMP
+                    </button>
                 </div>
-                <div class="ml-auto flex items-center gap-6">
-                    <div class="text-right">
-                        <span class="text-gray-500 text-[9px] block">AVG PRICE</span>
-                        <span id="avg-price" class="text-lg font-bold text-white mono">0</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-gray-500 text-[9px] block">TOTAL LOTS</span>
-                        <span id="total-lots" class="text-lg font-bold text-blue-400 mono">0</span>
-                    </div>
-                </div>
+            </div>
+
+            <div id="toast" class="absolute top-10 left-1/2 -translate-x-1/2 px-4 py-2 bg-blue-600 text-white font-bold text-xs rounded opacity-0 transition-opacity pointer-events-none shadow-lg transform translate-y-[-10px]">
+                ALGO ACTIVATED
             </div>
         </main>
 
-        <aside class="w-[240px] border-l border-gray bg-darker flex flex-col">
-            <div class="p-2 border-b border-gray font-bold text-gray-400 uppercase text-[9px]">Broker Summary (Top 5)</div>
-            <div class="flex-1 p-2 space-y-4">
-                <div id="buyer-list" class="space-y-1">
-                    <div class="text-[9px] text-up font-bold mb-1">TOP BUYERS</div>
-                    </div>
-                <div id="seller-list" class="space-y-1">
-                    <div class="text-[9px] text-down font-bold mb-1">TOP SELLERS</div>
-                    </div>
+        <aside class="w-[240px] bg-[#131722] border-l border-[#2a2e39] flex flex-col">
+            <div class="px-3 py-2 border-b border-[#2a2e39] font-bold text-[#787b86] text-[10px] uppercase">
+                Broker Summary
             </div>
-            <div class="p-4 bg-black border-t border-gray">
-                <div class="text-[9px] text-gray-500 mb-1">NET POSITION</div>
-                <div id="net-position" class="text-xl font-black text-white">$0</div>
+            
+            <div class="flex-1 flex flex-col p-2 gap-4">
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[9px] font-bold text-[#089981] mb-1">
+                        <span>TOP BUYER</span><span>LOT</span>
+                    </div>
+                    <div id="top-buyers" class="flex flex-col gap-0.5"></div>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <div class="flex justify-between text-[9px] font-bold text-[#f23645] mb-1">
+                        <span>TOP SELLER</span><span>LOT</span>
+                    </div>
+                    <div id="top-sellers" class="flex flex-col gap-0.5"></div>
+                </div>
+
+                <div class="mt-auto bg-[#1e222d] p-3 rounded border border-[#2a2e39]">
+                    <div class="text-[9px] text-[#787b86] font-bold uppercase mb-1">Action Prediction</div>
+                    <div id="broker-action" class="text-sm font-black text-white">ACCUMULATION</div>
+                    <div class="w-full h-1 bg-[#2a2e39] mt-2 rounded-full overflow-hidden">
+                        <div id="power-bar" class="h-full bg-green-500 w-[70%]"></div>
+                    </div>
+                </div>
             </div>
         </aside>
+
     </div>
 
     <script>
-        // --- DATA & STATE ---
-        const Engine = {
-            price: 110,
-            prevClose: 108,
-            inventory: 0,
-            avgEntry: 0,
+        // --- CONSTANTS ---
+        const RETAIL_BROKERS = ['YP', 'PD', 'CC', 'NI', 'XL'];
+        const MM_BROKERS = ['MG', 'BK', 'AK', 'KZ']; // MG = Market Maker (You)
+        
+        // --- ENGINE STATE ---
+        const Market = {
+            price: 9250,
+            prevClose: 9200,
+            sentiment: 50, // 0 (Panic) - 100 (FOMO)
+            inventory: 0,  // MM Lot Inventory
+            cash: 1000000000,
             candles: [],
-            orderbook: { bid: [], offer: [] },
-            brokers: { 
-                YP: { buy: 0, sell: 0 }, CC: { buy: 0, sell: 0 }, 
-                DH: { buy: 0, sell: 0 }, MG: { buy: 0, sell: 0 }, 
-                PD: { buy: 0, sell: 0 }, BK: { buy: 0, sell: 0 }
+            orderbook: { bids: [], asks: [] },
+            trades: [],
+            brokerStats: {},
+            tick: 0,
+            lastAlgo: 'NEUTRAL'
+        };
+
+        // --- UTILS ---
+        const rnd = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const fmtNum = (n) => n.toLocaleString('en-US');
+
+        // --- INITIALIZATION ---
+        function initBrokerStats() {
+            [...RETAIL_BROKERS, ...MM_BROKERS].forEach(b => {
+                Market.brokerStats[b] = { buy: 0, sell: 0, net: 0 };
+            });
+        }
+
+        function initOrderbook() {
+            Market.orderbook.bids = [];
+            Market.orderbook.asks = [];
+            for (let i = 1; i <= 10; i++) {
+                Market.orderbook.bids.push({ price: Market.price - (i * 25), vol: rnd(100, 5000) });
+                Market.orderbook.asks.push({ price: Market.price + (i * 25), vol: rnd(100, 5000) });
+            }
+        }
+
+        function generateCandles() {
+            let p = Market.price;
+            for(let i=0; i<60; i++) {
+                let o = p;
+                let c = o + (Math.random()-0.5)*50;
+                let h = Math.max(o,c) + Math.random()*25;
+                let l = Math.min(o,c) - Math.random()*25;
+                Market.candles.push({o,h,l,c});
+                p = c;
+            }
+            Market.price = Math.round(p/25)*25; // Snap to tick size 25
+        }
+
+        // --- CORE LOGIC ---
+        const Engine = {
+            processRetailPsychology() {
+                // Retail Logic: Follow the trend (Herd Mentality)
+                // If price rises fast -> Sentiment Up -> Retail Buys
+                // If price crashes -> Sentiment Down -> Retail Sells
+                
+                // Random Retail Noise
+                if (Math.random() > 0.3) {
+                    const isFomo = Market.sentiment > 70;
+                    const isPanic = Market.sentiment < 30;
+                    
+                    let side;
+                    if (isFomo) side = 'BUY';
+                    else if (isPanic) side = 'SELL';
+                    else side = Math.random() > 0.5 ? 'BUY' : 'SELL';
+
+                    const broker = RETAIL_BROKERS[rnd(0, RETAIL_BROKERS.length - 1)];
+                    const lots = rnd(1, isFomo || isPanic ? 50 : 10); // Retail lot size
+                    
+                    Engine.executeTrade(side, lots, broker);
+                }
+
+                // Decay Sentiment back to 50
+                if (Market.sentiment > 50) Market.sentiment -= 0.2;
+                if (Market.sentiment < 50) Market.sentiment += 0.2;
+            },
+
+            executeAlgo(type) {
+                Market.lastAlgo = type;
+                UI.showToast(`ALGO: ${type}`);
+                
+                let broker = 'MG'; // You are MG
+                let lots = 0;
+                let side = '';
+
+                if (type === 'MARKUP') {
+                    side = 'BUY';
+                    lots = rnd(1000, 3000); // Big Volume to eat Offer
+                    Market.sentiment += 15; // Trigger FOMO
+                } else if (type === 'MARKDOWN') {
+                    side = 'SELL';
+                    lots = rnd(1000, 3000); // Big Volume to hit Bid
+                    Market.sentiment -= 15; // Trigger Fear
+                } else if (type === 'DUMP') {
+                    side = 'SELL';
+                    lots = rnd(5000, 10000); // Massive Dump
+                    Market.sentiment = 10; // Instant Panic
+                } else if (type === 'ABSORB') {
+                    // Place Thick Bid
+                    Market.orderbook.bids[0].vol += 5000;
+                    return; // Passive order, no trade yet
+                }
+
+                if (side && lots > 0) {
+                    Engine.executeTrade(side, lots, broker);
+                    // Update MM Inventory
+                    if (side === 'BUY') Market.inventory += lots;
+                    else Market.inventory -= lots;
+                }
+            },
+
+            executeTrade(side, lots, broker) {
+                // Update Price
+                if (side === 'BUY') {
+                    // HKA (Hajar Kanan) -> Price tends to go up
+                    if (lots > Market.orderbook.asks[0].vol) {
+                        Market.price += 25;
+                        Market.orderbook.asks.shift();
+                        Market.orderbook.asks.push({ price: Market.price + (10 * 25), vol: rnd(100, 5000) });
+                        // Adjust Bids
+                        Market.orderbook.bids.unshift({ price: Market.price - 25, vol: rnd(100, 5000) });
+                        Market.orderbook.bids.pop();
+                    } else {
+                        Market.orderbook.asks[0].vol -= lots;
+                    }
+                } else {
+                    // HKI (Hajar Kiri) -> Price tends to go down
+                    if (lots > Market.orderbook.bids[0].vol) {
+                        Market.price -= 25;
+                        Market.orderbook.bids.shift();
+                        Market.orderbook.bids.push({ price: Market.price - (10 * 25), vol: rnd(100, 5000) });
+                        // Adjust Asks
+                        Market.orderbook.asks.unshift({ price: Market.price + 25, vol: rnd(100, 5000) });
+                        Market.orderbook.asks.pop();
+                    } else {
+                        Market.orderbook.bids[0].vol -= lots;
+                    }
+                }
+
+                // Record Trade
+                const trade = {
+                    time: new Date().toLocaleTimeString('en-GB').split(' ')[0],
+                    price: Market.price,
+                    vol: lots,
+                    broker: broker,
+                    side: side
+                };
+                Market.trades.unshift(trade);
+                if (Market.trades.length > 50) Market.trades.pop();
+
+                // Update Broker Stats
+                Market.brokerStats[broker][side.toLowerCase()] += lots;
+                Market.brokerStats[broker].net += (side === 'BUY' ? lots : -lots);
+
+                // Update Current Candle
+                const currentC = Market.candles[Market.candles.length - 1];
+                currentC.c = Market.price;
+                if (Market.price > currentC.h) currentC.h = Market.price;
+                if (Market.price < currentC.l) currentC.l = Market.price;
+                currentC.v = (currentC.v || 0) + lots;
+
+                // Retail Sentiment Impact
+                if (side === 'BUY' && lots > 500) Market.sentiment += 2;
+                if (side === 'SELL' && lots > 500) Market.sentiment -= 2;
+                Market.sentiment = Math.max(0, Math.min(100, Market.sentiment));
+            }
+        };
+
+        // --- UI RENDERER ---
+        const UI = {
+            renderHeader() {
+                const diff = Market.price - Market.prevClose;
+                const pct = ((diff / Market.prevClose) * 100).toFixed(2);
+                const colorClass = diff >= 0 ? 'text-[#089981]' : 'text-[#f23645]';
+                
+                const elPrice = document.getElementById('header-price');
+                elPrice.innerText = fmtNum(Market.price);
+                elPrice.className = `text-xl font-bold font-mono tracking-tight ${colorClass}`;
+
+                const elChange = document.getElementById('header-change');
+                elChange.innerText = `${diff > 0 ? '+' : ''}${diff} (${pct}%)`;
+                elChange.className = `font-bold ${colorClass}`;
+
+                // Sentiment Bar
+                const sBar = document.getElementById('sentiment-bar');
+                sBar.style.left = `${Market.sentiment}%`;
+                sBar.className = `absolute h-full w-2 transition-all duration-300 rounded-full ${Market.sentiment > 60 ? 'bg-[#089981]' : Market.sentiment < 40 ? 'bg-[#f23645]' : 'bg-blue-500'}`;
+                
+                const sLabel = document.getElementById('sentiment-label');
+                if (Market.sentiment > 80) { sLabel.innerText = "EXTREME FOMO"; sLabel.className = "text-[#089981] animate-pulse"; }
+                else if (Market.sentiment < 20) { sLabel.innerText = "PANIC SELLING"; sLabel.className = "text-[#f23645] animate-pulse"; }
+                else { sLabel.innerText = "NEUTRAL"; sLabel.className = "text-white"; }
+
+                // MM Stats
+                document.getElementById('mm-exposure').innerText = fmtNum(Market.inventory) + " Lot";
+                const pnl = (Market.price - 9250) * Market.inventory * 100; // rough calc
+                document.getElementById('mm-pnl').innerText = "Est. " + fmtNum(pnl);
+                document.getElementById('mm-pnl').className = `font-mono font-bold ${pnl >= 0 ? 'text-[#089981]' : 'text-[#f23645]'}`;
+            },
+
+            renderOrderbook() {
+                const el = document.getElementById('orderbook');
+                let html = '<div class="flex flex-col w-full h-full">';
+                
+                // ASKS (Reversed - Lowest Ask at bottom)
+                const asks = [...Market.orderbook.asks].slice(0, 10).reverse();
+                asks.forEach(a => {
+                    const width = Math.min((a.vol / 5000) * 100, 100);
+                    html += `
+                        <div class="flex relative h-[20px] items-center text-[10px]">
+                            <div class="w-1/2 flex justify-between px-2 border-r border-[#2a2e39] opacity-0"></div>
+                            <div class="w-1/2 flex justify-between px-2 relative">
+                                <div class="absolute inset-0 bg-[#f23645] opacity-10" style="width:${width}%"></div>
+                                <span class="z-10 text-[#f23645] font-bold">${fmtNum(a.price)}</span>
+                                <span class="z-10 text-[#d1d4dc] font-mono">${fmtNum(a.vol)}</span>
+                            </div>
+                        </div>`;
+                });
+
+                // CURRENT PRICE SPLITTER
+                html += `<div class="h-[2px] w-full bg-[#2a2e39] my-1"></div>`;
+
+                // BIDS
+                const bids = Market.orderbook.bids.slice(0, 10);
+                bids.forEach(b => {
+                    const width = Math.min((b.vol / 5000) * 100, 100);
+                    html += `
+                        <div class="flex relative h-[20px] items-center text-[10px]">
+                            <div class="w-1/2 flex justify-between px-2 border-r border-[#2a2e39] relative">
+                                <div class="absolute right-0 top-0 bottom-0 bg-[#089981] opacity-10" style="width:${width}%"></div>
+                                <span class="z-10 text-[#d1d4dc] font-mono">${fmtNum(b.vol)}</span>
+                                <span class="z-10 text-[#089981] font-bold">${fmtNum(b.price)}</span>
+                            </div>
+                            <div class="w-1/2 flex justify-between px-2"></div>
+                        </div>`;
+                });
+                
+                html += '</div>';
+                el.innerHTML = html;
+            },
+
+            renderTape() {
+                const el = document.getElementById('tape-content');
+                let html = '';
+                Market.trades.slice(0, 15).forEach(t => {
+                    const color = t.side === 'BUY' ? 'text-[#089981]' : 'text-[#f23645]';
+                    html += `
+                        <div class="flex py-0.5 border-b border-[#2a2e39]/50 ${t.broker === 'MG' ? 'bg-[#2a2e39]' : ''}">
+                            <span class="w-10 text-[#787b86]">${t.time}</span>
+                            <span class="w-12 font-bold ${color}">${fmtNum(t.price)}</span>
+                            <span class="w-10 text-right text-[#d1d4dc]">${fmtNum(t.vol)}</span>
+                            <span class="flex-1 text-right font-bold ${color}">${t.broker}</span>
+                        </div>
+                    `;
+                });
+                el.innerHTML = html;
+            },
+
+            renderBroxsum() {
+                const sorted = Object.entries(Market.brokerStats)
+                    .map(([code, stats]) => ({ code, ...stats }))
+                    .sort((a, b) => b.net - a.net); // Sort by Net Buy
+                
+                const buyers = sorted.filter(b => b.net > 0).slice(0, 5);
+                const sellers = sorted.filter(b => b.net < 0).sort((a,b) => a.net - b.net).slice(0, 5); // Most negative
+
+                const renderRow = (list, color) => list.map(b => `
+                    <div class="flex justify-between items-center text-[10px]">
+                        <div class="flex items-center gap-1">
+                            <span class="font-bold w-4 ${b.code === 'MG' ? 'text-yellow-500' : 'text-[#d1d4dc]'}">${b.code}</span>
+                            <div class="h-1 w-8 bg-[#2a2e39] rounded overflow-hidden">
+                                <div class="h-full ${color === 'green' ? 'bg-[#089981]' : 'bg-[#f23645]'}" style="width: ${Math.min(Math.abs(b.net)/200, 100)}%"></div>
+                            </div>
+                        </div>
+                        <span class="font-mono text-[#d1d4dc]">${fmtNum(Math.abs(b.net))}</span>
+                    </div>
+                `).join('');
+
+                document.getElementById('top-buyers').innerHTML = renderRow(buyers, 'green');
+                document.getElementById('top-sellers').innerHTML = renderRow(sellers, 'red');
+
+                // Action Prediction
+                const elAction = document.getElementById('broker-action');
+                const mgStats = Market.brokerStats['MG'];
+                if (mgStats.net > 1000) { elAction.innerText = "BIG ACCUMULATION"; elAction.className = "text-sm font-black text-[#089981]"; }
+                else if (mgStats.net < -1000) { elAction.innerText = "BIG DISTRIBUTION"; elAction.className = "text-sm font-black text-[#f23645]"; }
+                else { elAction.innerText = "SMALL MOVEMENT"; elAction.className = "text-sm font-black text-[#787b86]"; }
+            },
+
+            renderChart() {
+                const cvs = document.getElementById('chart-canvas');
+                const ctx = cvs.getContext('2d');
+                const w = cvs.width = cvs.parentElement.clientWidth;
+                const h = cvs.height = cvs.parentElement.clientHeight;
+
+                // Bg
+                ctx.fillStyle = '#0a0b0d';
+                ctx.fillRect(0, 0, w, h);
+
+                // Grid
+                ctx.strokeStyle = '#1e222d';
+                ctx.lineWidth = 1;
+                for(let x=0; x<w; x+=60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+                for(let y=0; y<h; y+=60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+
+                // Candles
+                const visible = Market.candles.slice(-80);
+                const minP = Math.min(...visible.map(c => c.l));
+                const maxP = Math.max(...visible.map(c => c.h));
+                const range = maxP - minP + 10;
+                
+                const getX = (i) => i * (w / 80);
+                const getY = (p) => h - ((p - minP + 5) / range * h);
+                const candleW = (w / 80) * 0.7;
+
+                visible.forEach((c, i) => {
+                    const x = getX(i);
+                    const isUp = c.c >= c.o;
+                    const color = isUp ? '#089981' : '#f23645';
+                    
+                    ctx.fillStyle = color;
+                    ctx.strokeStyle = color;
+                    
+                    // Wick
+                    ctx.beginPath();
+                    ctx.moveTo(x + candleW/2, getY(c.h));
+                    ctx.lineTo(x + candleW/2, getY(c.l));
+                    ctx.stroke();
+
+                    // Body
+                    const yO = getY(c.o);
+                    const yC = getY(c.c);
+                    const hBody = Math.max(1, Math.abs(yO - yC));
+                    ctx.fillRect(x, Math.min(yO, yC), candleW, hBody);
+                });
+
+                // Price Line
+                const py = getY(Market.price);
+                ctx.strokeStyle = '#ffffff';
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
+                
+                // Price Tag
+                ctx.fillStyle = Market.price >= Market.candles[Market.candles.length-2].c ? '#089981' : '#f23645';
+                ctx.fillRect(w-50, py-10, 50, 20);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 10px JetBrains Mono';
+                ctx.fillText(Market.price, w-45, py+4);
             },
             
-            init() {
-                this.generateOrderbook();
-                this.loop();
-                window.addEventListener('resize', () => this.resize());
-                this.resize();
-            },
-
-            resize() {
-                const c = document.getElementById('mainChart');
-                c.width = c.parentElement.clientWidth;
-                c.height = c.parentElement.clientHeight;
-            },
-
-            generateOrderbook() {
-                this.orderbook.bid = [];
-                this.orderbook.offer = [];
-                for(let i=0; i<10; i++) {
-                    this.orderbook.bid.push({ p: this.price - (i+1), v: Math.floor(Math.random()*10000) });
-                    this.orderbook.offer.push({ p: this.price + i, v: Math.floor(Math.random()*10000) });
-                }
-            },
-
-            manualExecution(side) {
-                const targetPrice = side === 'BUY' ? this.orderbook.offer[0].p : this.orderbook.bid[0].p;
-                const lot = 500 + Math.floor(Math.random()*1000);
-                
-                // Update Inventory
-                if(side === 'BUY') {
-                    const totalCost = (this.inventory * this.avgEntry) + (lot * targetPrice);
-                    this.inventory += lot;
-                    this.avgEntry = totalCost / this.inventory;
-                    this.brokers.MG.buy += lot;
-                } else {
-                    this.inventory -= lot;
-                    this.brokers.MG.sell += lot;
-                }
-
-                this.price = targetPrice;
-                this.generateOrderbook();
-                UI.pushTrade(side, targetPrice, lot, 'MG');
-            },
-
-            manipulate(mode) {
-                if(mode === 'MARKUP') this.price += 1;
-                if(mode === 'DISTRIBUTE') this.price -= 1;
-                this.generateOrderbook();
-                UI.showAlert("ALGO: " + mode);
-            },
-
-            loop() {
-                // Simulasikan Retail Noise
-                if(Math.random() > 0.7) {
-                    const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
-                    const brks = ['YP', 'PD', 'CC', 'DH'];
-                    const b = brks[Math.floor(Math.random()*brks.length)];
-                    const p = side === 'BUY' ? this.orderbook.offer[0].p : this.orderbook.bid[0].p;
-                    const v = Math.floor(Math.random()*200);
-                    
-                    this.brokers[b][side === 'BUY' ? 'buy' : 'sell'] += v;
-                    UI.pushTrade(side, p, v, b);
-                }
-
-                UI.update();
-                requestAnimationFrame(() => this.loop());
+            showToast(msg) {
+                const t = document.getElementById('toast');
+                t.innerText = msg;
+                t.style.opacity = 1;
+                t.style.transform = "translate(-50%, 0px)";
+                setTimeout(() => {
+                    t.style.opacity = 0;
+                    t.style.transform = "translate(-50%, -10px)";
+                }, 2000);
             }
         };
 
-        const UI = {
-            update() {
-                // Header
-                const p = Engine.price;
-                const diff = p - Engine.prevClose;
-                const pct = (diff / Engine.prevClose * 100).toFixed(2);
-                document.getElementById('header-price').innerText = p;
-                document.getElementById('header-price').className = `text-lg font-bold ${diff >= 0 ? 'text-up' : 'text-down'}`;
-                document.getElementById('header-diff').innerText = `${diff >= 0 ? '+':''}${diff} (${pct}%)`;
-                document.getElementById('header-diff').className = `font-mono ${diff >= 0 ? 'text-up' : 'text-down'}`;
-
-                // Orderbook
-                const obList = document.getElementById('orderbook-list');
-                let obHtml = '';
-                for(let i=0; i<10; i++) {
-                    const bid = Engine.orderbook.bid[i];
-                    const off = Engine.orderbook.offer[i];
-                    obHtml += `
-                        <div class="grid grid-cols-4 px-2 h-6 items-center border-b border-[#1a1e2a]">
-                            <span class="text-right pr-4 text-zinc-500">${bid.v.toLocaleString()}</span>
-                            <span class="text-up font-bold">${bid.p}</span>
-                            <span class="text-down font-bold text-right">${off.p}</span>
-                            <span class="pl-4 text-zinc-500">${off.v.toLocaleString()}</span>
-                        </div>`;
-                }
-                obList.innerHTML = obHtml;
-
-                // Stats
-                document.getElementById('avg-price').innerText = Engine.avgEntry.toFixed(1);
-                document.getElementById('total-lots').innerText = Engine.inventory.toLocaleString();
-                
-                const net = (Engine.price - Engine.avgEntry) * Engine.inventory;
-                const netEl = document.getElementById('net-position');
-                netEl.innerText = (net >= 0 ? '+' : '') + net.toLocaleString(undefined, {maximumFractionDigits:0});
-                netEl.className = `text-xl font-black ${net >= 0 ? 'text-up' : 'text-down'}`;
-
-                // Broker Sum
-                this.updateBrokers();
-                this.drawChart();
-            },
-
-            pushTrade(side, p, v, b) {
-                const rt = document.getElementById('running-trades');
-                const row = document.createElement('div');
-                row.className = `flex justify-between ${side === 'BUY' ? 'text-up' : 'text-down'}`;
-                row.innerHTML = `<span>15:59</span><span>${b}</span><span>${side === 'BUY' ? 'B' : 'S'}</span><span>${p}</span><span>${v}</span>`;
-                rt.prepend(row);
-                if(rt.children.length > 15) rt.lastChild.remove();
-            },
-
-            updateBrokers() {
-                const bList = Object.entries(Engine.brokers)
-                    .sort((a,b) => b[1].buy - a[1].buy)
-                    .slice(0, 5);
-                
-                document.getElementById('buyer-list').innerHTML = '<div class="text-[9px] text-up font-bold mb-1 uppercase">Top Buyers</div>' + 
-                    bList.map(([name, data]) => `<div class="flex justify-between text-[10px]"><span>${name}</span><span class="mono">${data.buy.toLocaleString()}</span></div>`).join('');
-            },
-
-            drawChart() {
-                const canvas = document.getElementById('mainChart');
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#131722';
-                ctx.fillRect(0,0,canvas.width, canvas.height);
-                
-                // Grid
-                ctx.strokeStyle = '#2a2e39';
-                ctx.lineWidth = 0.5;
-                for(let i=0; i<canvas.width; i+=100) { ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,canvas.height); ctx.stroke(); }
-                for(let i=0; i<canvas.height; i+=50) { ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(canvas.width,i); ctx.stroke(); }
-
-                // Price line (Simplified for performance)
-                ctx.strokeStyle = '#2962ff';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(0, canvas.height/2);
-                ctx.lineTo(canvas.width, canvas.height/2 + (Math.sin(Date.now()/500)*20));
-                ctx.stroke();
-            },
-
-            showAlert(msg) {
-                // Toast logic
+        // --- LOOP ---
+        function loop() {
+            Engine.processRetailPsychology();
+            
+            // Candle Tick Logic
+            Market.tick++;
+            if (Market.tick > 20) { // New Candle
+                const lastC = Market.candles[Market.candles.length - 1];
+                Market.candles.push({ o: lastC.c, h: lastC.c, l: lastC.c, c: lastC.c, v:0 });
+                if (Market.candles.length > 200) Market.candles.shift();
+                Market.tick = 0;
             }
-        };
 
-        Engine.init();
-        setInterval(() => {
-            document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB');
-        }, 1000);
+            UI.renderHeader();
+            UI.renderOrderbook();
+            UI.renderTape();
+            UI.renderBroxsum();
+            UI.renderChart();
+            
+            requestAnimationFrame(loop);
+        }
+
+        // --- START ---
+        initBrokerStats();
+        initOrderbook();
+        generateCandles();
+        loop();
+
     </script>
 </body>
 </html>
