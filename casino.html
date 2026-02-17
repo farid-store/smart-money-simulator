@@ -3,284 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Golden Nebula Casino Simulator</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Galaxy Vegas Mini-App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --gold: #ffcf4b;
-            --gold-dark: #b8860b;
-            --bg-dark: #0f0c29;
-            --neon-purple: #9d50bb;
-            --neon-pink: #6e48aa;
-            --glass: rgba(255, 255, 255, 0.1);
+            --neon-gold: #ffcc00;
+            --neon-blue: #00d4ff;
+            --dark-bg: #0a0a12;
+            --glass: rgba(255, 255, 255, 0.05);
         }
 
         body {
             margin: 0;
-            padding: 0;
-            font-family: 'Montserrat', sans-serif;
-            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--dark-bg);
             color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        .casino-wrapper {
-            width: 90%;
-            max-width: 500px;
+        /* Header & Navigation */
+        header {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--neon-gold);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            color: var(--neon-gold);
+            text-shadow: 0 0 10px var(--neon-gold);
+        }
+
+        .wallet {
             background: var(--glass);
-            backdrop-filter: blur(15px);
-            border: 2px solid rgba(255, 207, 75, 0.3);
-            border-radius: 30px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid var(--neon-blue);
+        }
+
+        /* Main Container */
+        .app-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .screen { display: none; animation: fadeIn 0.5s; }
+        .screen.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Dashboard Cards */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .game-card {
+            background: linear-gradient(145deg, #1e1e2f, #11111d);
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #333;
+            transition: 0.3s;
+        }
+
+        .game-card:hover {
+            border-color: var(--neon-blue);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 212, 255, 0.2);
+        }
+
+        .game-card i { font-size: 3rem; display: block; margin-bottom: 15px; }
+
+        /* Game UI Components */
+        .game-area {
+            background: var(--glass);
             padding: 30px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border-radius: 20px;
             text-align: center;
         }
 
-        .header h1 {
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            background: linear-gradient(to bottom, var(--gold), #fff, var(--gold-dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0 0 10px 0;
-        }
-
-        .balance-card {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 15px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            border: 1px solid var(--gold);
-        }
-
-        .balance-card span {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--gold);
-            text-transform: uppercase;
-        }
-
-        .balance-card strong {
-            font-size: 1.8rem;
-        }
-
-        /* Slot Machine UI */
-        .slot-container {
-            display: flex;
-            justify-content: space-around;
-            background: #000;
-            padding: 20px;
-            border-radius: 20px;
-            border: 4px solid #333;
-            box-shadow: inset 0 0 20px rgba(0,0,0,1);
-            margin-bottom: 30px;
-            position: relative;
-        }
-
-        .reel {
-            width: 80px;
-            height: 100px;
-            background: linear-gradient(to bottom, #222, #444, #222);
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 3rem;
-            overflow: hidden;
+        .btn-back {
+            background: none;
             border: 1px solid #555;
-        }
-
-        /* Controls */
-        .controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            color: #ccc;
+            padding: 5px 15px;
+            cursor: pointer;
             margin-bottom: 20px;
         }
 
-        .bet-selector {
+        button.primary-btn {
+            background: var(--neon-gold);
+            color: black;
+            border: none;
+            padding: 12px 25px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Orbitron';
+        }
+
+        /* Roulette Specific */
+        .roulette-wheel {
+            width: 200px;
+            height: 200px;
+            border: 10px solid #444;
+            border-radius: 50%;
+            margin: 20px auto;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            padding: 5px;
+            font-size: 2rem;
+            position: relative;
         }
 
-        .bet-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            padding: 0 15px;
-        }
+        .spinning { animation: rotate 1s linear infinite; }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .spin-btn {
-            grid-column: span 2;
-            background: linear-gradient(to right, #f8d800, #fdeb71);
-            color: #333;
-            border: none;
-            padding: 18px;
-            border-radius: 15px;
-            font-weight: 900;
-            font-size: 1.2rem;
-            cursor: pointer;
-            text-transform: uppercase;
-            transition: 0.2s;
-            box-shadow: 0 5px 15px rgba(248, 216, 0, 0.3);
-        }
-
-        .spin-btn:hover { transform: scale(1.02); box-shadow: 0 8px 20px rgba(248, 216, 0, 0.5); }
-        .spin-btn:active { transform: scale(0.98); }
-        .spin-btn:disabled { background: #555; color: #888; cursor: not-allowed; }
-
-        .log {
-            font-size: 0.9rem;
-            height: 20px;
-            color: #aaa;
-        }
-
-        /* Animations */
-        @keyframes blurSpin {
-            0% { filter: blur(0px); transform: translateY(0); }
-            50% { filter: blur(8px); transform: translateY(10px); }
-            100% { filter: blur(0px); transform: translateY(0); }
-        }
-
-        .spinning { animation: blurSpin 0.1s infinite; }
-
-        .jackpot-anim {
-            color: var(--gold);
-            text-shadow: 0 0 10px var(--gold);
-            animation: pulse 0.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
     </style>
 </head>
 <body>
 
-<div class="casino-wrapper">
-    <div class="header">
-        <h1>NEBULA SLOTS</h1>
-        <p style="font-size: 0.7rem; color: #888;">FAIR PLAY SIMULATION</p>
-    </div>
+<header>
+    <div class="logo">GALAXY VEGAS</div>
+    <div class="wallet">🪙 <span id="global-balance">10000</span></div>
+</header>
 
-    <div class="balance-card">
-        <span>Total Credit</span>
-        <strong id="balance">5,000</strong>
-    </div>
-
-    <div class="slot-container">
-        <div class="reel" id="reel1">💎</div>
-        <div class="reel" id="reel2">💎</div>
-        <div class="reel" id="reel3">💎</div>
-    </div>
-
-    <div class="controls">
-        <div class="bet-selector">
-            <button class="bet-btn" onclick="adjustBet(-50)">-</button>
-            <div style="width: 100px">
-                <span style="font-size: 0.6rem; display: block;">BET</span>
-                <span id="bet-amount" style="font-weight: bold;">100</span>
+<div class="app-container">
+    
+    <div id="screen-dashboard" class="screen active">
+        <h2 style="text-align: center; margin-bottom: 30px;">Pilih Permainan</h2>
+        <div class="grid">
+            <div class="game-card" onclick="showScreen('screen-slots')">
+                <div>🎰</div>
+                <h3>Neon Slots</h3>
+                <p>Uji keberuntungan barismu</p>
             </div>
-            <button class="bet-btn" onclick="adjustBet(50)">+</button>
+            <div class="game-card" onclick="showScreen('screen-roulette')">
+                <div>🎡</div>
+                <h3>Cyber Roulette</h3>
+                <p>Tebak angka & warna</p>
+            </div>
         </div>
-        <button class="spin-btn" id="spin-button" onclick="play()">SPIN</button>
     </div>
 
-    <div class="log" id="status-msg">Tekan Spin untuk mencoba keberuntungan!</div>
+    <div id="screen-slots" class="screen">
+        <button class="btn-back" onclick="showScreen('screen-dashboard')">⬅ Kembali</button>
+        <div class="game-area">
+            <h1>SLOTS</h1>
+            <div style="font-size: 4rem; margin: 30px 0;" id="slot-reels">🍒 | 🍒 | 🍒</div>
+            <button class="primary-btn" onclick="playSlots()">SPIN (100)</button>
+        </div>
+    </div>
+
+    <div id="screen-roulette" class="screen">
+        <button class="btn-back" onclick="showScreen('screen-dashboard')">⬅ Kembali</button>
+        <div class="game-area">
+            <h1>ROULETTE</h1>
+            <div class="roulette-wheel" id="wheel">?</div>
+            <div style="margin: 20px 0;">
+                <p>Pilih Taruhan (Biaya 200):</p>
+                <button class="primary-btn" style="background: #ff4e4e;" onclick="playRoulette('red')">MERAH</button>
+                <button class="primary-btn" style="background: #222; color: white; border: 1px solid white;" onclick="playRoulette('black')">HITAM</button>
+            </div>
+            <div id="roulette-msg"></div>
+        </div>
+    </div>
+
 </div>
 
 <script>
-    let balance = 5000;
-    let currentBet = 100;
-    const symbols = ['💎', '🎰', '🔥', '⭐', '🍒', '👑'];
-    const weights = [0.1, 0.15, 0.2, 0.25, 0.3, 0.05]; // Peluang muncul (👑 paling langka)
-
-    function adjustBet(amount) {
-        if (currentBet + amount >= 50 && currentBet + amount <= 1000) {
-            currentBet += amount;
-            document.getElementById('bet-amount').innerText = currentBet;
-        }
+    let balance = 10000;
+    
+    function updateUI() {
+        document.getElementById('global-balance').innerText = balance.toLocaleString();
     }
 
-    function getRandomSymbol() {
-        // Logika sederhana untuk simbol acak
-        return symbols[Math.floor(Math.random() * symbols.length)];
+    function showScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(screenId).classList.add('active');
     }
 
-    function play() {
-        if (balance < currentBet) {
-            updateStatus("Kredit tidak cukup!", "#ff4e4e");
-            return;
-        }
+    // --- LOGIKA SLOTS ---
+    function playSlots() {
+        if(balance < 100) return alert("Saldo tipis!");
+        balance -= 100;
+        updateUI();
+        
+        const symbols = ['💎', '⭐', '🍒', '7️⃣'];
+        const r = () => symbols[Math.floor(Math.random() * symbols.length)];
+        
+        const res = [r(), r(), r()];
+        document.getElementById('slot-reels').innerText = res.join(' | ');
 
-        // Deduct balance
-        balance -= currentBet;
+        if(res[0] === res[1] && res[1] === res[2]) {
+            balance += 1000;
+            alert("JACKPOT! +1000");
+        }
+        updateUI();
+    }
+
+    // --- LOGIKA ROULETTE ---
+    function playRoulette(betColor) {
+        if(balance < 200) return alert("Saldo tipis!");
+        balance -= 200;
         updateUI();
 
-        const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
-        const btn = document.getElementById('spin-button');
-        
-        btn.disabled = true;
-        updateStatus("Memutar galaksi...", "#aaa");
-
-        // Start Animation
-        reels.forEach(r => r.classList.add('spinning'));
+        const wheel = document.getElementById('wheel');
+        const msg = document.getElementById('roulette-msg');
+        wheel.classList.add('spinning');
+        msg.innerText = "Memutar...";
 
         setTimeout(() => {
-            reels.forEach(r => r.classList.remove('spinning'));
+            wheel.classList.remove('spinning');
+            const num = Math.floor(Math.random() * 37);
+            const color = (num === 0) ? 'green' : (num % 2 === 0 ? 'black' : 'red');
             
-            // Result Calculation
-            const results = [getRandomSymbol(), getRandomSymbol(), getRandomSymbol()];
-            reels.forEach((r, i) => r.innerText = results[i]);
+            wheel.innerText = num;
+            wheel.style.borderColor = (color === 'red') ? '#ff4e4e' : (color === 'black' ? '#222' : '#4eff4e');
 
-            checkWin(results);
-            btn.disabled = false;
+            if(betColor === color) {
+                balance += 400;
+                msg.innerHTML = `<span style="color: #4eff4e">MENANG! Muncul ${color} ${num}</span>`;
+            } else {
+                msg.innerHTML = `<span style="color: #ff4e4e">KALAH! Muncul ${color} ${num}</span>`;
+            }
+            updateUI();
         }, 1500);
-    }
-
-    function checkWin(results) {
-        const [r1, r2, r3] = results;
-        let winMultiplier = 0;
-
-        if (r1 === r2 && r2 === r3) {
-            // Jackpot 3 simbol sama
-            winMultiplier = (r1 === '👑') ? 50 : 10;
-            updateStatus(`JACKPOT! Menang ${currentBet * winMultiplier}`, "var(--gold)");
-            document.querySelector('.slot-container').classList.add('jackpot-anim');
-            setTimeout(() => document.querySelector('.slot-container').classList.remove('jackpot-anim'), 2000);
-        } else if (r1 === r2 || r2 === r3 || r1 === r3) {
-            // 2 simbol sama
-            winMultiplier = 2;
-            updateStatus(`MENANG KECIL! +${currentBet * winMultiplier}`, "#4eff4e");
-        } else {
-            updateStatus("Coba lagi, keberuntungan belum berpihak.", "#888");
-        }
-
-        balance += (currentBet * winMultiplier);
-        updateUI();
-    }
-
-    function updateUI() {
-        document.getElementById('balance').innerText = balance.toLocaleString();
-    }
-
-    function updateStatus(text, color) {
-        const msg = document.getElementById('status-msg');
-        msg.innerText = text;
-        msg.style.color = color;
     }
 </script>
 
