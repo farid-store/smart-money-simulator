@@ -3,554 +3,340 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MM Trainer - Real Candlestick V4</title>
+    <title>Institutional MM Terminal - Professional Grade</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-dark: #09090b; --panel: #18181b; --border: #27272a; --green: #22c55e; --red: #ef4444; --gold: #eab308; }
-        body { background-color: var(--bg-dark); color: #e4e4e7; font-family: 'Inter', sans-serif; overflow: hidden; }
+        :root { --bg: #050505; --panel: #0f0f0f; --border: #1f1f1f; }
+        body { background-color: var(--bg); color: #ccc; font-family: 'Inter', sans-serif; overflow: hidden; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        
-        /* Crisp Lines for Canvas */
-        canvas { image-rendering: pixelated; }
-        
-        /* UI Elements */
-        .btn-mm { transition: all 0.1s; border-bottom: 2px solid rgba(0,0,0,0.5); }
-        .btn-mm:active { transform: translateY(2px); border-bottom: 0px; }
-        .btn-tf.active { background: #2563eb; color: white; border-color: #3b82f6; }
+        canvas { image-rendering: -webkit-optimize-contrast; }
+        .glitch-red { color: #ff3e3e; text-shadow: 2px 0 #550000; }
+        .glitch-green { color: #3eff3e; text-shadow: 2px 0 #005500; }
     </style>
 </head>
 <body class="flex h-screen w-screen text-[11px] select-none bg-black">
 
-    <aside class="w-[60px] bg-[#0c0c0c] border-r border-[#222] flex flex-col items-center py-4 z-50">
-        <div class="mb-6 font-black text-blue-500 text-xs">MM</div>
+    <aside class="w-[70px] bg-[#0c0c0c] border-r border-[#222] flex flex-col items-center py-6 z-50 gap-6">
+        <div class="font-black text-blue-600 text-lg tracking-tighter">SMM</div>
         
-        <div class="space-y-3 w-full px-1 flex flex-col items-center">
-            <button onmousedown="Engine.injectLiquidity('BUY')" onmouseup="Engine.normalize()" class="w-10 h-10 rounded bg-[#051105] border border-green-900 text-green-500 hover:bg-green-900 hover:text-white btn-mm flex flex-col items-center justify-center">
-                <span class="font-bold text-[14px]">↑</span>
+        <div class="flex flex-col gap-4 w-full px-2">
+            <button onmousedown="Engine.manualPush('BUY')" class="group p-3 rounded-xl bg-green-950/20 border border-green-900/50 hover:bg-green-600 hover:text-black transition-all">
+                <span class="block font-bold text-lg">↑</span>
+                <span class="text-[7px] font-bold opacity-50 group-hover:opacity-100">PUMP</span>
             </button>
-            <button onmousedown="Engine.injectLiquidity('SELL')" onmouseup="Engine.normalize()" class="w-10 h-10 rounded bg-[#110505] border border-red-900 text-red-500 hover:bg-red-900 hover:text-white btn-mm flex flex-col items-center justify-center">
-                <span class="font-bold text-[14px]">↓</span>
+            <button onmousedown="Engine.manualPush('SELL')" class="group p-3 rounded-xl bg-red-950/20 border border-red-900/50 hover:bg-red-600 hover:text-black transition-all">
+                <span class="block font-bold text-lg">↓</span>
+                <span class="text-[7px] font-bold opacity-50 group-hover:opacity-100">DUMP</span>
             </button>
             
-            <div class="h-[1px] w-6 bg-[#333] my-2"></div>
+            <div class="h-[1px] bg-[#222] w-full my-2"></div>
 
-            <button onclick="Engine.triggerEvent('SPIKE')" class="w-10 h-10 rounded bg-[#1a1500] border border-yellow-900 text-yellow-500 hover:bg-yellow-700 hover:text-black btn-mm flex flex-col items-center justify-center" title="Liquidity Hunt Spike">
-                <span class="font-bold text-[10px]">HUNT</span>
+            <button onclick="Engine.triggerHunt()" class="p-2 rounded bg-yellow-600/10 border border-yellow-600/50 text-yellow-600 hover:bg-yellow-600 hover:text-black font-bold text-[8px]">
+                LIQ HUNT
             </button>
         </div>
-        
-        <div class="flex-1"></div>
-        <div class="py-4 vertical-text text-[9px] text-gray-700 font-mono" style="writing-mode: vertical-rl;">REALTIME SIMULATION</div>
+
+        <div class="mt-auto pb-4 flex flex-col items-center gap-4">
+            <div id="connection-status" class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+            <div class="vertical-text text-[8px] text-gray-600 font-mono tracking-widest" style="writing-mode: vertical-rl;">ALGO_v4.0_STABLE</div>
+        </div>
     </aside>
 
-    <main class="flex-1 flex flex-col min-w-0">
-        
-        <header class="h-10 bg-[#111] border-b border-[#222] flex items-center px-4 justify-between">
-            <div class="flex items-center gap-4">
-                <span class="text-sm font-black tracking-tighter text-white">BTC/USD <span class="text-[#444] text-[10px] font-normal">INSTITUTIONAL</span></span>
-                
-                <div class="flex bg-[#000] p-0.5 rounded border border-[#222]">
-                    <button onclick="Chart.setTF(1)" id="tf-1" class="px-2 py-0.5 rounded-[2px] text-[9px] font-bold text-gray-400 hover:bg-[#222] active btn-tf">M1</button>
+    <main class="flex-1 flex flex-col">
+        <header class="h-12 bg-[#0c0c0c] border-b border-[#1a1a1a] flex items-center px-6 justify-between">
+            <div class="flex items-center gap-8">
+                <div>
+                    <span class="text-xs font-bold text-white tracking-widest">XBT/USD</span>
+                    <span class="ml-2 text-[9px] text-blue-500 font-mono">PRO_FEED</span>
                 </div>
-
-                <div class="flex items-center gap-2 border-l border-[#333] pl-4">
-                    <span class="text-[9px] text-gray-500 uppercase">State:</span>
-                    <span id="market-state" class="text-[9px] font-bold text-blue-400 mono">ACCUMULATION</span>
+                <div class="flex gap-4 border-l border-[#222] pl-6">
+                    <div class="flex flex-col">
+                        <span class="text-[8px] text-gray-500 uppercase">Retail Sentiment</span>
+                        <div class="flex items-center gap-2">
+                            <div class="w-24 h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                                <div id="sentiment-bar" class="h-full bg-blue-500 transition-all duration-500" style="width: 50%"></div>
+                            </div>
+                            <span id="sentiment-text" class="text-[10px] mono text-blue-400">NEUTRAL</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex items-center gap-6">
+            <div class="flex items-center gap-8 font-mono">
                 <div class="text-right">
-                    <div class="text-[8px] text-gray-500 uppercase">Next Candle</div>
-                    <div id="candle-timer" class="text-[10px] font-mono text-gray-300">00s</div>
+                    <div class="text-[8px] text-gray-600">MM INVENTORY</div>
+                    <div id="mm-inventory" class="text-xs font-bold text-gray-300">0.00</div>
                 </div>
-                <div class="text-right pl-4 border-l border-[#222]">
-                    <div class="text-[8px] text-gray-500 uppercase">PnL</div>
-                    <div id="pnl-display" class="text-sm font-bold text-white mono">$0.00</div>
+                <div class="text-right border-l border-[#222] pl-8">
+                    <div class="text-[8px] text-gray-600">UNREALIZED PnL</div>
+                    <div id="pnl-display" class="text-sm font-black text-white">$0.00</div>
                 </div>
             </div>
         </header>
 
-        <div class="flex-1 flex overflow-hidden relative">
-            <div class="flex-1 bg-[#09090b] relative cursor-crosshair">
-                <canvas id="mainChart" class="w-full h-full block"></canvas>
+        <div class="flex-1 flex overflow-hidden">
+            <div class="flex-1 relative bg-[#050505]">
+                <canvas id="mainChart" class="w-full h-full"></canvas>
                 
-                <div class="absolute top-4 left-4 pointer-events-none z-10">
-                    <div class="flex items-baseline gap-2">
-                        <h1 id="big-price" class="text-3xl font-bold text-white mono tracking-tighter">0.00</h1>
+                <div class="absolute top-6 left-6 pointer-events-none">
+                    <div id="price-container">
+                        <h1 id="big-price" class="text-4xl font-black text-white mono leading-none">0.00</h1>
+                        <div id="price-change" class="text-[10px] mt-2 mono text-green-500">+0.00%</div>
                     </div>
-                    <div class="text-[9px] text-gray-600 mt-1 mono">VOL: <span id="vol-status">LOW</span></div>
                 </div>
 
-                <div id="toast" class="absolute bottom-10 left-1/2 -translate-x-1/2 bg-[#111] border border-[#333] text-white px-4 py-2 rounded text-xs font-bold shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50">
-                    Market Update
+                <div id="alert-toast" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 pointer-events-none transition-all duration-300">
+                    <div class="bg-blue-600 text-white px-6 py-3 font-black text-lg tracking-tighter skew-x-[-10deg] italic">ALGO INTERVENTION</div>
                 </div>
             </div>
 
-            <div class="w-[260px] bg-[#0c0c0c] border-l border-[#222] flex flex-col z-20">
-                <div class="flex-1 flex flex-col min-h-0">
-                    <div class="px-2 py-1 bg-[#111] border-b border-[#222] text-[9px] font-bold text-gray-500 flex justify-between">
-                        <span>ORDER BOOK (L2)</span>
-                        <span>FIB ALGO ACTIVE</span>
-                    </div>
-                    <div id="dom-ladder" class="flex-1 overflow-hidden relative font-mono text-[9px] select-none bg-[#080808]">
-                        </div>
+            <aside class="w-[280px] bg-[#0c0c0c] border-l border-[#1a1a1a] flex flex-col">
+                <div class="p-3 border-b border-[#1a1a1a] bg-[#0e0e0e] flex justify-between items-center">
+                    <span class="text-[9px] font-bold text-gray-500 tracking-widest">ORDER BOOK DEPTH</span>
+                    <span class="text-[8px] text-green-500 bg-green-500/10 px-1 rounded">LIVE</span>
                 </div>
+                
+                <div id="dom-ladder" class="flex-1 overflow-hidden font-mono text-[10px] bg-[#050505]"></div>
 
-                <div class="p-3 bg-[#111] border-t border-[#222] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-[9px] font-bold text-gray-500">LOT SIZE</span>
-                        <input type="number" id="lot-input" value="1.0" class="w-16 bg-[#000] border border-[#333] text-right text-white text-xs font-mono rounded px-1 outline-none focus:border-blue-500">
+                <div class="p-4 bg-[#0e0e0e] border-t border-[#1a1a1a]">
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="Trader.open('BUY')" class="py-4 bg-green-600 hover:bg-green-500 text-black font-black rounded active:scale-95 transition-all">BUY / LONG</button>
+                        <button onclick="Trader.open('SELL')" class="py-4 bg-red-600 hover:bg-red-500 text-black font-black rounded active:scale-95 transition-all">SELL / SHORT</button>
                     </div>
-                    
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <button onclick="Trader.open('BUY')" class="py-3 bg-[#0a1f0a] border border-green-900/50 hover:bg-green-600 hover:text-white text-green-500 rounded font-bold text-xs transition-colors flex flex-col items-center">
-                            <span>BID</span>
-                            <span id="btn-bid" class="text-[9px] opacity-70">0.00</span>
-                        </button>
-                        <button onclick="Trader.open('SELL')" class="py-3 bg-[#1f0a0a] border border-red-900/50 hover:bg-red-600 hover:text-white text-red-500 rounded font-bold text-xs transition-colors flex flex-col items-center">
-                            <span>ASK</span>
-                            <span id="btn-ask" class="text-[9px] opacity-70">0.00</span>
-                        </button>
-                    </div>
-                    <button onclick="Trader.closeAll()" class="w-full py-1.5 bg-[#222] border border-[#333] hover:bg-[#333] text-gray-300 text-[9px] font-bold rounded">CLOSE ALL POSITIONS</button>
+                    <button onclick="Trader.closeAll()" class="w-full mt-3 py-2 border border-[#222] text-gray-500 hover:text-white hover:border-gray-500 text-[9px] font-bold rounded transition-all">EXIT ALL POSITIONS</button>
                 </div>
-            </div>
+            </aside>
         </div>
     </main>
 
     <script>
-        // --- CONSTANTS & CONFIG ---
         const CONFIG = {
-            startPrice: 65000.00,
-            tickRate: 50,      // Market Update Speed (ms)
-            candleTime: 60,    // ticks per candle (Simulation Speed)
-            spread: 5.0,
-            pipValue: 10,
+            tickRate: 50,
+            candleTime: 40, 
+            spread: 2.5,
+            initialPrice: 50000.00,
+            retailResponsiveness: 0.15 // Seberapa cepat retail FOMO
         };
 
-        // --- MATH UTILS ---
-        const rand = (min, max) => Math.random() * (max - min) + min;
-        const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-
-        // --- MARKET ENGINE (BRAIN) ---
         const Engine = {
-            price: CONFIG.startPrice,
-            
-            // Candle Management
-            completedCandles: [], // Stores closed candles {o,h,l,c}
-            currentCandle: null,  // Currently forming candle
-            tickCounter: 0,
-            
-            // Physics Variables (For Organic Movement)
+            price: CONFIG.initialPrice,
             velocity: 0,
             acceleration: 0,
-            targetPrice: CONFIG.startPrice,
-            
-            // State Machine
-            state: 'RANGE', 
-            stateDuration: 0,
-            stateTimer: 0,
-            
-            // Smart Money Logic
-            swingHigh: CONFIG.startPrice + 100,
-            swingLow: CONFIG.startPrice - 100,
-            fibLevels: [],
+            inventory: 0, // MM Inventory
+            sentiment: 50, // 0: Panic, 100: FOMO
+            candles: [],
+            currentCandle: null,
+            ticks: 0,
             
             init() {
-                // Generate History so chart isn't empty
-                let p = this.price;
-                for(let i=0; i<80; i++) {
-                    const o = p;
-                    const c = p + (Math.random() - 0.5) * 50;
-                    const h = Math.max(o, c) + Math.random() * 20;
-                    const l = Math.min(o, c) - Math.random() * 20;
-                    this.completedCandles.push({o, h, l, c});
-                    p = c;
-                }
-                this.price = p;
-                
-                // Start first active candle
+                for(let i=0; i<100; i++) this.generateHistory();
                 this.startNewCandle();
-                this.cycleState();
-                this.updatePivots();
+                this.loop();
+            },
+
+            generateHistory() {
+                const lastC = this.candles.length ? this.candles[this.candles.length-1].c : this.price;
+                const o = lastC, c = o + (Math.random()-0.5)*100;
+                this.candles.push({o, h: Math.max(o,c)+20, l: Math.min(o,c)-20, c});
+                this.price = c;
             },
 
             startNewCandle() {
-                this.tickCounter = 0;
-                this.currentCandle = {
-                    o: this.price,
-                    h: this.price,
-                    l: this.price,
-                    c: this.price
-                };
+                this.ticks = 0;
+                this.currentCandle = { o: this.price, h: this.price, l: this.price, c: this.price };
             },
 
-            // --- THE CORE LOOP (Runs every 50ms) ---
-            update() {
-                this.stateTimer++;
+            // LOGIKA DINAMIS: MARKET RHYTHM
+            processMarketPhysics() {
+                // 1. RETAIL BEHAVIOR (FOMO/PANIC)
+                // Jika harga naik cepat, sentiment naik (FOMO)
+                const priceMove = this.velocity;
+                this.sentiment += priceMove * CONFIG.retailResponsiveness;
+                this.sentiment = Math.max(5, Math.min(95, this.sentiment));
 
-                // 1. STATE MACHINE & LOGIC (Market Maker Thinking)
-                this.processLogic();
+                // Retail murni mengikuti trend (Herd Mentality)
+                let retailForce = (this.sentiment - 50) * 0.05;
 
-                // 2. MOVE PRICE (Physics)
-                this.processPhysics();
+                // 2. INVENTORY GRAVITY
+                // MM ingin inventory kembali ke 0. Jika MM terlalu "Long", MM akan "Dump" perlahan.
+                let inventoryRebalance = -this.inventory * 0.01;
 
-                // 3. CANDLE FORMATION (The Fix for "Snake" issue)
-                this.updateCandle();
+                // 3. NOISE
+                let marketNoise = (Math.random() - 0.5) * 2;
 
-                // 4. UPDATE UI
-                Chart.render();
-                DOM.render();
-                UI.update();
-                Trader.update();
-            },
+                this.acceleration = retailForce + inventoryRebalance + marketNoise;
+                this.velocity = (this.velocity + this.acceleration) * 0.95;
+                this.price += this.velocity;
 
-            processLogic() {
-                if(this.stateTimer > this.stateDuration) {
-                    this.cycleState();
-                }
-
-                // Fibonacci Gravity Logic
-                let gravity = 0;
-                let friction = 0.95;
-
-                // Find nearest Fib
-                const nearestFib = this.fibLevels.reduce((prev, curr) => 
-                    Math.abs(curr.price - this.price) < Math.abs(prev.price - this.price) ? curr : prev
-                , {price: 0});
-
-                if(nearestFib && nearestFib.price) {
-                    const dist = nearestFib.price - this.price;
-                    if(Math.abs(dist) < 30) {
-                        if(this.state.includes('RANGE') || this.state.includes('FLAG')) {
-                            gravity = dist * 0.08; // Magnet pull
-                            friction = 0.85; // Slow down
-                            UI.setVolColor('text-yellow-500', 'FIB TEST');
-                        } else {
-                            friction = 0.98; // Breakout speed
-                        }
-                    }
-                }
-
-                const distToTarget = this.targetPrice - this.price;
-                const force = (distToTarget * 0.01) + gravity + (Math.random()-0.5) * 2;
-                
-                this.acceleration = force * 0.05;
-                this.velocity = (this.velocity + this.acceleration) * friction;
-            },
-
-            processPhysics() {
-                 // Cap velocity
-                 this.velocity = Math.max(-15, Math.min(15, this.velocity));
-                 this.price += this.velocity;
-            },
-
-            updateCandle() {
-                // Update High/Low/Close of CURRENT candle only
+                // Update Candle
                 const c = this.currentCandle;
                 c.c = this.price;
                 if(c.c > c.h) c.h = c.c;
                 if(c.c < c.l) c.l = c.c;
-
-                // Time management
-                this.tickCounter++;
-                if(this.tickCounter >= CONFIG.candleTime) {
-                    // Close candle
-                    this.completedCandles.push({...this.currentCandle});
-                    if(this.completedCandles.length > 150) this.completedCandles.shift(); // Keep memory low
-                    
-                    // Re-evaluate Fibs on Candle Close (Institutional behavior)
-                    this.updatePivots();
-                    
-                    // Open new one
+                
+                this.ticks++;
+                if(this.ticks >= CONFIG.candleTime) {
+                    this.candles.push({...this.currentCandle});
+                    if(this.candles.length > 100) this.candles.shift();
                     this.startNewCandle();
                 }
             },
 
-            // --- AI DIRECTOR ---
-            cycleState() {
-                this.stateTimer = 0;
-                const r = Math.random();
-                
-                if(this.state.includes('SPIKE')) this.state = 'RANGE'; // After spike, consolidate
-                else {
-                    if(r < 0.4) this.state = 'RANGE';
-                    else if(r < 0.6) this.state = 'TREND_UP';
-                    else if(r < 0.8) this.state = 'TREND_DOWN';
-                    else if(r < 0.9) this.state = Math.random()>0.5 ? 'FLAG_BULL' : 'FLAG_BEAR';
-                    else this.state = Math.random()>0.5 ? 'SPIKE_UP' : 'SPIKE_DOWN';
-                }
-
-                this.setTargets();
-                UI.updateState(this.state);
+            // ACTIONS
+            manualPush(side) {
+                const power = side === 'BUY' ? 15 : -15;
+                this.velocity += power;
+                this.inventory += (side === 'BUY' ? 5 : -5); // MM taking position
+                UI.showAlert(side === 'BUY' ? "INSTITUTIONAL BUY ORDER" : "INSTITUTIONAL SELL ORDER");
             },
 
-            setTargets() {
-                // ... same target logic as before ...
-                switch(this.state) {
-                    case 'RANGE': this.stateDuration = randInt(100, 300); this.targetPrice = this.price + rand(-40, 40); break;
-                    case 'TREND_UP': this.stateDuration = randInt(200, 400); this.targetPrice = this.price + rand(200, 400); break;
-                    case 'TREND_DOWN': this.stateDuration = randInt(200, 400); this.targetPrice = this.price - rand(200, 400); break;
-                    case 'SPIKE_UP': this.stateDuration = 40; this.targetPrice = this.price + 300; break;
-                    case 'SPIKE_DOWN': this.stateDuration = 40; this.targetPrice = this.price - 300; break;
-                    default: this.stateDuration = 100; this.targetPrice = this.price;
-                }
+            triggerHunt() {
+                const side = Math.random() > 0.5 ? 1 : -1;
+                this.velocity = side * 40;
+                UI.showAlert("⚠️ LIQUIDITY SWEEP");
             },
 
-            updatePivots() {
-                // Look back 100 candles
-                let h = -Infinity, l = Infinity;
-                const lookback = this.completedCandles.slice(-100);
-                if(lookback.length < 10) return;
-
-                lookback.forEach(c => {
-                    if(c.h > h) h = c.h;
-                    if(c.l < l) l = c.l;
-                });
-
-                if((h-l) > 100) {
-                    this.swingHigh = h;
-                    this.swingLow = l;
-                    const range = h - l;
-                    const ratios = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
-                    this.fibLevels = ratios.map(r => ({
-                        level: r,
-                        price: l + (range * r),
-                        color: r === 0.618 || r === 0.5 ? '#eab308' : '#52525b'
-                    }));
-                }
-            },
-
-            // Interventions
-            injectLiquidity(side) {
-                this.velocity += (side === 'BUY' ? 10 : -10);
-                this.state = 'INSTITUTIONAL_PUSH';
-                this.stateDuration = 50;
-                this.targetPrice = this.price + (side === 'BUY' ? 300 : -300);
-            },
-            triggerEvent(type) {
-                if(type === 'SPIKE') {
-                    this.state = Math.random() > 0.5 ? 'SPIKE_UP' : 'SPIKE_DOWN';
-                    this.stateDuration = 30;
-                    this.targetPrice = this.price + (this.state === 'SPIKE_UP' ? 400 : -400);
-                    UI.showToast("⚡ LIQUIDITY HUNT");
-                }
-            },
-            normalize() { this.cycleState(); }
+            loop() {
+                this.processMarketPhysics();
+                Chart.draw();
+                DOM.update();
+                UI.update();
+                Trader.update();
+                setTimeout(() => this.loop(), CONFIG.tickRate);
+            }
         };
 
-        // --- CHART RENDERER (The Real Fix) ---
         const Chart = {
             canvas: document.getElementById('mainChart'),
             ctx: document.getElementById('mainChart').getContext('2d'),
             
-            setTF(val) { /* Placeholder for future expansion */ },
+            draw() {
+                const { canvas, ctx } = this;
+                const w = canvas.width = canvas.parentElement.clientWidth;
+                const h = canvas.height = canvas.parentElement.clientHeight;
+                
+                ctx.fillStyle = '#050505';
+                ctx.fillRect(0, 0, w, h);
 
-            render() {
-                const ctx = this.ctx;
-                const w = this.canvas.width = this.canvas.parentElement.clientWidth;
-                const h = this.canvas.height = this.canvas.parentElement.clientHeight;
-                
-                // 1. CLEAR & GRID
-                ctx.fillStyle = '#09090b'; ctx.fillRect(0,0,w,h);
-                
-                // Draw Grid
-                ctx.strokeStyle = '#27272a'; ctx.lineWidth = 1;
-                ctx.beginPath();
-                for(let i=0; i<w; i+=80) { ctx.moveTo(i,0); ctx.lineTo(i,h); } // Vertical
-                for(let i=0; i<h; i+=80) { ctx.moveTo(0,i); ctx.lineTo(w,i); } // Horizontal
-                ctx.stroke();
+                // Grid
+                ctx.strokeStyle = '#111';
+                ctx.lineWidth = 1;
+                for(let x=0; x<w; x+=50) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+                for(let y=0; y<h; y+=50) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
 
-                // 2. PREPARE DATA TO DRAW
-                // Combine completed history + current active candle
-                const dataToDraw = [...Engine.completedCandles, Engine.currentCandle];
-                
-                // Auto Scale Logic
-                let max = -Infinity, min = Infinity;
-                // Only scale based on visible candles (last 60)
-                const visibleCount = 50;
-                const visibleData = dataToDraw.slice(-visibleCount);
-                
-                visibleData.forEach(c => {
-                    if(c.h > max) max = c.h;
-                    if(c.l < min) min = c.l;
-                });
-                // Include Fibs in scale if active
-                Engine.fibLevels.forEach(f => {
-                    if(f.price > min && f.price < max) { /* Valid */ }
-                });
-
-                const padding = (max - min) * 0.2;
-                max += padding; min -= padding;
+                const visible = [...Engine.candles, Engine.currentCandle].slice(-60);
+                const min = Math.min(...visible.map(c => c.l)) * 0.999;
+                const max = Math.max(...visible.map(c => c.h)) * 1.001;
                 const range = max - min;
-                
-                const toY = (p) => h - ((p - min) / range * h);
-                const candleWidth = (w - 60) / visibleCount; // Leave space on right
-                const spacing = 1;
 
-                // 3. DRAW FIBONACCI
-                Engine.fibLevels.forEach(fib => {
-                    const y = toY(fib.price);
-                    if(y > 0 && y < h) {
-                        ctx.beginPath();
-                        ctx.strokeStyle = fib.color;
-                        ctx.lineWidth = fib.level === 0.618 ? 2 : 1;
-                        ctx.setLineDash(fib.level === 0.618 ? [] : [4,4]);
-                        ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-                        ctx.fillStyle = fib.color;
-                        ctx.fillText(`FIB ${fib.level}`, w-50, y-4);
-                    }
-                });
-                ctx.setLineDash([]);
+                const getY = (p) => h - ((p - min) / range * h);
+                const candleW = w / 65;
 
-                // 4. DRAW CANDLES
-                // We draw from the end of the array backwards or forwards. 
-                // Let's draw the visible subset.
-                visibleData.forEach((c, index) => {
-                    // Position X
-                    const x = (index * candleWidth) + 10; // Simple offset
-                    const cx = x + candleWidth/2;
-
-                    const isBull = c.c >= c.o;
-                    const color = isBull ? '#22c55e' : '#ef4444';
+                visible.forEach((c, i) => {
+                    const x = i * (candleW + 2) + 20;
+                    const isUp = c.c >= c.o;
+                    const color = isUp ? '#22c55e' : '#ef4444';
                     
-                    ctx.fillStyle = color;
                     ctx.strokeStyle = color;
-
-                    // Wick (High to Low)
+                    ctx.lineWidth = 1;
+                    // Wick
                     ctx.beginPath();
-                    ctx.moveTo(cx, toY(c.h));
-                    ctx.lineTo(cx, toY(c.l));
+                    ctx.moveTo(x + candleW/2, getY(c.h));
+                    ctx.lineTo(x + candleW/2, getY(c.l));
                     ctx.stroke();
-
-                    // Body (Open to Close)
-                    const yOpen = toY(c.o);
-                    const yClose = toY(c.c);
-                    let bodyHeight = Math.abs(yOpen - yClose);
-                    if(bodyHeight < 1) bodyHeight = 1; // Ensure doji is visible
-
-                    // Draw Rect
-                    ctx.fillRect(x + spacing, Math.min(yOpen, yClose), candleWidth - (spacing*2), bodyHeight);
+                    // Body
+                    ctx.fillStyle = color;
+                    const yOpen = getY(c.o), yClose = getY(c.c);
+                    ctx.fillRect(x, Math.min(yOpen, yClose), candleW, Math.max(1, Math.abs(yOpen - yClose)));
                 });
 
-                // 5. CURRENT PRICE LINE (Pulsing)
-                const currY = toY(Engine.price);
-                ctx.strokeStyle = '#ffffff'; ctx.setLineDash([2, 4]); ctx.beginPath();
-                ctx.moveTo(0, currY); ctx.lineTo(w, currY); ctx.stroke();
-                
-                // Price Tag
-                ctx.fillStyle = '#2563eb';
-                ctx.fillRect(w-55, currY-10, 55, 20);
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 10px Inter';
-                ctx.fillText(Engine.price.toFixed(2), w-50, currY+4);
-
-                // 6. POSITIONS
-                Trader.positions.forEach(pos => {
-                    const y = toY(pos.entry);
-                    ctx.strokeStyle = pos.side === 'BUY' ? '#22c55e' : '#ef4444';
-                    ctx.setLineDash([5, 2]);
-                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle;
-                    ctx.fillText(`${pos.side} ${pos.lot}`, 5, y-5);
-                });
+                // Price Line
+                const py = getY(Engine.price);
+                ctx.setLineDash([5, 5]);
+                ctx.strokeStyle = '#555';
+                ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(w, py); ctx.stroke();
+                ctx.setLineDash([]);
             }
         };
 
-        // --- DOM RENDERER ---
         const DOM = {
-            el: document.getElementById('dom-ladder'),
-            render() {
-                const center = Engine.price;
-                const isBull = Engine.state.includes('UP');
+            update() {
+                const el = document.getElementById('dom-ladder');
                 let html = '';
-                
-                // Asks
-                for(let i=6; i>0; i--) {
-                    const p = center + (i * 2);
-                    const vol = randInt(10, 100) + (isBull ? 0 : 50);
-                    const w = Math.min(vol/2, 100);
-                    html += `<div class="flex justify-between px-2 h-5 items-center text-red-400 relative border-b border-[#111]">
-                        <span class="z-10 text-[8px]">${p.toFixed(0)}</span>
-                        <div class="absolute right-0 h-full bg-red-900/20" style="width:${w}%"></div>
-                        <span class="z-10 font-bold text-[9px]">${vol}</span>
-                    </div>`;
-                }
-                
-                // Spread Box
-                html += `<div class="bg-[#1a1a1a] py-1 text-center text-[8px] text-gray-500">SPREAD ${CONFIG.spread.toFixed(1)}</div>`;
+                const p = Engine.price;
+                const sentimentFactor = (Engine.sentiment / 100);
 
-                // Bids
-                for(let i=1; i<=6; i++) {
-                    const p = center - (i * 2);
-                    const vol = randInt(10, 100) + (isBull ? 50 : 0);
-                    const w = Math.min(vol/2, 100);
-                    html += `<div class="flex justify-between px-2 h-5 items-center text-green-400 relative border-b border-[#111]">
-                        <span class="z-10 font-bold text-[9px]">${vol}</span>
-                        <div class="absolute left-0 h-full bg-green-900/20" style="width:${w}%"></div>
-                        <span class="z-10 text-[8px]">${p.toFixed(0)}</span>
+                // Asks (Red)
+                for(let i=12; i>0; i--) {
+                    const price = p + (i * 0.5);
+                    const vol = Math.floor(Math.random() * 500 * (2 - sentimentFactor));
+                    html += `<div class="flex justify-between px-4 h-4 items-center text-red-500/80">
+                        <span>${price.toFixed(1)}</span>
+                        <div class="h-1 bg-red-900/30" style="width: ${vol/10}%"></div>
+                        <span class="font-bold">${vol}</span>
                     </div>`;
                 }
-                this.el.innerHTML = html;
+                html += `<div class="bg-white/5 py-1 text-center font-bold text-white text-[9px]">SPREAD ${CONFIG.spread}</div>`;
+                // Bids (Green)
+                for(let i=1; i<=12; i++) {
+                    const price = p - (i * 0.5);
+                    const vol = Math.floor(Math.random() * 500 * sentimentFactor);
+                    html += `<div class="flex justify-between px-4 h-4 items-center text-green-500/80">
+                        <span>${price.toFixed(1)}</span>
+                        <div class="h-1 bg-green-900/30" style="width: ${vol/10}%"></div>
+                        <span class="font-bold">${vol}</span>
+                    </div>`;
+                }
+                el.innerHTML = html;
             }
         };
 
-        // --- TRADER ---
         const Trader = {
-            positions: [],
+            pos: [],
             open(side) {
-                const price = side === 'BUY' ? Engine.price + CONFIG.spread : Engine.price;
-                this.positions.push({ side, entry: price, lot: document.getElementById('lot-input').value });
+                this.pos.push({ side, entry: Engine.price, size: 1 });
+                // MM Reaction: Jika Anda BUY, MM terpaksa SELL kepada Anda (Inventory MM berkurang)
+                Engine.inventory += (side === 'BUY' ? -1 : 1);
             },
-            closeAll() { this.positions = []; },
+            closeAll() { 
+                this.pos.forEach(p => Engine.inventory += (p.side === 'BUY' ? 1 : -1));
+                this.pos = []; 
+            },
             update() {
                 let pnl = 0;
-                this.positions.forEach(p => {
-                    const curr = p.side === 'BUY' ? Engine.price : Engine.price + CONFIG.spread;
-                    pnl += (p.side === 'BUY' ? curr - p.entry : p.entry - curr) * p.lot;
+                this.pos.forEach(p => {
+                    pnl += (p.side === 'BUY' ? Engine.price - p.entry : p.entry - Engine.price);
                 });
                 const el = document.getElementById('pnl-display');
                 el.innerText = `$${pnl.toFixed(2)}`;
-                el.className = `text-sm font-bold mono ${pnl >= 0 ? 'text-green-500' : 'text-red-500'}`;
+                el.className = `text-sm font-black mono ${pnl >= 0 ? 'text-green-500' : 'text-red-500'}`;
             }
         };
 
-        // --- UI UTILS ---
         const UI = {
             update() {
                 document.getElementById('big-price').innerText = Engine.price.toFixed(2);
-                document.getElementById('btn-bid').innerText = Engine.price.toFixed(2);
-                document.getElementById('btn-ask').innerText = (Engine.price + CONFIG.spread).toFixed(2);
+                document.getElementById('mm-inventory').innerText = Engine.inventory.toFixed(2);
                 
-                // Candle Timer
-                const timeLeft = Math.max(0, CONFIG.candleTime - Engine.tickCounter);
-                document.getElementById('candle-timer').innerText = timeLeft + " ticks";
+                const s = Engine.sentiment;
+                const sBar = document.getElementById('sentiment-bar');
+                const sText = document.getElementById('sentiment-text');
+                sBar.style.width = s + '%';
                 
-                // Vol status logic
-                const vol = Math.abs(Engine.velocity);
-                if(vol > 8) this.setVolColor('text-red-500', 'EXTREME');
-                else if(vol > 3) this.setVolColor('text-white', 'NORMAL');
-                else this.setVolColor('text-gray-500', 'LOW');
+                if(s > 70) { sText.innerText = "FOMO ALERT"; sText.className = "text-[10px] mono text-green-500 font-bold"; }
+                else if(s < 30) { sText.innerText = "PANIC SELLING"; sText.className = "text-[10px] mono text-red-500 font-bold"; }
+                else { sText.innerText = "STABLE"; sText.className = "text-[10px] mono text-blue-400"; }
             },
-            setVolColor(cls, txt) {
-                const el = document.getElementById('vol-status');
-                el.className = cls + " font-bold";
-                el.innerText = txt;
-            },
-            updateState(s) { document.getElementById('market-state').innerText = s.replace('_', ' '); },
-            showToast(msg) {
-                const t = document.getElementById('toast');
-                t.innerText = msg;
+            showAlert(msg) {
+                const t = document.getElementById('alert-toast');
+                t.children[0].innerText = msg;
                 t.style.opacity = 1;
-                setTimeout(() => t.style.opacity = 0, 2000);
+                setTimeout(() => t.style.opacity = 0, 1500);
             }
         };
 
-        // --- START ---
         Engine.init();
-        setInterval(() => Engine.update(), CONFIG.tickRate);
     </script>
 </body>
 </html>
