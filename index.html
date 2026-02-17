@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BANDAR TERMINAL PRO - INSTITUTIONAL GRADE</title>
+    <title>BANDAR TERMINAL PRO - LOCAL KERNEL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -73,7 +72,7 @@
             <div class="h-6 w-px bg-[#2a2e39]"></div>
             <div class="flex items-center gap-2 px-3 py-1 bg-[#2a2e39] rounded border border-gray-700">
                 <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                <span class="text-[10px] font-bold text-gray-300">MARKET OPEN</span>
+                <span class="text-[10px] font-bold text-gray-300">LOCAL FEED</span>
             </div>
         </div>
     </header>
@@ -133,14 +132,14 @@
             <div class="mt-4">
                  <span class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Top Broker Action</span>
                  <div id="broker-activity" class="text-[10px] font-mono space-y-1">
-                     </div>
+                 </div>
             </div>
 
         </div>
     </aside>
 
     <main class="relative bg-[#000] flex flex-col overflow-hidden">
-        <div id="tv-chart" class="w-full h-full"></div>
+        <canvas id="market-canvas" class="w-full h-full block"></canvas>
         
         <div class="absolute top-2 left-2 pointer-events-none bg-[#131722]/80 p-2 rounded border border-[#2a2e39] backdrop-blur-sm">
             <div class="text-[10px] text-gray-400 font-bold">ALGO STATUS</div>
@@ -163,7 +162,7 @@
             </div>
 
             <div id="orderbook-container" class="flex-1 overflow-hidden relative font-mono text-[11px]">
-                </div>
+            </div>
         </div>
 
         <div class="h-[250px] flex flex-col bg-[#000]">
@@ -172,7 +171,7 @@
                 <span>REALTIME</span>
             </div>
             <div id="tape-container" class="flex-1 overflow-y-auto font-mono text-[10px] bg-[#131722]">
-                </div>
+            </div>
         </div>
 
     </aside>
@@ -192,109 +191,168 @@
 </div>
 
 <script>
-    // --- 1. SETUP TRADINGVIEW CHART ---
-    const chartContainer = document.getElementById('tv-chart');
-    const chart = LightweightCharts.createChart(chartContainer, {
-        width: chartContainer.clientWidth,
-        height: chartContainer.clientHeight,
-        layout: {
-            background: { type: 'solid', color: '#000000' },
-            textColor: '#d1d4dc',
-        },
-        grid: {
-            vertLines: { color: '#1f2937' },
-            horzLines: { color: '#1f2937' },
-        },
-        rightPriceScale: {
-            borderColor: '#2a2e39',
-            scaleMargins: { top: 0.1, bottom: 0.2 }, // Space for volume
-        },
-        timeScale: {
-            borderColor: '#2a2e39',
-            timeVisible: true,
-            secondsVisible: true,
-        },
-        crosshair: {
-            mode: LightweightCharts.CrosshairMode.Normal,
-        },
-    });
-
-    // Series
-    const candleSeries = chart.addCandlestickSeries({
-        upColor: '#26a69a', downColor: '#ef5350',
-        borderUpColor: '#26a69a', borderDownColor: '#ef5350',
-        wickUpColor: '#26a69a', wickDownColor: '#ef5350',
-    });
-
-    const volumeSeries = chart.addHistogramSeries({
-        color: '#26a69a',
-        priceFormat: { type: 'volume' },
-        priceScaleId: '', // Overlay mode
-    });
+    // --- 1. CUSTOM LOCAL CANVAS CHART ENGINE (NO EXTERNAL API) ---
+    const canvas = document.getElementById('market-canvas');
+    const ctx = canvas.getContext('2d');
     
-    // Config volume to sit at bottom
-    volumeSeries.priceScale().applyOptions({
-        scaleMargins: { top: 0.8, bottom: 0 },
-    });
-
-    const vwapSeries = chart.addLineSeries({
-        color: '#fbbf24', // Yellow
-        lineWidth: 1,
-        lineStyle: LightweightCharts.LineStyle.Dotted,
-        crosshairMarkerVisible: false,
-    });
-
+    // Chart Config
+    let candleWidth = 8;
+    let candleSpacing = 2;
+    let chartData = []; // Stores {time, open, high, low, close, vol}
+    let viewOffset = 0; // For scrolling (future)
+    
     // Resize Handler
-    new ResizeObserver(entries => {
-        if (entries.length === 0 || entries[0].target !== chartContainer) { return; }
-        const newRect = entries[0].contentRect;
-        chart.applyOptions({ width: newRect.width, height: newRect.height });
-    }).observe(chartContainer);
+    function resizeCanvas() {
+        const parent = canvas.parentElement;
+        canvas.width = parent.clientWidth;
+        canvas.height = parent.clientHeight;
+        renderChart();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    
+    function renderChart() {
+        if(chartData.length === 0) return;
+        
+        // Clear Canvas
+        ctx.fillStyle = "#000000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Calculate Visible Data
+        const maxCandles = Math.floor(canvas.width / (candleWidth + candleSpacing));
+        const visibleData = chartData.slice(-maxCandles);
+        
+        // Find Min/Max Price for Y-Axis Scaling
+        let minP = Infinity;
+        let maxP = -Infinity;
+        let maxVol = 0;
+        
+        visibleData.forEach(d => {
+            if (d.high > maxP) maxP = d.high;
+            if (d.low < minP) minP = d.low;
+            if (d.vol > maxVol) maxVol = d.vol;
+        });
+        
+        // Add padding to price range
+        const padding = (maxP - minP) * 0.2; // 20% padding
+        if(padding === 0) { maxP += 1; minP -= 1; } // Prevent div by zero
+        else { maxP += padding; minP -= padding; }
+        
+        const priceRange = maxP - minP;
+        const h = canvas.height;
+        const priceH = h * 0.8; // Chart takes 80% height
+        const volH = h * 0.2; // Volume takes 20%
+        
+        // Helper: Price to Y coordinate
+        const getY = (price) => {
+            return priceH - ((price - minP) / priceRange) * priceH;
+        };
 
-    // --- 2. DATA ENGINE ---
+        // Helper: Vol to Y coordinate
+        const getVolY = (vol) => {
+            return h - (vol / maxVol) * volH;
+        };
+
+        // Draw Grid Lines (Horizontal)
+        ctx.strokeStyle = "#1f2937";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for(let p = Math.ceil(minP); p <= Math.floor(maxP); p++) {
+            const y = getY(p);
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            // Draw Price Label
+            ctx.fillStyle = "#555";
+            ctx.font = "10px monospace";
+            ctx.fillText(p, canvas.width - 25, y - 2);
+        }
+        ctx.stroke();
+
+        // Draw Candles
+        visibleData.forEach((d, i) => {
+            const x = i * (candleWidth + candleSpacing) + 5; // Left margin
+            const isUp = d.close >= d.open;
+            const color = isUp ? '#26a69a' : '#ef5350';
+            
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            
+            // 1. Draw Wick (Line)
+            const yHigh = getY(d.high);
+            const yLow = getY(d.low);
+            const yCenter = x + candleWidth / 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(yCenter, yHigh);
+            ctx.lineTo(yCenter, yLow);
+            ctx.stroke();
+            
+            // 2. Draw Body (Rect)
+            const yOpen = getY(d.open);
+            const yClose = getY(d.close);
+            const bodyH = Math.abs(yClose - yOpen);
+            // Ensure at least 1px height
+            const finalBodyH = bodyH < 1 ? 1 : bodyH; 
+            const yTop = Math.min(yOpen, yClose);
+            
+            ctx.fillRect(x, yTop, candleWidth, finalBodyH);
+            
+            // 3. Draw Volume Bar
+            const vY = getVolY(d.vol);
+            ctx.fillStyle = isUp ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)';
+            ctx.fillRect(x, vY, candleWidth, h - vY);
+        });
+
+        // Draw Current Price Line
+        const last = visibleData[visibleData.length - 1];
+        const lastY = getY(last.close);
+        ctx.strokeStyle = "#ffffff";
+        ctx.setLineDash([2, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, lastY);
+        ctx.lineTo(canvas.width, lastY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Draw Current Price Label
+        ctx.fillStyle = last.close >= last.open ? '#26a69a' : '#ef5350';
+        ctx.fillRect(canvas.width - 30, lastY - 8, 30, 16);
+        ctx.fillStyle = "#fff";
+        ctx.fillText(last.close, canvas.width - 25, lastY + 3);
+    }
+
+    // --- 2. DATA ENGINE (MODIFIED FOR LOCAL ARRAY) ---
     
     // Initial Data Generation
     let currentPrice = 82;
-    let initialData = [];
-    let volumeData = [];
-    let vwapData = [];
-    let time = Math.floor(Date.now() / 1000) - 3600; // Start 1 hour ago
+    let time = Math.floor(Date.now() / 1000) - 3600;
 
     // Generate history
-    for(let i=0; i<200; i++) {
-        time += 60; // 1 min candles
+    for(let i=0; i<100; i++) {
+        time += 60;
         const open = currentPrice;
-        const close = open + (Math.random() - 0.5) * 2;
+        const close = Math.round((open + (Math.random() - 0.5) * 2)*10)/10; // Round to 1 decimal
         const high = Math.max(open, close) + Math.random();
         const low = Math.min(open, close) - Math.random();
         const vol = Math.floor(Math.random() * 5000) + 500;
         
         currentPrice = close;
         
-        initialData.push({ time, open, high, low, close });
-        volumeData.push({ 
-            time, 
-            value: vol, 
-            color: close >= open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)' 
-        });
-        vwapData.push({ time, value: (high+low+close)/3 }); // Simple VWAP approx
+        chartData.push({ time, open, high, low, close, vol });
     }
 
-    candleSeries.setData(initialData);
-    volumeSeries.setData(volumeData);
-    vwapSeries.setData(vwapData);
+    // Initialize Canvas Size
+    setTimeout(resizeCanvas, 100);
 
     // Live Candle State
-    let lastCandle = initialData[initialData.length - 1];
-    let lastVol = volumeData[volumeData.length - 1];
+    let lastCandle = chartData[chartData.length - 1];
     let currentBar = {
         open: lastCandle.close,
         high: lastCandle.close,
         low: lastCandle.close,
         close: lastCandle.close,
+        vol: 0,
         time: lastCandle.time + 60,
     };
-    let currentVol = 0;
 
     // --- 3. MARKET MAKER LOGIC ---
     
@@ -335,7 +393,7 @@
                 document.getElementById('status-iceberg').className = `w-1.5 h-1.5 rounded-full ${this.isIceberg ? 'bg-green-500 shadow-[0_0_5px_lime]' : 'bg-gray-600'}`;
                 if(this.isIceberg) {
                     this.icebergPrice = this.bids[0].p;
-                    this.bids[0].v = 112; // Visual small
+                    this.bids[0].v = 112; 
                     this.bids[0].type = 'ICEBERG';
                     UI.notify("ICEBERG ACTIVE", "text-up");
                 } else {
@@ -347,10 +405,9 @@
                 this.isSpoof = !this.isSpoof;
                 document.getElementById('status-spoof').className = `w-1.5 h-1.5 rounded-full ${this.isSpoof ? 'bg-red-500 shadow-[0_0_5px_red]' : 'bg-gray-600'}`;
                 if(this.isSpoof) {
-                    // Create wall at +3 ticks
                     if(this.asks[2]) {
                         this.spoofPrice = this.asks[2].p;
-                        this.asks[2].v = 550000; // Big wall
+                        this.asks[2].v = 550000;
                         this.asks[2].type = 'SPOOF';
                         UI.notify("SPOOF WALL DEPLOYED", "text-down");
                     }
@@ -370,30 +427,24 @@
         executeTrade(price, qty, side, aggressor) {
             // Update Price Logic
             if(side === 'BUY') {
-                // Eat Ask
-                this.price += (qty > 5000 ? 1 : 0.5); // Impact
+                this.price += (qty > 5000 ? 1 : 0.5); 
                 if(this.isSpoof && this.price >= this.spoofPrice - 1) {
-                    // Pull the wall if price gets close
-                    this.toggleAlgo('SPOOF'); // Deactivate
+                    this.toggleAlgo('SPOOF'); 
                     UI.notify("ALGO: WALL PULLED (SAFEGUARD)", "text-yellow-500");
                 }
             } else {
-                // Hit Bid
-                // Iceberg Logic
                 if(this.isIceberg && this.price <= this.icebergPrice + 0.5) {
-                     this.price = this.icebergPrice; // Hold price
-                     // Refill volume animation (logic only)
+                     this.price = this.icebergPrice; 
                 } else {
                     this.price -= (qty > 5000 ? 1 : 0.5);
                 }
             }
             
-            // Round price
-            this.price = Math.round(this.price * 2) / 2; // Tick size 0.5? Let's assume integer for simpler ID stock
+            this.price = Math.round(this.price * 2) / 2; 
             this.price = Math.round(this.price); 
 
-            // Update Chart
-            this.updateCandle(this.price, qty, side);
+            // Update Chart Logic (Local)
+            this.updateCandle(this.price, qty);
             
             // Tape & OB
             this.trades.unshift({ 
@@ -419,54 +470,60 @@
                 const qty = Math.floor(Math.random() * 100) + 10;
                 this.executeTrade(this.price, qty, side, 'RETAIL');
             }
-            // Update timestamp for chart
+            
+            // Check for new candle
             if (Date.now()/1000 > currentBar.time + 60) {
-                // Close candle
+                // Push completed candle to history
+                chartData.push({...currentBar});
+                
+                // Start new candle
                 currentBar = {
                     open: currentBar.close,
                     high: currentBar.close,
                     low: currentBar.close,
                     close: currentBar.close,
+                    vol: 0,
                     time: currentBar.time + 60
                 };
-                currentVol = 0;
             }
+            
+            // Re-render chart
+            renderChart();
         },
 
-        updateCandle(price, vol, side) {
-            currentVol += vol;
+        updateCandle(price, vol) {
+            currentBar.vol += vol;
             currentBar.close = price;
             if(price > currentBar.high) currentBar.high = price;
             if(price < currentBar.low) currentBar.low = price;
-
-            candleSeries.update(currentBar);
-            volumeSeries.update({
-                time: currentBar.time,
-                value: currentVol,
-                color: currentBar.close >= currentBar.open ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)'
-            });
+            
+            // Update display logic for live candle (we don't push to array until closed, 
+            // but for rendering we want to see it. 
+            // Simplified: we will treat chartData + currentBar as the full dataset for the renderer)
+            const liveData = [...chartData, currentBar];
+            
+            // Hacky swap for the renderer
+            const temp = chartData;
+            chartData = liveData;
+            renderChart();
+            chartData = temp; // Restore history only
         },
 
         regenerateOBRows() {
-            // Keep OB centered around price
             const center = this.price;
-            // Update existing or create new
-            // Simplified: just regen for demo smoothness
             this.bids = [];
             this.asks = [];
             for(let i=1; i<=8; i++) {
-                // Bids
                 let bidP = center - i;
                 let bidV = Math.floor(Math.random() * 3000) + 100;
                 let bidType = 'NORMAL';
                 
                 if(this.isIceberg && bidP === this.icebergPrice) {
-                    bidV = Math.floor(Math.random() * 100) + 50; // Show small
+                    bidV = Math.floor(Math.random() * 100) + 50; 
                     bidType = 'ICEBERG';
                 }
                 this.bids.push({ p: bidP, v: bidV, type: bidType });
 
-                // Asks
                 let askP = center + i;
                 let askV = Math.floor(Math.random() * 3000) + 100;
                 let askType = 'NORMAL';
@@ -486,9 +543,8 @@
 
         renderOB() {
             const el = document.getElementById('orderbook-container');
-            let html = '<div class="flex flex-col h-full">';
             
-            // Asks (Red) - Reverse order (High price on top)
+            // Asks
             let asksHtml = '<div class="flex-1 flex flex-col justify-end">';
             [...this.asks].reverse().forEach(a => {
                 const barW = Math.min(a.v/5000 * 100, 100);
@@ -506,7 +562,7 @@
             // Spread
             let spreadHtml = `<div class="h-6 flex items-center justify-center bg-[#1e222d] border-y border-[#2a2e39] text-[10px] text-gray-500 font-bold">SPREAD</div>`;
 
-            // Bids (Green)
+            // Bids
             let bidsHtml = '<div class="flex-1 flex flex-col">';
             this.bids.forEach(b => {
                 const barW = Math.min(b.v/5000 * 100, 100);
@@ -529,7 +585,6 @@
             const el = document.getElementById('tape-container');
             const html = this.trades.map(t => {
                 const color = t.s === 'BUY' ? 'text-up' : 'text-down';
-                // Highlight Bandar Broker
                 const bCol = this.bandarCodes.includes(t.b) ? 'text-purple-400 font-black' : 'text-gray-500';
                 return `
                 <div class="grid grid-cols-4 px-2 py-0.5 border-b border-[#1f2937] hover:bg-[#1e222d]">
@@ -546,8 +601,13 @@
     const UI = {
         updateHeader() {
             document.getElementById('header-price').innerText = Engine.price;
-            // Simplified stat update
             document.getElementById('header-vol').innerText = Engine.trades.reduce((acc, t) => acc + t.q, 0).toLocaleString();
+            
+            // Simple High/Low tracking
+            let high = parseFloat(document.getElementById('stat-h').innerText);
+            let low = parseFloat(document.getElementById('stat-l').innerText);
+            if(Engine.price > high) document.getElementById('stat-h').innerText = Engine.price;
+            if(Engine.price < low) document.getElementById('stat-l').innerText = Engine.price;
         },
         notify(msg, colorClass) {
             const el = document.getElementById('chart-status');
