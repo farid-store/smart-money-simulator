@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MM Pro Terminal - Institutional Grade</title>
+    <title>MM Pro Terminal - Fibonacci Grade</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;800&display=swap" rel="stylesheet">
     <style>
@@ -27,6 +27,7 @@
         
         /* Canvas Cursor */
         #chartCanvas { cursor: crosshair; }
+        .fib-label { text-shadow: 0px 1px 2px black; }
     </style>
 </head>
 <body class="flex h-screen w-screen text-[11px] select-none">
@@ -54,7 +55,7 @@
         </div>
 
         <div class="flex-1"></div>
-        <div class="py-4 text-[9px] font-mono text-gray-600 rotate-180 vertical-text" style="writing-mode: vertical-rl;">CONNECTED: SERVER_HK_01</div>
+        <div class="py-4 text-[9px] font-mono text-gray-600 rotate-180 vertical-text" style="writing-mode: vertical-rl;">ALGO: FIBONACCI_SEQ_V2</div>
     </aside>
 
     <main class="flex-1 flex flex-col min-w-0 bg-[#020202]">
@@ -78,8 +79,8 @@
                 </div>
 
                 <div>
-                    <div class="text-[8px] text-gray-500 uppercase font-bold tracking-wider">Structure</div>
-                    <div id="market-phase" class="text-blue-400 font-bold text-xs mono">ACCUMULATION</div>
+                    <div class="text-[8px] text-gray-500 uppercase font-bold tracking-wider">Algorithmic State</div>
+                    <div id="market-phase" class="text-blue-400 font-bold text-xs mono">FIB SEEKING</div>
                 </div>
             </div>
 
@@ -113,7 +114,7 @@
                             <div class="w-1.5 h-1.5 rounded-full bg-green-500 live-dot"></div>
                             <span class="text-[10px] font-bold text-white mono" id="price-display">2030.00</span>
                         </div>
-                        <div class="text-[9px] text-gray-500 mono">VOL: <span id="vol-display" class="text-white">LOW</span></div>
+                        <div class="text-[9px] text-gray-500 mono">FIB ZONE: <span id="vol-display" class="text-yellow-500">NEUTRAL</span></div>
                     </div>
 
                     <div class="absolute bottom-4 left-4 right-4 pointer-events-none">
@@ -184,16 +185,21 @@
             historyLimit: 5000  // Max candles in memory
         };
 
-        // --- MARKET ENGINE (BRAIN) ---
+        // --- MARKET ENGINE (BRAIN - NOW WITH FIBONACCI LOGIC) ---
         const MarketEngine = {
             price: Config.basePrice,
-            ticks: [], // Raw M1 Data: {open, high, low, close, time}
+            ticks: [], // Raw M1 Data
             
-            // Psychology & Mechanics
-            phase: 'ACCUMULATION',
-            sentiment: 0,       // -100 to 100
+            // Logic State
+            phase: 'CONSOLIDATION',
+            sentiment: 0,        // -100 to 100
             volatility: 0.5,
             momentum: 0,
+            
+            // Fibonacci State
+            swingHigh: 2040.00,
+            swingLow: 2020.00,
+            activeLevels: [],
             
             // Intervention
             overrideMode: null,
@@ -202,10 +208,11 @@
                 // Seed Data (Generate 24 hours of M1 history)
                 let p = this.price;
                 const now = Date.now();
+                // Create a trend to start with so Fibs make sense
                 for(let i=0; i<1440; i++) {
-                    const noise = (Math.random() - 0.5) * 2;
+                    const noise = (Math.random() - 0.5) * 1.5;
                     const open = p;
-                    const close = p + noise;
+                    const close = p + noise + (Math.sin(i/100) * 0.2); // slight wave
                     const high = Math.max(open, close) + Math.random();
                     const low = Math.min(open, close) - Math.random();
                     this.ticks.push({
@@ -215,43 +222,97 @@
                     p = close;
                 }
                 this.price = p;
-                this.updateCycle();
+                this.calculateFibLevels();
+            },
+
+            calculateFibLevels() {
+                // Find recent High/Low from last 500 ticks for dynamic levels
+                let max = -Infinity, min = Infinity;
+                const lookback = this.ticks.slice(-500);
+                lookback.forEach(t => {
+                    if(t.high > max) max = t.high;
+                    if(t.low < min) min = t.low;
+                });
+                
+                // Keep them slightly stable to avoid jitter
+                this.swingHigh = max;
+                this.swingLow = min;
+                const range = max - min;
+                
+                // Standard Fib Levels
+                const ratios = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1];
+                this.activeLevels = ratios.map(r => ({
+                    val: min + (range * r),
+                    ratio: r
+                }));
             },
 
             update() {
-                // 1. Calculate Move
-                let drift = 0;
+                // 1. Calculate Fibonacci Influence (The "Pergerakan sesuai level Fib" Logic)
+                this.calculateFibLevels(); // Update levels dynamically
                 
-                // Phase Logic
-                switch(this.phase) {
-                    case 'ACCUMULATION': drift = (Math.random() - 0.45) * 0.1; break; // Slight Up drift
-                    case 'DISTRIBUTION': drift = (Math.random() - 0.55) * 0.1; break; // Slight Down drift
-                    case 'BULL_RUN': drift = 0.15; break;
-                    case 'BEAR_RUN': drift = -0.15; break;
-                    case 'MANIPULATION_UP': drift = 1.0; break;
-                    case 'MANIPULATION_DOWN': drift = -1.0; break;
+                let force = 0;
+                let nearestFib = null;
+                let minDist = Infinity;
+
+                // Find closest Fib level
+                this.activeLevels.forEach(lvl => {
+                    const dist = Math.abs(this.price - lvl.val);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestFib = lvl;
+                    }
+                });
+
+                // Logic: Magnet vs Breakout
+                // Jika momentum rendah, harga tertarik ke level Fib (Magnet)
+                // Jika momentum tinggi, harga menolak/menembus
+                
+                if (nearestFib) {
+                    const distSigned = nearestFib.val - this.price;
+                    
+                    if (Math.abs(this.sentiment) > 70 || this.overrideMode) {
+                        // High Momentum: Ignore magnet, push through
+                        force = this.sentiment * 0.005; 
+                    } else {
+                        // Low Momentum: Magnet Effect (Consolidation at Fibs)
+                        // Semakin dekat, tarikan semakin kuat sampai titik tertentu
+                        if (minDist < 2.0) {
+                            force = distSigned * 0.05; // Pull towards line
+                            document.getElementById('vol-display').innerText = "AT FIB " + nearestFib.ratio;
+                            document.getElementById('vol-display').className = "text-yellow-400 font-bold";
+                        } else {
+                            document.getElementById('vol-display').innerText = "SEEKING";
+                            document.getElementById('vol-display').className = "text-gray-500";
+                        }
+                    }
                 }
 
-                // Retail Sentiment Impact (FOMO)
-                const sentimentEffect = (this.sentiment / 100) * 0.1;
+                // Phase Logic & Random Noise
+                let drift = 0;
+                if(this.phase === 'BULL_RUN') drift = 0.1;
+                if(this.phase === 'BEAR_RUN') drift = -0.1;
                 
-                // Physics
-                this.momentum = (this.momentum * 0.9) + (drift + sentimentEffect + (Math.random() - 0.5) * this.volatility);
-                const move = this.momentum * 0.2;
-                
-                this.price += move;
+                // Override Logic
+                if (this.overrideMode === 'PUMP') force += 0.5;
+                if (this.overrideMode === 'DUMP') force -= 0.5;
 
-                // 2. Adjust Sentiment based on price action
-                if (move > 0.2) this.sentiment += 0.5;
-                else if (move < -0.2) this.sentiment -= 0.5;
-                else this.sentiment *= 0.99; // Decay
+                // Apply Physics
+                this.momentum = (this.momentum * 0.9) + force + drift + ((Math.random() - 0.5) * this.volatility * 0.5);
+                
+                // Cap Momentum to prevent explosion
+                this.momentum = Math.max(-2, Math.min(2, this.momentum));
+                
+                this.price += this.momentum * 0.1; // Speed factor
+
+                // 2. Adjust Sentiment
+                if (this.momentum > 0.1) this.sentiment += 0.5;
+                else if (this.momentum < -0.1) this.sentiment -= 0.5;
+                else this.sentiment *= 0.98; // Decay
                 this.sentiment = Math.max(-100, Math.min(100, this.sentiment));
 
-                // 3. Update Candle Data (Simulation of Real-time M1)
+                // 3. Update Candle Data
                 this.processTick(this.price);
-
-                // 4. Trigger Random Events
-                if(Math.random() < 0.005 && !this.overrideMode) this.changePhase();
 
                 // UI Updates
                 Chart.render();
@@ -261,73 +322,60 @@
             },
 
             processTick(price) {
-                const last = this.ticks[this.ticks.length - 1];
                 const now = Date.now();
-                // Simple assumption: 1 second simulation time = 1 real second for smooth chart flow
-                // In real app, check timestamps. Here we force a new candle every X updates or just update last.
+                const last = this.ticks[this.ticks.length - 1];
                 
-                // Let's say 1 candle = 60 ticks in simulation speed
-                if (Math.random() > 0.98) { // New M1 Candle
+                // Simulation: 1 real tick approx every 50ms. 
+                // Let's make a new candle every 20 ticks to simulate time passing faster
+                // Or simply strictly follow time if we want M1 to be real M1.
+                // For visual movement, let's append to current candle mostly.
+                
+                // Logic: Check time difference. If > 60000ms, new candle.
+                // For this demo speed, we simulate speedup.
+                
+                if (Math.random() > 0.95) { // New Candle Chance
                     this.ticks.push({ open: price, high: price, low: price, close: price, time: now });
                     if(this.ticks.length > Config.historyLimit) this.ticks.shift();
                 } else {
                     last.close = price;
+                    last.time = now;
                     if (price > last.high) last.high = price;
                     if (price < last.low) last.low = price;
                 }
             },
 
-            changePhase() {
-                const phases = ['ACCUMULATION', 'DISTRIBUTION', 'BULL_RUN', 'BEAR_RUN', 'CHOPPY'];
-                // Weighted choice based on sentiment
-                if(this.sentiment > 80) this.phase = Math.random() > 0.5 ? 'BULL_RUN' : 'MANIPULATION_DOWN'; // Bull trap
-                else if(this.sentiment < -80) this.phase = Math.random() > 0.5 ? 'BEAR_RUN' : 'MANIPULATION_UP'; // Bear trap
-                else this.phase = phases[Math.floor(Math.random() * phases.length)];
-                
-                // Update UI
-                const pEl = document.getElementById('market-phase');
-                pEl.innerText = this.phase.replace('_', ' ');
-                pEl.className = "text-xs font-bold mono " + (this.phase.includes('BULL') ? "text-green-500" : this.phase.includes('BEAR') ? "text-red-500" : "text-blue-400");
-            },
-
             inject(type) {
                 this.overrideMode = type;
-                this.phase = type === 'PUMP' ? 'MANIPULATION_UP' : 'MANIPULATION_DOWN';
                 this.volatility = 2.0;
-                this.triggerNews("INSTITUTIONAL VOLUME DETECTED");
+                this.triggerNews("INSTITUTIONAL " + type);
             },
 
             release() {
                 this.overrideMode = null;
                 this.volatility = 0.5;
-                this.changePhase();
             },
 
             triggerNews(msg = null) {
                 if(!msg) {
-                    const news = ["FED SPEAKER HAWKISH", "GOLDMAN BUY RATING", "RETAIL PANIC SELLING", "LIQUIDITY SWEEP", "BREAKOUT IMMINENT"];
+                    const news = ["FIB 0.618 REJECTION", "ALGO BUY PROGRAM", "LIQUIDITY GAP FILL", "GOLDEN POCKET TEST"];
                     msg = news[Math.floor(Math.random() * news.length)];
                     this.volatility = 1.5;
                 }
                 const el = document.getElementById('news-feed');
-                el.innerText = ">> NEWS: " + msg;
+                el.innerText = ">> ALERT: " + msg;
                 el.style.opacity = 1;
                 setTimeout(() => { el.style.opacity = 0; }, 3000);
             },
 
             updateUI() {
                 document.getElementById('price-display').innerText = this.price.toFixed(2);
-                document.getElementById('vol-display').innerText = this.volatility > 1.0 ? "HIGH" : "NORMAL";
                 
-                // Buttons
                 const bid = (this.price - (Config.spread/2)).toFixed(2);
                 const ask = (this.price + (Config.spread/2)).toFixed(2);
                 document.getElementById('btn-bid-price').innerText = bid;
                 document.getElementById('btn-ask-price').innerText = ask;
 
-                // Sentiment Bar
                 const bar = document.getElementById('sentiment-bar');
-                const pct = 50 + (this.sentiment / 2); // Map -100..100 to 0..100
                 bar.style.width = Math.abs(this.sentiment / 2) + "%";
                 bar.style.marginLeft = this.sentiment > 0 ? "50%" : (50 - Math.abs(this.sentiment / 2)) + "%";
                 bar.className = `h-full rounded-full transition-all duration-300 ${this.sentiment > 0 ? 'bg-green-500' : 'bg-red-500'}`;
@@ -335,11 +383,11 @@
             }
         };
 
-        // --- CHARTING ENGINE (THE FIX) ---
+        // --- CHARTING ENGINE (IMPROVED RENDERING) ---
         const Chart = {
             canvas: document.getElementById('chartCanvas'),
             ctx: null,
-            tf: 1, // 1, 5, 15, 60
+            tf: 1, 
             crosshairY: -1,
             
             init() {
@@ -347,7 +395,6 @@
                 this.resize();
                 window.addEventListener('resize', () => this.resize());
                 
-                // Crosshair Listener
                 this.canvas.addEventListener('mousemove', e => {
                     const rect = this.canvas.getBoundingClientRect();
                     this.crosshairY = e.clientY - rect.top;
@@ -356,39 +403,42 @@
             },
 
             resize() {
-                this.canvas.width = this.canvas.parentElement.clientWidth;
-                this.canvas.height = this.canvas.parentElement.clientHeight;
+                // Fix for visual bug where canvas doesn't scale correctly
+                const parent = this.canvas.parentElement;
+                this.canvas.width = parent.clientWidth;
+                this.canvas.height = parent.clientHeight;
+                this.render(); // Force render on resize
             },
 
             setTF(val) {
                 this.tf = val;
-                // UI Toggle
                 document.querySelectorAll('.btn-tf').forEach(b => b.classList.remove('active'));
                 const map = {1:'btn-m1', 5:'btn-m5', 15:'btn-m15', 60:'btn-h1'};
                 document.getElementById(map[val]).classList.add('active');
             },
 
             getResampledData() {
-                // Core Logic: Convert M1 array into TF array
                 const raw = MarketEngine.ticks;
-                if (this.tf === 1) return raw.slice(-100); // Zoom level
+                // If TF is 1, return raw but ensure it's sliced correctly
+                if (this.tf === 1) return raw.slice(-120); 
 
+                // Resample Logic for higher TFs
                 let candles = [];
                 let buffer = [];
-
-                // Simple aggregation: iterate from start and group by count
-                // Real implementation would group by timestamp modulo, but for simulation count is fine
+                
+                // Grouping logic (simplified by count for this demo)
+                // In production, use time modulus
                 for(let i = 0; i < raw.length; i++) {
                     buffer.push(raw[i]);
-                    if(buffer.length === this.tf) {
+                    if(buffer.length >= this.tf) {
                         candles.push(this.makeCandle(buffer));
                         buffer = [];
                     }
                 }
-                // Handle forming candle
+                // Don't lose the active candle!
                 if(buffer.length > 0) candles.push(this.makeCandle(buffer));
                 
-                return candles.slice(-80); // Return visible count
+                return candles.slice(-100); 
             },
 
             makeCandle(ticks) {
@@ -406,37 +456,60 @@
                 const ctx = this.ctx;
                 const w = this.canvas.width;
                 const h = this.canvas.height;
-                const data = this.getResampledData();
                 
+                // Safety check
+                if (w === 0 || h === 0) return;
+
+                const data = this.getResampledData();
                 ctx.clearRect(0,0,w,h);
 
-                // Auto Scale
+                if (data.length === 0) return;
+
+                // Scale Calculation
                 let max = -Infinity, min = Infinity;
                 data.forEach(c => { if(c.high > max) max = c.high; if(c.low < min) min = c.low; });
                 
-                // Add padding
-                const padding = (max - min) * 0.2;
+                // Include active Fib levels in scale so they don't disappear
+                MarketEngine.activeLevels.forEach(lvl => {
+                     // Only include if reasonably close to price to avoid squashing chart
+                     if(Math.abs(lvl.val - MarketEngine.price) < 20) {
+                        if(lvl.val > max) max = lvl.val;
+                        if(lvl.val < min) min = lvl.val;
+                     }
+                });
+
+                const padding = (max - min) * 0.15;
                 max += padding; min -= padding;
                 const range = max - min;
                 
                 const toY = (val) => h - ((val - min) / range * h);
-                const toVal = (y) => min + ((h - y) / h * range); // Inverse for crosshair
+                const toVal = (y) => min + ((h - y) / h * range);
                 const candleW = w / data.length;
 
-                // 1. Grid (Professional Look)
+                // 1. Grid
                 ctx.strokeStyle = '#1a1a1a'; ctx.lineWidth = 1; ctx.beginPath();
-                for(let i=0; i<h; i+=h/5) { ctx.moveTo(0, i); ctx.lineTo(w, i); }
-                for(let i=0; i<w; i+=w/10) { ctx.moveTo(i, 0); ctx.lineTo(i, h); }
+                for(let i=0; i<h; i+=h/6) { ctx.moveTo(0, i); ctx.lineTo(w, i); }
+                for(let i=0; i<w; i+=w/8) { ctx.moveTo(i, 0); ctx.lineTo(i, h); }
                 ctx.stroke();
 
-                // 2. Heatmap / SNR Lines (Dynamic)
-                // Draw some static random lines based on range
-                const startP = Math.floor(min / 10) * 10;
-                for(let p = startP; p < max; p+=5) {
-                    const y = toY(p);
-                    ctx.fillStyle = 'rgba(234, 179, 8, 0.05)'; // Gold tint
-                    ctx.fillRect(0, y-1, w, 2);
-                }
+                // 2. FIBONACCI LINES (VISUALIZATION ADDITION)
+                MarketEngine.activeLevels.forEach(lvl => {
+                    const y = toY(lvl.val);
+                    // Draw if within view
+                    if(y > 0 && y < h) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = lvl.ratio === 0.618 || lvl.ratio === 0.5 ? 'rgba(234, 179, 8, 0.4)' : 'rgba(255, 255, 255, 0.1)';
+                        ctx.lineWidth = lvl.ratio === 0.618 ? 2 : 1;
+                        ctx.moveTo(0, y);
+                        ctx.lineTo(w, y);
+                        ctx.stroke();
+                        
+                        // Label
+                        ctx.fillStyle = lvl.ratio === 0.618 ? '#EAB308' : '#555';
+                        ctx.font = '9px JetBrains Mono';
+                        ctx.fillText(`FIB ${lvl.ratio} (${lvl.val.toFixed(2)})`, 5, y - 4);
+                    }
+                });
 
                 // 3. Candles
                 data.forEach((c, i) => {
@@ -455,27 +528,34 @@
                     // Body
                     const yO = toY(c.open);
                     const yC = toY(c.close);
-                    const bodyH = Math.max(Math.abs(yO - yC), 1);
-                    ctx.fillRect(x + 1, Math.min(yO, yC), candleW - 2, bodyH);
+                    let bodyH = Math.abs(yO - yC);
+                    if (bodyH < 1) bodyH = 1; // Ensure visibility for doji
+                    
+                    ctx.fillRect(x + 1, Math.min(yO, yC), Math.max(candleW - 2, 1), bodyH);
                 });
 
                 // 4. Current Price Line
                 const currY = toY(MarketEngine.price);
-                ctx.strokeStyle = '#fff'; ctx.setLineDash([2, 4]); ctx.beginPath();
-                ctx.moveTo(0, currY); ctx.lineTo(w, currY); ctx.stroke();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]); 
+                ctx.beginPath(); ctx.moveTo(0, currY); ctx.lineTo(w, currY); ctx.stroke();
                 ctx.setLineDash([]);
                 
-                // Price Label
+                // Label
                 ctx.fillStyle = '#222'; ctx.fillRect(w-45, currY-9, 45, 18);
-                ctx.fillStyle = '#fff'; ctx.font = '9px monospace'; ctx.fillText(MarketEngine.price.toFixed(2), w-40, currY+3);
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 10px monospace'; ctx.fillText(MarketEngine.price.toFixed(2), w-40, currY+3);
 
-                // 5. Positions (Entry Lines)
+                // 5. Positions
                 Trader.positions.forEach(pos => {
                     const y = toY(pos.entry);
-                    ctx.strokeStyle = pos.type === 'BUY' ? '#22c55e' : '#ef4444';
-                    ctx.setLineDash([4, 2]); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-                    ctx.fillStyle = ctx.strokeStyle;
-                    ctx.fillText(`${pos.type} ${pos.lot}`, 5, y - 4);
+                    const isWin = (pos.type === 'BUY' && MarketEngine.price > pos.entry) || (pos.type === 'SELL' && MarketEngine.price < pos.entry);
+                    const color = isWin ? '#22c55e' : '#ef4444';
+
+                    ctx.strokeStyle = color;
+                    ctx.setLineDash([4, 2]); ctx.lineWidth = 1;
+                    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+                    
+                    ctx.fillStyle = color;
+                    ctx.fillText(`${pos.type} ${pos.lot}`, w - 100, y - 4);
                     ctx.setLineDash([]);
                 });
 
@@ -484,7 +564,7 @@
                     ctx.strokeStyle = '#555'; ctx.setLineDash([4, 4]);
                     ctx.beginPath(); ctx.moveTo(0, this.crosshairY); ctx.lineTo(w, this.crosshairY); ctx.stroke();
                     ctx.setLineDash([]);
-                    // Label
+                    
                     const val = toVal(this.crosshairY).toFixed(2);
                     ctx.fillStyle = '#333'; ctx.fillRect(w-45, this.crosshairY-9, 45, 18);
                     ctx.fillStyle = '#ccc'; ctx.fillText(val, w-40, this.crosshairY+3);
@@ -503,10 +583,10 @@
                 
                 let html = '';
                 
-                // Asks (Red) - Reverse Order
+                // Asks (Red)
                 for(let i=5; i>=0; i--) {
                     const p = askStart + (i * 0.1);
-                    const vol = Math.floor(Math.random() * 50) + (i*10); // More liquidity further out
+                    const vol = Math.floor(Math.abs(Math.sin(Date.now()/1000 + i)) * 50) + 10; 
                     const w = Math.min(vol, 100);
                     html += `
                         <div class="flex relative justify-between px-2 py-0.5 items-center hover:bg-[#1f0a0a]">
@@ -518,13 +598,12 @@
                     `;
                 }
 
-                // Spread Gap
                 html += `<div class="bg-[#111] text-center text-[8px] text-gray-600 py-0.5 border-y border-[#222]">SPREAD ${(spread*10).toFixed(0)} PTS</div>`;
 
                 // Bids (Green)
                 for(let i=0; i<=5; i++) {
                     const p = bidStart - (i * 0.1);
-                    const vol = Math.floor(Math.random() * 50) + (i*10);
+                    const vol = Math.floor(Math.abs(Math.cos(Date.now()/1000 + i)) * 50) + 10;
                     const w = Math.min(vol, 100);
                     html += `
                         <div class="flex relative justify-between px-2 py-0.5 items-center hover:bg-[#0a1f0a]">
@@ -546,7 +625,6 @@
             
             execute(type) {
                 const lot = parseFloat(document.getElementById('lot-size').value);
-                // Slippage simulation
                 const slip = (Math.random() * 0.05);
                 const price = type === 'BUY' ? 
                     MarketEngine.price + (Config.spread/2) + slip : 
