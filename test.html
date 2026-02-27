@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kloning UI Stockbit - Web</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* Menyamakan font keluarga dengan Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Kustomisasi Scrollbar untuk Sidebar agar rapi dan tidak memakan tempat */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background-color: #e5e7eb;
+            border-radius: 20px;
+        }
+        .sidebar-scroll:hover::-webkit-scrollbar-thumb {
+            background-color: #d1d5db;
+        }
+
+        /* Sembunyikan scrollbar di area Stream Feed tapi tetap bisa di-scroll */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shrink-0 z-10">
+        <div class="flex items-center gap-8">
+            <div class="text-2xl font-bold text-emerald-600 tracking-tighter">StockClone</div>
+            
+            <div class="relative hidden md:block">
+                <input type="text" placeholder="Cari emiten, user, atau berita..." class="w-96 bg-gray-100 text-sm rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+            <button class="font-medium text-sm text-gray-600 hover:text-emerald-600">Portofolio</button>
+            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">FS</div>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden relative">
+        
+        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col overflow-y-auto sidebar-scroll shrink-0">
+            <nav class="flex-1 p-4 space-y-1">
+                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg font-medium text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    Stream
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
+                    Chartbit
+                </a>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
+                    Screener
+                </a>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto bg-gray-50 flex justify-center pb-20 no-scrollbar">
+            <div class="w-full max-w-2xl px-4 py-6">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+                    <div class="flex gap-3">
+                        <div class="w-10 h-10 rounded-full bg-emerald-100 shrink-0"></div>
+                        <div class="flex-1">
+                            <textarea id="postInput" placeholder="Bagikan ide investasi Anda... (Ketik $ untuk tag saham)" class="w-full bg-transparent resize-none outline-none text-sm placeholder-gray-400 min-h-[60px]"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-2 border-t pt-2">
+                        <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-1.5 rounded-full text-sm font-medium transition">Post</button>
+                    </div>
+                </div>
+
+                <div id="feedContainer" class="space-y-4">
+                    </div>
+            </div>
+        </main>
+
+        <aside class="w-80 bg-white border-l border-gray-200 flex flex-col shrink-0 hidden lg:flex">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-bold text-sm text-gray-800">Trending Saham</h3>
+            </div>
+            <div class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-3">
+                <div class="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
+                    <div class="font-bold text-blue-600">$BBCA</div>
+                    <div class="text-right">
+                        <div class="font-medium font-mono">10,150</div>
+                        <div class="text-emerald-500 text-xs font-medium font-mono">+1.50%</div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
+                    <div class="font-bold text-blue-600">$GOTO</div>
+                    <div class="text-right">
+                        <div class="font-medium font-mono">75</div>
+                        <div class="text-red-500 text-xs font-medium font-mono">-2.60%</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <script>
+        // Data dummy postingan untuk simulasi Stream
+        const dummyPosts = [
+            {
+                user: "TraderPro",
+                time: "10 menit yang lalu",
+                content: "Menurut saya $BBCA masih akan menguat sampai akhir bulan melihat laporan keuangannya yang solid. Ada yang nyangkut di $GOTO?",
+                likes: 24,
+                comments: 5
+            },
+            {
+                user: "ValueInvestor",
+                time: "1 jam yang lalu",
+                content: "Menunggu momentum koreksi IHSG untuk serok saham perbankan. $BBMRI terlihat menarik di area support ini.",
+                likes: 112,
+                comments: 30
+            }
+        ];
+
+        // Fungsi merubah text $SAHAM menjadi elemen interaktif (UI Cashtag)
+        function formatCashtag(text) {
+            // Regex mencari kata yang diawali $ diikuti huruf/angka
+            const regex = /\$([A-Z0-9]+)/g;
+            return text.replace(regex, `<span class="text-blue-600 font-semibold cursor-pointer hover:underline">$$$1</span>`);
+        }
+
+        // Fungsi render feed ke HTML
+        function renderFeed() {
+            const container = document.getElementById('feedContainer');
+            container.innerHTML = ''; // Bersihkan kontainer
+
+            dummyPosts.forEach(post => {
+                // Terapkan deteksi cashtag ke isi konten
+                const formattedContent = formatCashtag(post.content);
+
+                const postHTML = `
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 transition hover:shadow-md cursor-pointer">
+                        <div class="flex gap-3 mb-2">
+                            <div class="w-10 h-10 rounded-full bg-gray-200 shrink-0"></div>
+                            <div>
+                                <div class="font-bold text-sm text-gray-800">${post.user}</div>
+                                <div class="text-xs text-gray-500">${post.time}</div>
+                            </div>
+                        </div>
+                        <div class="text-sm text-gray-700 leading-relaxed mb-4">
+                            ${formattedContent}
+                        </div>
+                        <div class="flex gap-6 text-gray-500 border-t pt-3">
+                            <div class="flex items-center gap-1 text-xs font-medium hover:text-emerald-500 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.514"></path></svg>
+                                ${post.likes}
+                            </div>
+                            <div class="flex items-center gap-1 text-xs font-medium hover:text-blue-500 transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                                ${post.comments}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += postHTML;
+            });
+        }
+
+        // Render awal saat DOM siap
+        document.addEventListener('DOMContentLoaded', () => {
+            renderFeed();
+        });
+    </script>
+</body>
+</html>
