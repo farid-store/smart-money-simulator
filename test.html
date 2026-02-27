@@ -229,15 +229,18 @@
     }
     window.addEventListener('resize', resizeCanvases);
 
-    // --- CHART RENDERER ---
+    // --- CHART RENDERER (DIPERBAIKI UNTUK REAL-TIME) ---
     function renderChart() {
-        if(chartData.length === 0) return;
+        // PERBAIKAN: Selalu gabungkan data riwayat dengan candle yang sedang menyala (currentBar)
+        const fullData = currentBar ? [...chartData, currentBar] : chartData;
+        
+        if(fullData.length === 0) return;
         
         ctx.fillStyle = "var(--bg-dark)";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         const maxCandles = Math.floor(canvas.width / (candleWidth + candleSpacing));
-        const visibleData = chartData.slice(-maxCandles);
+        const visibleData = fullData.slice(-maxCandles);
         
         let minP = Infinity, maxP = -Infinity, maxVol = 0;
         
@@ -265,7 +268,7 @@
         ctx.beginPath();
         const step = Math.ceil(priceRange / 5) || 1;
         for(let p = Math.floor(minP); p <= Math.ceil(maxP); p+=step) {
-            const y = Math.floor(getY(p)) + 0.5; // Crisp lines
+            const y = Math.floor(getY(p)) + 0.5;
             ctx.moveTo(0, y);
             ctx.lineTo(canvas.width, y);
             ctx.fillStyle = "var(--text-sec)";
@@ -359,39 +362,41 @@
         chartData.push({ time, open, high, low, close, vol, vwap });
     }
 
-    setTimeout(resizeCanvases, 100);
-
-    let lastCandle = chartData[chartData.length - 1];
-    let currentBar = {
-        open: lastCandle.close,
-        high: lastCandle.close,
-        low: lastCandle.close,
-        close: lastCandle.close,
-        vol: 0,
-        vwap: lastCandle.vwap,
-        time: lastCandle.time + 60,
-    };
+    // Tunggu DOM siap sebelum render
+    let currentBar = null; 
+    setTimeout(() => {
+        let lastCandle = chartData[chartData.length - 1];
+        currentBar = {
+            open: lastCandle.close,
+            high: lastCandle.close,
+            low: lastCandle.close,
+            close: lastCandle.close,
+            vol: 0,
+            vwap: lastCandle.vwap,
+            time: lastCandle.time + 60,
+        };
+        resizeCanvases();
+        Engine.init(); // Pindahkan init ke sini agar currentBar siap
+    }, 100);
 
     // --- MARKET MAKER ENGINE ---
     const Engine = {
-        price: Math.round(currentBar.close),
+        price: 82,
         bids: [],
         asks: [],
         trades: [],
         
-        // Algos
         isIceberg: false,
         icebergPrice: 0,
         isSpoof: false,
         spoofPrice: 0,
         
-        // Brokers
         bandarCodes: ['MG', 'BK', 'AK', 'ZP', 'CC'],
         retailCodes: ['YP', 'PD', 'NI', 'XL', 'KK'],
         brokerStats: {},
 
         init() {
-            // Setup Brokers
+            this.price = Math.round(currentBar.close);
             [...this.bandarCodes, ...this.retailCodes].forEach(code => {
                 this.brokerStats[code] = { buy: 0, sell: 0, net: 0, isBandar: this.bandarCodes.includes(code) };
             });
@@ -450,7 +455,6 @@
         },
 
         executeTrade(price, qty, side, aggressor) {
-            // Move Price
             if(side === 'BUY') {
                 this.price += (qty > 1500 ? 1 : 0); 
                 if(this.isSpoof && this.price >= this.spoofPrice - 1) {
@@ -466,25 +470,21 @@
             }
             this.price = Math.round(this.price); 
 
-            // Assign Brokers
             let buyer = side === 'BUY' ? (aggressor==='BANDAR' ? this.getRandomBroker(true) : this.getRandomBroker(false)) : this.getRandomBroker(false);
             let seller = side === 'SELL' ? (aggressor==='BANDAR' ? this.getRandomBroker(true) : this.getRandomBroker(false)) : this.getRandomBroker(false);
             
-            // Update Stats
             this.brokerStats[buyer].buy += qty;
             this.brokerStats[buyer].net += qty;
             this.brokerStats[seller].sell += qty;
             this.brokerStats[seller].net -= qty;
 
-            // Update Global VWAP
             sessionTotalValue += price * qty;
             sessionTotalVol += qty;
             currentBar.vwap = sessionTotalValue / sessionTotalVol;
 
-            // Update Chart
+            // Update Candle SEGERA setelah eksekusi
             this.updateCandle(this.price, qty);
             
-            // Tape
             this.trades.unshift({ 
                 t: new Date().toLocaleTimeString('id-ID', {hour12:false}), 
                 p: this.price, q: qty, s: side, b: buyer, sl: seller 
@@ -500,33 +500,36 @@
         },
 
         tick() {
+            // Random Market Noise (Ritel)
             if(Math.random() > 0.6) {
                 const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
                 const qty = Math.floor(Math.random() * 300) + 10;
                 this.executeTrade(this.price, qty, side, 'RETAIL');
             }
             
+            // Logika ganti candle tiap 60 detik
             if (Date.now()/1000 > currentBar.time + 60) {
-                chartData.push({...currentBar});
+                chartData.push({...currentBar}); // Simpan yang lama ke riwayat
+                // Buat candle baru
                 currentBar = {
                     open: currentBar.close, high: currentBar.close, low: currentBar.close,
                     close: currentBar.close, vol: 0, vwap: currentBar.vwap, time: currentBar.time + 60
                 };
             }
+            
+            // PERBAIKAN: Pastikan render selalu berjalan di tiap tick (termasuk idle)
             renderChart();
         },
 
         updateCandle(price, vol) {
+            // PERBAIKAN: Tidak perlu lagi swap array yang ribet
             currentBar.vol += vol;
             currentBar.close = price;
             if(price > currentBar.high) currentBar.high = price;
             if(price < currentBar.low) currentBar.low = price;
             
-            const liveData = [...chartData, currentBar];
-            const temp = chartData;
-            chartData = liveData;
-            renderChart();
-            chartData = temp; 
+            // Panggil render langsung agar sumbu (wick) dan body seketika memanjang
+            renderChart(); 
         },
 
         regenerateOBRows() {
@@ -558,7 +561,6 @@
             const sortedBrokers = Object.entries(this.brokerStats).sort((a,b) => b[1].net - a[1].net);
             
             let html = '';
-            // Display top 5 buyers (left) and top 5 sellers (right) side-by-side
             for(let i=0; i<5; i++) {
                 const buyer = sortedBrokers[i];
                 const seller = sortedBrokers[sortedBrokers.length - 1 - i];
@@ -591,20 +593,20 @@
             
             let cumBid = 0;
             const bidPoints = [];
-            [...this.bids].forEach((b) => { // High to low
+            [...this.bids].forEach((b) => { 
                 cumBid += b.v;
                 bidPoints.push({p: b.p, v: cumBid});
             });
 
             let cumAsk = 0;
             const askPoints = [];
-            [...this.asks].forEach((a) => { // Low to high
+            [...this.asks].forEach((a) => { 
                 cumAsk += a.v;
                 askPoints.push({p: a.p, v: cumAsk});
             });
 
             const maxVol = Math.max(cumBid, cumAsk) || 1;
-            const pxPerItem = midX / 10; // 10 depth levels
+            const pxPerItem = midX / 10; 
 
             // Draw Bids (Green)
             depthCtx.beginPath();
@@ -716,9 +718,6 @@
             }, 2500);
         }
     };
-
-    Engine.init();
-
 </script>
 </body>
 </html>
