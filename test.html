@@ -3,189 +3,722 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kloning UI Stockbit - Web</title>
-    
+    <title>BANDAR TERMINAL PRO - LOCAL KERNEL</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        /* Menyamakan font keluarga dengan Tailwind */
-        body {
-            font-family: 'Inter', sans-serif;
+        :root {
+            --bg-dark: #0b0e14; 
+            --bg-panel: #131722; 
+            --bg-header: #1e222d;
+            --border: #2a2e39;
+            --up: #26a69a; 
+            --up-bg: rgba(38, 166, 154, 0.15);
+            --down: #ef5350;
+            --down-bg: rgba(239, 83, 80, 0.15);
+            --text-main: #d1d4dc;
+            --text-sec: #787b86;
+            --vwap: #fbbf24;
         }
+        body { background: var(--bg-dark); color: var(--text-main); font-family: 'Inter', sans-serif; overflow: hidden; }
+        .mono { font-family: 'Roboto Mono', monospace; }
+        .text-up { color: var(--up); } .text-down { color: var(--down); }
+        .bg-up { background-color: var(--up); } .bg-down { background-color: var(--down); }
+        
+        /* Professional Grid Layout */
+        .grid-main { 
+            display: grid; 
+            grid-template-columns: 300px 1fr 320px; 
+            grid-template-rows: 55px 1fr 30px; 
+            height: 100vh; 
+        }
+        
+        .panel-border { border: 1px solid var(--border); }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #3f434e; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: #5a5f6e; }
 
-        /* Kustomisasi Scrollbar untuk Sidebar agar rapi dan tidak memakan tempat */
-        .sidebar-scroll::-webkit-scrollbar {
-            width: 6px;
-        }
-        .sidebar-scroll::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        .sidebar-scroll::-webkit-scrollbar-thumb {
-            background-color: #e5e7eb;
-            border-radius: 20px;
-        }
-        .sidebar-scroll:hover::-webkit-scrollbar-thumb {
-            background-color: #d1d5db;
-        }
-
-        /* Sembunyikan scrollbar di area Stream Feed tapi tetap bisa di-scroll */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
+        .btn-action { transition: all 0.1s; transform: translateY(0); }
+        .btn-action:active { transform: translateY(2px); }
+        
+        /* Broker Table specific */
+        .broker-row { display: grid; grid-template-columns: 1fr 1.5fr 1fr; align-items: center; }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
+<body>
 
-    <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shrink-0 z-10">
-        <div class="flex items-center gap-8">
-            <div class="text-2xl font-bold text-emerald-600 tracking-tighter">StockClone</div>
-            
-            <div class="relative hidden md:block">
-                <input type="text" placeholder="Cari emiten, user, atau berita..." class="w-96 bg-gray-100 text-sm rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition">
+<div class="grid-main">
+    
+    <header class="col-span-3 bg-[var(--bg-panel)] border-b border-[var(--border)] flex items-center justify-between px-4 z-20">
+        <div class="flex items-center gap-6">
+            <div class="flex flex-col">
+                <span class="text-[10px] text-[var(--text-sec)] font-bold tracking-widest">TICKER</span>
+                <span class="text-lg font-black tracking-tighter text-yellow-500">GOTO.JK <span class="text-[10px] bg-gray-800 text-gray-300 px-1 rounded ml-1 align-middle">RG</span></span>
+            </div>
+            <div class="h-8 w-px bg-[var(--border)]"></div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-[var(--text-sec)] font-bold">LAST</span>
+                <span id="header-price" class="text-xl font-bold mono text-white">82</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-[var(--text-sec)] font-bold">CHANGE</span>
+                <span id="header-pct" class="text-sm font-bold mono text-up">+0.00%</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-[var(--text-sec)] font-bold">VOL (LOT)</span>
+                <span id="header-vol" class="text-sm font-bold mono text-gray-300">0</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-[10px] text-[var(--text-sec)] font-bold">VWAP</span>
+                <span id="header-vwap" class="text-sm font-bold mono text-yellow-400">82.0</span>
             </div>
         </div>
-        
+
         <div class="flex items-center gap-4">
-            <button class="font-medium text-sm text-gray-600 hover:text-emerald-600">Portofolio</button>
-            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">FS</div>
+            <div class="flex items-center gap-2 px-3 py-1.5 bg-[#1e222d] rounded border border-[#2a2e39] shadow-inner">
+                <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_lime]"></div>
+                <span class="text-[10px] font-bold text-gray-300 tracking-wider">L2 KERNEL ACTIVE</span>
+            </div>
         </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden relative">
+    <aside class="row-span-1 bg-[var(--bg-panel)] border-r border-[var(--border)] flex flex-col overflow-hidden">
         
-        <aside class="w-64 bg-white border-r border-gray-200 flex flex-col overflow-y-auto sidebar-scroll shrink-0">
-            <nav class="flex-1 p-4 space-y-1">
-                <a href="#" class="flex items-center gap-3 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg font-medium text-sm">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    Stream
-                </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
-                    Chartbit
-                </a>
-                <a href="#" class="flex items-center gap-3 px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium text-sm transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                    Screener
-                </a>
-            </nav>
-        </aside>
-
-        <main class="flex-1 overflow-y-auto bg-gray-50 flex justify-center pb-20 no-scrollbar">
-            <div class="w-full max-w-2xl px-4 py-6">
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-                    <div class="flex gap-3">
-                        <div class="w-10 h-10 rounded-full bg-emerald-100 shrink-0"></div>
-                        <div class="flex-1">
-                            <textarea id="postInput" placeholder="Bagikan ide investasi Anda... (Ketik $ untuk tag saham)" class="w-full bg-transparent resize-none outline-none text-sm placeholder-gray-400 min-h-[60px]"></textarea>
-                        </div>
+        <div class="flex flex-col h-[40%] border-b border-[var(--border)]">
+            <div class="px-3 py-2 bg-[var(--bg-header)] border-b border-[var(--border)]">
+                <h2 class="text-[11px] font-bold text-[var(--text-main)] uppercase tracking-wider flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    Algo Engine
+                </h2>
+            </div>
+            <div class="p-3 space-y-3 overflow-y-auto">
+                <div class="bg-[#181c25] p-2.5 rounded panel-border">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-[10px] font-bold text-green-400 tracking-wide">ICEBERG (ACCUM)</span>
+                        <div id="status-iceberg" class="w-2 h-2 rounded-full bg-gray-600"></div>
                     </div>
-                    <div class="flex justify-end mt-2 border-t pt-2">
-                        <button class="bg-emerald-500 hover:bg-emerald-600 text-white px-5 py-1.5 rounded-full text-sm font-medium transition">Post</button>
-                    </div>
+                    <button onclick="Engine.toggleAlgo('ICEBERG')" class="btn-action w-full py-1.5 bg-[#2a2e39] hover:bg-[#363b49] text-[10px] font-bold text-white rounded panel-border">
+                        TOGGLE GHOST BID
+                    </button>
                 </div>
 
-                <div id="feedContainer" class="space-y-4">
+                <div class="bg-[#181c25] p-2.5 rounded panel-border">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-[10px] font-bold text-red-400 tracking-wide">SPOOFING (WALL)</span>
+                        <div id="status-spoof" class="w-2 h-2 rounded-full bg-gray-600"></div>
                     </div>
-            </div>
-        </main>
-
-        <aside class="w-80 bg-white border-l border-gray-200 flex flex-col shrink-0 hidden lg:flex">
-            <div class="p-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 class="font-bold text-sm text-gray-800">Trending Saham</h3>
-            </div>
-            <div class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-3">
-                <div class="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
-                    <div class="font-bold text-blue-600">$BBCA</div>
-                    <div class="text-right">
-                        <div class="font-medium font-mono">10,150</div>
-                        <div class="text-emerald-500 text-xs font-medium font-mono">+1.50%</div>
-                    </div>
+                    <button onclick="Engine.toggleAlgo('SPOOF')" class="btn-action w-full py-1.5 bg-[#2a2e39] hover:bg-red-900/40 text-[10px] font-bold text-white rounded panel-border hover:border-red-500">
+                        TOGGLE FAKE OFFER
+                    </button>
                 </div>
-                <div class="flex justify-between items-center text-sm cursor-pointer hover:bg-gray-50 p-1 rounded">
-                    <div class="font-bold text-blue-600">$GOTO</div>
-                    <div class="text-right">
-                        <div class="font-medium font-mono">75</div>
-                        <div class="text-red-500 text-xs font-medium font-mono">-2.60%</div>
-                    </div>
+
+                <div class="grid grid-cols-2 gap-2 mt-2">
+                    <button onmousedown="Engine.manualTrade('BUY')" class="btn-action py-2 bg-up hover:brightness-110 text-[#000] font-black text-[10px] rounded shadow-lg">
+                        HAKA (BUY)
+                    </button>
+                    <button onmousedown="Engine.manualTrade('SELL')" class="btn-action py-2 bg-down hover:brightness-110 text-white font-black text-[10px] rounded shadow-lg">
+                        HKI (SELL)
+                    </button>
                 </div>
             </div>
-        </aside>
+        </div>
 
+        <div class="flex flex-col h-[60%]">
+            <div class="px-3 py-2 bg-[var(--bg-header)] border-b border-[var(--border)] flex justify-between items-center">
+                <h2 class="text-[11px] font-bold text-[var(--text-main)] uppercase tracking-wider">Broker Summary</h2>
+                <span class="text-[9px] text-gray-500">NET VOL</span>
+            </div>
+            <div class="flex-1 overflow-y-auto bg-[var(--bg-dark)] p-2">
+                <div class="flex justify-between text-[9px] font-bold text-gray-500 mb-2 px-1">
+                    <span>TOP BUYER</span>
+                    <span>TOP SELLER</span>
+                </div>
+                <div id="broker-summary-container" class="space-y-1">
+                    </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="relative bg-[var(--bg-dark)] flex flex-col overflow-hidden min-w-0">
+        <div class="h-[75%] relative border-b border-[var(--border)]">
+            <canvas id="market-canvas" class="w-full h-full block"></canvas>
+            <div class="absolute top-2 left-2 pointer-events-none bg-[var(--bg-panel)]/90 p-1.5 rounded panel-border backdrop-blur-sm">
+                <div class="text-[9px] text-[var(--text-sec)] font-bold">SYSTEM STATUS</div>
+                <div id="chart-status" class="text-[11px] font-mono text-up font-bold">NORMAL MARKET</div>
+            </div>
+            <div class="absolute top-2 right-2 pointer-events-none text-[10px] font-mono font-bold">
+                <span class="text-yellow-400">--- VWAP</span>
+            </div>
+        </div>
+        
+        <div class="h-[25%] bg-[var(--bg-panel)] relative">
+            <div class="absolute top-1 left-2 text-[9px] font-bold text-[var(--text-sec)] z-10">MARKET DEPTH</div>
+            <canvas id="depth-canvas" class="w-full h-full block"></canvas>
+        </div>
+    </main>
+
+    <aside class="row-span-1 bg-[var(--bg-panel)] border-l border-[var(--border)] flex flex-col overflow-hidden min-w-0">
+        
+        <div class="flex-1 flex flex-col min-h-0 border-b border-[var(--border)]">
+            <div class="px-2 py-1.5 bg-[var(--bg-header)] border-b border-[var(--border)] text-[10px] font-bold text-[var(--text-main)] flex justify-between">
+                <span>ORDER BOOK</span>
+                <span class="text-[var(--text-sec)]">L2 DATA</span>
+            </div>
+            
+            <div class="grid grid-cols-3 text-[9px] text-[var(--text-sec)] px-2 py-1.5 font-bold border-b border-[var(--border)] bg-[#131722]">
+                <div class="text-right">BID VOL</div>
+                <div class="text-center">PRICE</div>
+                <div class="text-right">ASK VOL</div>
+            </div>
+
+            <div id="orderbook-container" class="flex-1 overflow-hidden relative font-mono text-[11px] bg-[var(--bg-dark)]">
+            </div>
+        </div>
+
+        <div class="h-[30%] flex flex-col bg-[var(--bg-dark)]">
+            <div class="px-2 py-1.5 bg-[var(--bg-header)] border-y border-[var(--border)] text-[10px] font-bold text-[var(--text-main)] flex justify-between">
+                <span>TIME & SALES</span>
+            </div>
+            <div id="tape-container" class="flex-1 overflow-y-auto font-mono text-[10px] bg-[var(--bg-dark)]">
+            </div>
+        </div>
+
+    </aside>
+
+    <div class="col-span-3 bg-[var(--bg-header)] border-t border-[var(--border)] flex items-center justify-between px-4 z-20">
+        <div class="flex gap-6 text-[10px] font-mono text-[var(--text-sec)]">
+            <span>O: <span class="text-white">80</span></span>
+            <span>H: <span class="text-white" id="stat-h">82</span></span>
+            <span>L: <span class="text-white" id="stat-l">79</span></span>
+        </div>
+        <div class="flex items-center gap-2">
+            <div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+            <span class="text-[9px] text-gray-500 font-bold tracking-widest uppercase">Latency: 12ms</span>
+        </div>
     </div>
 
-    <script>
-        // Data dummy postingan untuk simulasi Stream
-        const dummyPosts = [
-            {
-                user: "TraderPro",
-                time: "10 menit yang lalu",
-                content: "Menurut saya $BBCA masih akan menguat sampai akhir bulan melihat laporan keuangannya yang solid. Ada yang nyangkut di $GOTO?",
-                likes: 24,
-                comments: 5
-            },
-            {
-                user: "ValueInvestor",
-                time: "1 jam yang lalu",
-                content: "Menunggu momentum koreksi IHSG untuk serok saham perbankan. $BBMRI terlihat menarik di area support ini.",
-                likes: 112,
-                comments: 30
-            }
-        ];
+</div>
 
-        // Fungsi merubah text $SAHAM menjadi elemen interaktif (UI Cashtag)
-        function formatCashtag(text) {
-            // Regex mencari kata yang diawali $ diikuti huruf/angka
-            const regex = /\$([A-Z0-9]+)/g;
-            return text.replace(regex, `<span class="text-blue-600 font-semibold cursor-pointer hover:underline">$$$1</span>`);
-        }
+<script>
+    // --- CANVAS CONTEXTS ---
+    const canvas = document.getElementById('market-canvas');
+    const ctx = canvas.getContext('2d');
+    const depthCanvas = document.getElementById('depth-canvas');
+    const depthCtx = depthCanvas.getContext('2d');
+    
+    // --- STATE MANAGEMENT ---
+    let candleWidth = 6;
+    let candleSpacing = 2;
+    let chartData = []; 
+    
+    // --- GLOBAL VWAP CALCULATOR ---
+    let sessionTotalValue = 0;
+    let sessionTotalVol = 0;
+    
+    // --- RESIZE HANDLER ---
+    function resizeCanvases() {
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        depthCanvas.width = depthCanvas.parentElement.clientWidth;
+        depthCanvas.height = depthCanvas.parentElement.clientHeight;
+        renderChart();
+        if(Engine) Engine.renderDepth();
+    }
+    window.addEventListener('resize', resizeCanvases);
 
-        // Fungsi render feed ke HTML
-        function renderFeed() {
-            const container = document.getElementById('feedContainer');
-            container.innerHTML = ''; // Bersihkan kontainer
-
-            dummyPosts.forEach(post => {
-                // Terapkan deteksi cashtag ke isi konten
-                const formattedContent = formatCashtag(post.content);
-
-                const postHTML = `
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 transition hover:shadow-md cursor-pointer">
-                        <div class="flex gap-3 mb-2">
-                            <div class="w-10 h-10 rounded-full bg-gray-200 shrink-0"></div>
-                            <div>
-                                <div class="font-bold text-sm text-gray-800">${post.user}</div>
-                                <div class="text-xs text-gray-500">${post.time}</div>
-                            </div>
-                        </div>
-                        <div class="text-sm text-gray-700 leading-relaxed mb-4">
-                            ${formattedContent}
-                        </div>
-                        <div class="flex gap-6 text-gray-500 border-t pt-3">
-                            <div class="flex items-center gap-1 text-xs font-medium hover:text-emerald-500 transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.514"></path></svg>
-                                ${post.likes}
-                            </div>
-                            <div class="flex items-center gap-1 text-xs font-medium hover:text-blue-500 transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                                ${post.comments}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.innerHTML += postHTML;
-            });
-        }
-
-        // Render awal saat DOM siap
-        document.addEventListener('DOMContentLoaded', () => {
-            renderFeed();
+    // --- CHART RENDERER ---
+    function renderChart() {
+        if(chartData.length === 0) return;
+        
+        ctx.fillStyle = "var(--bg-dark)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        const maxCandles = Math.floor(canvas.width / (candleWidth + candleSpacing));
+        const visibleData = chartData.slice(-maxCandles);
+        
+        let minP = Infinity, maxP = -Infinity, maxVol = 0;
+        
+        visibleData.forEach(d => {
+            if (d.high > maxP) maxP = d.high;
+            if (d.low < minP) minP = d.low;
+            if (d.vol > maxVol) maxVol = d.vol;
         });
-    </script>
+        
+        const padding = (maxP - minP) * 0.15; 
+        maxP += padding || 1; 
+        minP -= padding || 1;
+        
+        const priceRange = maxP - minP;
+        const h = canvas.height;
+        const priceH = h * 0.85; 
+        const volH = h * 0.15; 
+        
+        const getY = (price) => priceH - ((price - minP) / priceRange) * priceH;
+        const getVolY = (vol) => h - (vol / maxVol) * volH;
+
+        // Grid Lines
+        ctx.strokeStyle = "rgba(42, 46, 57, 0.5)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        const step = Math.ceil(priceRange / 5) || 1;
+        for(let p = Math.floor(minP); p <= Math.ceil(maxP); p+=step) {
+            const y = Math.floor(getY(p)) + 0.5; // Crisp lines
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvas.width, y);
+            ctx.fillStyle = "var(--text-sec)";
+            ctx.font = "10px 'Roboto Mono'";
+            ctx.fillText(p, canvas.width - 25, y - 4);
+        }
+        ctx.stroke();
+
+        // Draw VWAP Line
+        ctx.beginPath();
+        ctx.strokeStyle = "var(--vwap)";
+        ctx.lineWidth = 1.5;
+        visibleData.forEach((d, i) => {
+            const x = i * (candleWidth + candleSpacing) + (candleWidth/2);
+            const y = getY(d.vwap);
+            if(i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+
+        // Draw Candles
+        visibleData.forEach((d, i) => {
+            const x = i * (candleWidth + candleSpacing);
+            const isUp = d.close >= d.open;
+            const color = isUp ? 'var(--up)' : 'var(--down)';
+            const volColor = isUp ? 'var(--up-bg)' : 'var(--down-bg)';
+            
+            ctx.fillStyle = color;
+            ctx.strokeStyle = color;
+            
+            // Wick
+            const yHigh = getY(d.high);
+            const yLow = getY(d.low);
+            const yCenter = x + candleWidth / 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(yCenter, yHigh);
+            ctx.lineTo(yCenter, yLow);
+            ctx.stroke();
+            
+            // Body
+            const yOpen = getY(d.open);
+            const yClose = getY(d.close);
+            const bodyH = Math.max(Math.abs(yClose - yOpen), 1); 
+            const yTop = Math.min(yOpen, yClose);
+            
+            ctx.fillRect(x, yTop, candleWidth, bodyH);
+            
+            // Volume
+            const vY = getVolY(d.vol);
+            ctx.fillStyle = volColor;
+            ctx.fillRect(x, vY, candleWidth, h - vY);
+        });
+
+        // Current Price Line
+        const last = visibleData[visibleData.length - 1];
+        const lastY = getY(last.close);
+        ctx.strokeStyle = last.close >= last.open ? 'var(--up)' : 'var(--down)';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, lastY);
+        ctx.lineTo(canvas.width, lastY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Price Tag
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.fillRect(canvas.width - 35, lastY - 9, 35, 18);
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 11px 'Roboto Mono'";
+        ctx.fillText(last.close.toFixed(0), canvas.width - 30, lastY + 4);
+    }
+
+    // --- INITIALIZE DUMMY DATA ---
+    let currentPrice = 82;
+    let time = Math.floor(Date.now() / 1000) - 3600;
+
+    for(let i=0; i<150; i++) {
+        time += 60;
+        const open = currentPrice;
+        const close = Math.round((open + (Math.random() - 0.5) * 2)*10)/10;
+        const high = Math.max(open, close) + Math.random();
+        const low = Math.min(open, close) - Math.random();
+        const vol = Math.floor(Math.random() * 5000) + 500;
+        
+        sessionTotalValue += ((high+low+close)/3) * vol;
+        sessionTotalVol += vol;
+        const vwap = sessionTotalValue / sessionTotalVol;
+
+        currentPrice = close;
+        chartData.push({ time, open, high, low, close, vol, vwap });
+    }
+
+    setTimeout(resizeCanvases, 100);
+
+    let lastCandle = chartData[chartData.length - 1];
+    let currentBar = {
+        open: lastCandle.close,
+        high: lastCandle.close,
+        low: lastCandle.close,
+        close: lastCandle.close,
+        vol: 0,
+        vwap: lastCandle.vwap,
+        time: lastCandle.time + 60,
+    };
+
+    // --- MARKET MAKER ENGINE ---
+    const Engine = {
+        price: Math.round(currentBar.close),
+        bids: [],
+        asks: [],
+        trades: [],
+        
+        // Algos
+        isIceberg: false,
+        icebergPrice: 0,
+        isSpoof: false,
+        spoofPrice: 0,
+        
+        // Brokers
+        bandarCodes: ['MG', 'BK', 'AK', 'ZP', 'CC'],
+        retailCodes: ['YP', 'PD', 'NI', 'XL', 'KK'],
+        brokerStats: {},
+
+        init() {
+            // Setup Brokers
+            [...this.bandarCodes, ...this.retailCodes].forEach(code => {
+                this.brokerStats[code] = { buy: 0, sell: 0, net: 0, isBandar: this.bandarCodes.includes(code) };
+            });
+
+            this.generateOB();
+            this.renderOB();
+            this.renderBrokerSummary();
+            setInterval(() => this.tick(), 400); 
+        },
+
+        generateOB() {
+            this.bids = [];
+            this.asks = [];
+            for(let i=1; i<=10; i++) {
+                this.bids.push({ p: this.price - i, v: Math.floor(Math.random()*8000), type: 'NORMAL' });
+                this.asks.push({ p: this.price + i, v: Math.floor(Math.random()*8000), type: 'NORMAL' });
+            }
+        },
+
+        toggleAlgo(type) {
+            if(type === 'ICEBERG') {
+                this.isIceberg = !this.isIceberg;
+                document.getElementById('status-iceberg').className = `w-2 h-2 rounded-full ${this.isIceberg ? 'bg-green-500 shadow-[0_0_5px_lime]' : 'bg-gray-600'}`;
+                if(this.isIceberg) {
+                    this.icebergPrice = this.bids[0].p;
+                    this.bids[0].v = 112; 
+                    this.bids[0].type = 'ICEBERG';
+                    UI.notify("ICEBERG ACTIVE", "text-up");
+                } else {
+                    this.bids[0].type = 'NORMAL';
+                    this.bids[0].v = Math.floor(Math.random()*2000);
+                }
+            }
+            if(type === 'SPOOF') {
+                this.isSpoof = !this.isSpoof;
+                document.getElementById('status-spoof').className = `w-2 h-2 rounded-full ${this.isSpoof ? 'bg-red-500 shadow-[0_0_5px_red]' : 'bg-gray-600'}`;
+                if(this.isSpoof) {
+                    if(this.asks[2]) {
+                        this.spoofPrice = this.asks[2].p;
+                        this.asks[2].v = 850000;
+                        this.asks[2].type = 'SPOOF';
+                        UI.notify("WALL DEPLOYED", "text-down");
+                    }
+                } else {
+                    const wall = this.asks.find(a => a.type === 'SPOOF');
+                    if(wall) { wall.type = 'NORMAL'; wall.v = Math.random()*5000; }
+                }
+            }
+            this.renderOB();
+            this.renderDepth();
+        },
+
+        manualTrade(side) {
+            const qty = Math.floor(Math.random() * 2000) + 1000;
+            this.executeTrade(this.price, qty, side, 'BANDAR');
+        },
+
+        executeTrade(price, qty, side, aggressor) {
+            // Move Price
+            if(side === 'BUY') {
+                this.price += (qty > 1500 ? 1 : 0); 
+                if(this.isSpoof && this.price >= this.spoofPrice - 1) {
+                    this.toggleAlgo('SPOOF'); 
+                    UI.notify("WALL PULLED (SAFEGUARD)", "text-yellow-500");
+                }
+            } else {
+                if(this.isIceberg && this.price <= this.icebergPrice + 1) {
+                     this.price = this.icebergPrice; 
+                } else {
+                    this.price -= (qty > 1500 ? 1 : 0);
+                }
+            }
+            this.price = Math.round(this.price); 
+
+            // Assign Brokers
+            let buyer = side === 'BUY' ? (aggressor==='BANDAR' ? this.getRandomBroker(true) : this.getRandomBroker(false)) : this.getRandomBroker(false);
+            let seller = side === 'SELL' ? (aggressor==='BANDAR' ? this.getRandomBroker(true) : this.getRandomBroker(false)) : this.getRandomBroker(false);
+            
+            // Update Stats
+            this.brokerStats[buyer].buy += qty;
+            this.brokerStats[buyer].net += qty;
+            this.brokerStats[seller].sell += qty;
+            this.brokerStats[seller].net -= qty;
+
+            // Update Global VWAP
+            sessionTotalValue += price * qty;
+            sessionTotalVol += qty;
+            currentBar.vwap = sessionTotalValue / sessionTotalVol;
+
+            // Update Chart
+            this.updateCandle(this.price, qty);
+            
+            // Tape
+            this.trades.unshift({ 
+                t: new Date().toLocaleTimeString('id-ID', {hour12:false}), 
+                p: this.price, q: qty, s: side, b: buyer, sl: seller 
+            });
+            if(this.trades.length > 40) this.trades.pop();
+            
+            this.regenerateOBRows();
+            this.renderTape();
+            this.renderOB();
+            this.renderDepth();
+            this.renderBrokerSummary();
+            UI.updateHeader();
+        },
+
+        tick() {
+            if(Math.random() > 0.6) {
+                const side = Math.random() > 0.5 ? 'BUY' : 'SELL';
+                const qty = Math.floor(Math.random() * 300) + 10;
+                this.executeTrade(this.price, qty, side, 'RETAIL');
+            }
+            
+            if (Date.now()/1000 > currentBar.time + 60) {
+                chartData.push({...currentBar});
+                currentBar = {
+                    open: currentBar.close, high: currentBar.close, low: currentBar.close,
+                    close: currentBar.close, vol: 0, vwap: currentBar.vwap, time: currentBar.time + 60
+                };
+            }
+            renderChart();
+        },
+
+        updateCandle(price, vol) {
+            currentBar.vol += vol;
+            currentBar.close = price;
+            if(price > currentBar.high) currentBar.high = price;
+            if(price < currentBar.low) currentBar.low = price;
+            
+            const liveData = [...chartData, currentBar];
+            const temp = chartData;
+            chartData = liveData;
+            renderChart();
+            chartData = temp; 
+        },
+
+        regenerateOBRows() {
+            const center = this.price;
+            this.bids = [];
+            this.asks = [];
+            for(let i=1; i<=10; i++) {
+                let bidP = center - i;
+                let bidV = Math.floor(Math.random() * 5000) + 100;
+                let bidType = 'NORMAL';
+                if(this.isIceberg && bidP === this.icebergPrice) { bidV = Math.floor(Math.random() * 200) + 50; bidType = 'ICEBERG'; }
+                this.bids.push({ p: bidP, v: bidV, type: bidType });
+
+                let askP = center + i;
+                let askV = Math.floor(Math.random() * 5000) + 100;
+                let askType = 'NORMAL';
+                if(this.isSpoof && askP === this.spoofPrice) { askV = 850000 + Math.floor(Math.random()*10000); askType = 'SPOOF'; }
+                this.asks.push({ p: askP, v: askV, type: askType });
+            }
+        },
+
+        getRandomBroker(isBandar) {
+            const arr = isBandar ? this.bandarCodes : this.retailCodes;
+            return arr[Math.floor(Math.random() * arr.length)];
+        },
+
+        renderBrokerSummary() {
+            const container = document.getElementById('broker-summary-container');
+            const sortedBrokers = Object.entries(this.brokerStats).sort((a,b) => b[1].net - a[1].net);
+            
+            let html = '';
+            // Display top 5 buyers (left) and top 5 sellers (right) side-by-side
+            for(let i=0; i<5; i++) {
+                const buyer = sortedBrokers[i];
+                const seller = sortedBrokers[sortedBrokers.length - 1 - i];
+                
+                if(!buyer || !seller) continue;
+
+                const bColor = buyer[1].isBandar ? 'text-purple-400' : 'text-gray-400';
+                const sColor = seller[1].isBandar ? 'text-purple-400' : 'text-gray-400';
+
+                html += `
+                <div class="flex justify-between items-center bg-[#181c25] p-1.5 rounded border border-[var(--border)] mb-1">
+                    <div class="flex items-center gap-2 w-1/2 border-r border-[#2a2e39] pr-2">
+                        <span class="font-bold text-[10px] ${bColor} w-6">${buyer[0]}</span>
+                        <span class="font-mono text-[9px] text-up flex-1 text-right">${buyer[1].net > 0 ? '+'+buyer[1].net.toLocaleString() : 0}</span>
+                    </div>
+                    <div class="flex items-center gap-2 w-1/2 pl-2">
+                        <span class="font-mono text-[9px] text-down flex-1">${seller[1].net < 0 ? seller[1].net.toLocaleString() : 0}</span>
+                        <span class="font-bold text-[10px] ${sColor} w-6 text-right">${seller[0]}</span>
+                    </div>
+                </div>`;
+            }
+            container.innerHTML = html;
+        },
+
+        renderDepth() {
+            depthCtx.clearRect(0, 0, depthCanvas.width, depthCanvas.height);
+            
+            const midX = depthCanvas.width / 2;
+            const h = depthCanvas.height;
+            
+            let cumBid = 0;
+            const bidPoints = [];
+            [...this.bids].forEach((b) => { // High to low
+                cumBid += b.v;
+                bidPoints.push({p: b.p, v: cumBid});
+            });
+
+            let cumAsk = 0;
+            const askPoints = [];
+            [...this.asks].forEach((a) => { // Low to high
+                cumAsk += a.v;
+                askPoints.push({p: a.p, v: cumAsk});
+            });
+
+            const maxVol = Math.max(cumBid, cumAsk) || 1;
+            const pxPerItem = midX / 10; // 10 depth levels
+
+            // Draw Bids (Green)
+            depthCtx.beginPath();
+            depthCtx.moveTo(midX, h);
+            bidPoints.forEach((pt, i) => {
+                const x = midX - (i * pxPerItem);
+                const y = h - ((pt.v / maxVol) * (h * 0.9));
+                depthCtx.lineTo(x, y);
+            });
+            depthCtx.lineTo(0, h);
+            depthCtx.fillStyle = "rgba(38, 166, 154, 0.2)";
+            depthCtx.fill();
+            depthCtx.strokeStyle = "rgba(38, 166, 154, 0.8)";
+            depthCtx.lineWidth = 1.5;
+            depthCtx.stroke();
+
+            // Draw Asks (Red)
+            depthCtx.beginPath();
+            depthCtx.moveTo(midX, h);
+            askPoints.forEach((pt, i) => {
+                const x = midX + (i * pxPerItem);
+                const y = h - ((pt.v / maxVol) * (h * 0.9));
+                depthCtx.lineTo(x, y);
+            });
+            depthCtx.lineTo(depthCanvas.width, h);
+            depthCtx.fillStyle = "rgba(239, 83, 80, 0.2)";
+            depthCtx.fill();
+            depthCtx.strokeStyle = "rgba(239, 83, 80, 0.8)";
+            depthCtx.stroke();
+        },
+
+        renderOB() {
+            const el = document.getElementById('orderbook-container');
+            
+            let asksHtml = '<div class="flex-1 flex flex-col justify-end">';
+            [...this.asks].reverse().forEach(a => {
+                const barW = Math.min(a.v/10000 * 100, 100);
+                const isSpoof = a.type === 'SPOOF';
+                asksHtml += `
+                <div class="grid grid-cols-3 text-[11px] hover:bg-[#1e222d] relative border-b border-[#1f2937] ${isSpoof ? 'bg-red-900/30' : ''}">
+                    <div class="text-right text-[var(--text-sec)] py-0.5 z-10">-</div>
+                    <div class="text-center text-down font-bold py-0.5 z-10">${a.p}</div>
+                    <div class="text-right text-white py-0.5 pr-2 z-10 font-bold">${a.v.toLocaleString()}</div>
+                    <div class="absolute right-0 top-0 bottom-0 bg-red-900/20" style="width:${isSpoof ? 100 : barW}%"></div>
+                </div>`;
+            });
+            asksHtml += '</div>';
+
+            let spreadHtml = `<div class="h-5 flex items-center justify-center bg-[var(--bg-header)] border-y border-[var(--border)] text-[9px] text-[var(--text-sec)] font-bold tracking-widest">SPREAD</div>`;
+
+            let bidsHtml = '<div class="flex-1 flex flex-col">';
+            this.bids.forEach(b => {
+                const barW = Math.min(b.v/10000 * 100, 100);
+                const isIce = b.type === 'ICEBERG';
+                bidsHtml += `
+                <div class="grid grid-cols-3 text-[11px] hover:bg-[#1e222d] relative border-b border-[#1f2937] ${isIce ? 'bg-green-900/30' : ''}">
+                    <div class="text-right text-white font-bold py-0.5 z-10 pl-2">${b.v.toLocaleString()}</div>
+                    <div class="text-center text-up font-bold py-0.5 z-10">${b.p}</div>
+                    <div class="text-right text-[var(--text-sec)] py-0.5 z-10">-</div>
+                    <div class="absolute left-0 top-0 bottom-0 bg-green-900/20" style="width:${barW}%"></div>
+                    ${isIce ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-green-500"></div>' : ''}
+                </div>`;
+            });
+            bidsHtml += '</div>';
+
+            el.innerHTML = asksHtml + spreadHtml + bidsHtml;
+        },
+
+        renderTape() {
+            const el = document.getElementById('tape-container');
+            const html = this.trades.map(t => {
+                const color = t.s === 'BUY' ? 'text-up' : 'text-down';
+                const isBandar = this.bandarCodes.includes(t.b) || this.bandarCodes.includes(t.sl);
+                const bg = isBandar ? 'bg-[#181c25]' : '';
+                return `
+                <div class="grid grid-cols-4 px-2 py-1 border-b border-[#1f2937] hover:bg-[#1e222d] ${bg}">
+                    <span class="text-[var(--text-sec)]">${t.t}</span>
+                    <span class="${color} font-bold text-center">${t.p}</span>
+                    <span class="text-white text-right font-mono">${t.q}</span>
+                    <div class="text-right flex justify-end gap-1">
+                        <span class="${this.bandarCodes.includes(t.b) ? 'text-purple-400 font-bold' : 'text-gray-500'}">${t.b}</span>
+                        <span class="text-gray-600">-</span>
+                        <span class="${this.bandarCodes.includes(t.sl) ? 'text-purple-400 font-bold' : 'text-gray-500'}">${t.sl}</span>
+                    </div>
+                </div>`;
+            }).join('');
+            el.innerHTML = html;
+        }
+    };
+
+    const UI = {
+        updateHeader() {
+            document.getElementById('header-price').innerText = Engine.price;
+            document.getElementById('header-vol').innerText = Engine.trades.reduce((acc, t) => acc + t.q, 0).toLocaleString();
+            document.getElementById('header-vwap').innerText = currentBar.vwap.toFixed(1);
+            
+            let high = parseFloat(document.getElementById('stat-h').innerText);
+            let low = parseFloat(document.getElementById('stat-l').innerText);
+            if(Engine.price > high) document.getElementById('stat-h').innerText = Engine.price;
+            if(Engine.price < low) document.getElementById('stat-l').innerText = Engine.price;
+        },
+        notify(msg, colorClass) {
+            const el = document.getElementById('chart-status');
+            el.innerText = msg;
+            el.className = `text-[11px] font-mono font-bold ${colorClass} animate-pulse`;
+            setTimeout(() => {
+                el.innerText = "NORMAL MARKET";
+                el.className = "text-[11px] font-mono text-up font-bold";
+            }, 2500);
+        }
+    };
+
+    Engine.init();
+
+</script>
 </body>
 </html>
