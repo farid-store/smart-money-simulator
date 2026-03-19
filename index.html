@@ -61,7 +61,6 @@
         .glass-tr { transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03); }
         .glass-tr:hover { background: rgba(255,255,255,0.03); transform: scale(1.01); border-radius: 1rem; }
 
-        /* Modal Overlay */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -97,9 +96,14 @@
             </a>
             
             <div class="flex items-center gap-4 sm:gap-6">
-                <div class="text-right">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live Balance</p>
-                    <p class="text-lg font-numbers font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400" id="nav-balance">$0.00</p>
+                <div class="text-right flex items-center gap-3">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live Balance</p>
+                        <p class="text-lg font-numbers font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400" id="nav-balance">$0.00</p>
+                    </div>
+                    <button onclick="openBalanceModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-brand-500/20 text-gray-400 hover:text-brand-300 transition-colors border border-transparent hover:border-brand-500/30 flex items-center justify-center" title="Edit Saldo Awal">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
                 </div>
                 <div class="w-px h-8 bg-white/10 hidden sm:block"></div>
                 <button onclick="clearAllData()" class="text-red-400 hover:text-white hover:bg-red-500/20 px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all border border-transparent hover:border-red-500/30 flex items-center gap-2">
@@ -110,6 +114,7 @@
     </div>
 
     <main class="pt-32 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
+        
         <div data-aos="fade-down" class="flex flex-col lg:flex-row justify-between items-center gap-6">
             <div class="text-center lg:text-left">
                 <h1 class="font-heading text-4xl md:text-5xl font-black text-glow tracking-tighter mb-2">
@@ -122,12 +127,10 @@
                 <button onclick="openBalanceModal()" class="glass-pill border-brand-500/30 hover:bg-brand-500/10 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.1)] hover:scale-105">
                     <i class="fa-solid fa-wallet text-brand-400"></i> Set Modal
                 </button>
-                
                 <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
                 <button onclick="document.getElementById('importFile').click()" class="glass-pill hover:bg-white/10 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 hover:scale-105">
                     <i class="fa-solid fa-cloud-arrow-up text-gray-400"></i> Import
                 </button>
-                
                 <button onclick="exportJSON()" class="bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/30 text-brand-300 px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.1)] hover:scale-105">
                     <i class="fa-solid fa-cloud-arrow-down"></i> Backup
                 </button>
@@ -195,6 +198,34 @@
         </div>
 
         <div class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10"><i class="fa-regular fa-calendar-days text-white"></i></div>
+                    <h3 class="font-heading text-2xl font-black text-white">Trading Calendar</h3>
+                </div>
+                
+                <div class="flex items-center gap-4 bg-white/5 border border-white/10 p-1.5 rounded-full">
+                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"><i class="fa-solid fa-chevron-left text-xs text-gray-400"></i></button>
+                    <span id="calendar-month-year" class="font-bold text-brand-300 uppercase tracking-widest text-sm w-32 text-center">BULAN TAHUN</span>
+                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"><i class="fa-solid fa-chevron-right text-xs text-gray-400"></i></button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-7 gap-2 md:gap-3 text-center mb-3">
+                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Min</div>
+                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sen</div>
+                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sel</div>
+                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Rab</div>
+                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Kam</div>
+                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Jum</div>
+                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sab</div>
+            </div>
+            
+            <div id="calendar-grid" class="grid grid-cols-7 gap-2 md:gap-3">
+                </div>
+        </div>
+
+        <div class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
             <div class="flex justify-between items-center mb-4 px-2">
                 <h3 class="font-heading text-xl sm:text-2xl font-black text-white">Live Equity Curve</h3>
                 <div class="flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 px-3 py-1.5 rounded-full">
@@ -225,17 +256,17 @@
                         </div>
                         <div>
                             <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Lot Size</label>
-                            <input type="number" id="lot" step="0.01" class="glass-input" placeholder="0.00" required>
+                            <input type="number" id="lot" step="0.01" class="glass-input font-numbers" placeholder="0.00" required>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Harga Entry</label>
-                            <input type="number" id="entry" step="0.00001" class="glass-input" placeholder="0.00" required>
+                            <input type="number" id="entry" step="0.00001" class="glass-input font-numbers" placeholder="0.00" required>
                         </div>
                         <div>
                             <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Harga Exit</label>
-                            <input type="number" id="exit" step="0.00001" class="glass-input" placeholder="0.00" required>
+                            <input type="number" id="exit" step="0.00001" class="glass-input font-numbers" placeholder="0.00" required>
                         </div>
                     </div>
                     <div class="pt-2">
@@ -243,7 +274,7 @@
                             <span>Realized PnL ($)</span>
                             <span onclick="autoCalculatePnL()" class="text-brand-400 cursor-pointer hover:text-white transition-colors bg-brand-500/10 px-2 py-1 rounded border border-brand-500/20"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto Calc</span>
                         </label>
-                        <input type="number" id="pnl" step="0.01" class="glass-input text-xl text-brand-300 font-bold" placeholder="$0.00" required>
+                        <input type="number" id="pnl" step="0.01" class="glass-input font-numbers text-xl text-brand-300 font-bold" placeholder="$0.00" required>
                     </div>
                     <button type="submit" class="w-full bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 text-white font-black py-4 rounded-xl transition-all shadow-[0_10px_30px_-10px_rgba(56,189,248,0.5)] active:scale-95 text-sm uppercase tracking-wider mt-4">
                         Simpan Jurnal <i class="fa-solid fa-paper-plane ml-2"></i>
@@ -294,12 +325,12 @@
         const STORAGE_KEY = 'farid_trade_dynamic';
         const BALANCE_KEY = 'farid_initial_balance';
         let equityChart;
+        let currentCalendarDate = new Date();
 
         function getInitialBalance() {
             return parseFloat(localStorage.getItem(BALANCE_KEY)) || 100000;
         }
 
-        // Logic Modal Saldo
         function openBalanceModal() {
             document.getElementById('newBalanceInput').value = getInitialBalance();
             document.getElementById('balanceModal').classList.add('active');
@@ -314,8 +345,8 @@
             if (!isNaN(newBal) && newBal > 0) {
                 localStorage.setItem(BALANCE_KEY, newBal);
                 closeBalanceModal();
-                initChart(); // Reset chart point
-                renderData(); // Re-render numbers
+                initChart(); 
+                renderData(); 
             } else {
                 alert("Masukkan angka saldo yang valid!");
             }
@@ -339,9 +370,11 @@
 
         document.getElementById('tradeForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            // Simpan timestamp di ID, karena kita butuh exact Date untuk Kalender
+            const now = Date.now();
             const newTrade = {
-                id: Date.now(),
-                date: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute:'2-digit', hour12: false }),
+                id: now,
+                date: new Date(now).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute:'2-digit', hour12: false }),
                 asset: document.getElementById('asset').value.toUpperCase(),
                 position: document.getElementById('position').value,
                 lot: parseFloat(document.getElementById('lot').value),
@@ -354,7 +387,6 @@
             renderData();
         });
 
-        // LOGIKA KALKULASI PNL (Multiplier x100)
         function autoCalculatePnL() {
             const entry = parseFloat(document.getElementById('entry').value);
             const exit = parseFloat(document.getElementById('exit').value);
@@ -365,7 +397,7 @@
                 alert("Mohon isi Posisi, Lot, Entry, dan Exit untuk Kalkulasi Otomatis."); return;
             }
             
-            // Rumus: (Selisih Harga) * Lot * 100
+            // Rumus Real (10 Pips = $1 per 0.01 lot)
             const multiplier = 100;
             let rawPnL = 0;
             
@@ -379,10 +411,70 @@
             setTimeout(() => pnlInput.classList.remove('scale-105', 'bg-brand-500/20'), 300);
         }
 
+        function changeMonth(step) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + step);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+
+            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+
+            const firstDay = new Date(year, month, 1).getDay(); // 0 (Sun) to 6 (Sat)
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            // Kumpulkan data per hari
+            const trades = getTrades();
+            const dailyData = {};
+            trades.forEach(t => {
+                const tDate = new Date(t.id); // Kita set id = Date.now() saat save
+                if (tDate.getFullYear() === year && tDate.getMonth() === month) {
+                    const day = tDate.getDate();
+                    if (!dailyData[day]) dailyData[day] = { pnl: 0 };
+                    dailyData[day].pnl += t.pnl;
+                }
+            });
+
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            // Blank spaces untuk awal bulan
+            for (let i = 0; i < firstDay; i++) {
+                grid.innerHTML += `<div class="p-2 min-h-[70px]"></div>`;
+            }
+
+            // Render Tanggal
+            for (let day = 1; day <= daysInMonth; day++) {
+                if (dailyData[day]) {
+                    const pnl = dailyData[day].pnl;
+                    const isProfit = pnl >= 0;
+                    const bgClass = isProfit ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30';
+                    const textClass = isProfit ? 'text-green-400' : 'text-red-400';
+                    const sign = isProfit ? '+' : '';
+
+                    grid.innerHTML += `
+                        <div class="${bgClass} rounded-2xl p-2.5 min-h-[70px] flex flex-col justify-between border premium-hover transition-transform cursor-default">
+                            <span class="text-xs ${textClass} font-bold text-left opacity-70">${day}</span>
+                            <span class="font-numbers ${textClass} font-bold text-xs sm:text-sm text-right break-all leading-tight mt-1">${sign}$${pnl.toFixed(2)}</span>
+                        </div>
+                    `;
+                } else {
+                    grid.innerHTML += `
+                        <div class="bg-white/5 rounded-2xl p-2.5 min-h-[70px] flex flex-col border border-white/5 opacity-30 hover:opacity-50 transition-opacity">
+                            <span class="text-xs text-gray-500 text-left font-bold">${day}</span>
+                        </div>
+                    `;
+                }
+            }
+        }
+
         function renderData() {
             const currentInitialBalance = getInitialBalance();
-            const targetLimit = currentInitialBalance * 0.08; // 8% Profit Target
-            const lossLimit = currentInitialBalance * 0.10;   // 10% Max Loss
+            const targetLimit = currentInitialBalance * 0.08; 
+            const lossLimit = currentInitialBalance * 0.10;   
 
             document.getElementById('ui-target-limit').innerText = `Target: $${targetLimit.toLocaleString()}`;
             document.getElementById('ui-loss-limit').innerText = `Limit: $${lossLimit.toLocaleString()}`;
@@ -470,6 +562,7 @@
             document.getElementById('stat-lots').innerText = totalLots.toFixed(2);
 
             updateChartData(chartCategories, chartData);
+            renderCalendar(); // UPDATE KALENDER SETIAP ADA DATA BARU
         }
 
         function deleteTrade(id) {
