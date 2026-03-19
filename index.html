@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farid Trade | Compact Journal</title>
+    <title>Farid Trade | Advanced Analytics</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,6 +49,9 @@
         .glass-input { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.6rem 1rem; border-radius: 0.75rem; width: 100%; transition: all 0.2s ease; font-family: 'Space Grotesk', sans-serif; font-size: 0.875rem;}
         .glass-input:focus { outline: none; border-color: #38bdf8; background: rgba(56,189,248,0.05); box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); }
         
+        .filter-select { background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; font-size: 0.75rem; font-weight: bold; border-radius: 0.5rem; padding: 0.25rem 0.5rem; cursor: pointer; outline: none;}
+        .filter-select:hover { border-color: #38bdf8; color: white; }
+
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -96,8 +99,8 @@
             
             <div class="hidden md:flex gap-6 items-center font-bold text-xs">
                 <a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Stats</a>
+                <a href="#advanced-stats" class="text-gray-400 hover:text-white transition-colors">Analytics</a>
                 <a href="#calendar-section" class="text-gray-400 hover:text-white transition-colors">Calendar</a>
-                <a href="#trade-form-section" class="text-gray-400 hover:text-white transition-colors">New Trade</a>
             </div>
 
             <div class="flex items-center gap-4">
@@ -124,18 +127,18 @@
                 <i class="fa-solid fa-chart-pie text-lg"></i>
                 <span class="text-[8px] font-bold uppercase">Stats</span>
             </a>
-            <a href="#calendar-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
-                <i class="fa-solid fa-calendar-days text-lg"></i>
-                <span class="text-[8px] font-bold uppercase">Cal</span>
+            <a href="#advanced-stats" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
+                <i class="fa-solid fa-microchip text-lg"></i>
+                <span class="text-[8px] font-bold uppercase">Analytic</span>
             </a>
             <a href="#trade-form-section" class="flex flex-col items-center group relative -mt-6">
                 <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-lg border-4 border-[#0a0a0a] active:scale-95 transition-transform">
                     <i class="fa-solid fa-plus text-xl"></i>
                 </div>
             </a>
-            <a href="#history-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
-                <i class="fa-solid fa-list-ul text-lg"></i>
-                <span class="text-[8px] font-bold uppercase">List</span>
+            <a href="#calendar-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
+                <i class="fa-solid fa-calendar-days text-lg"></i>
+                <span class="text-[8px] font-bold uppercase">Cal</span>
             </a>
             <a href="#" onclick="openBalanceModal()" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
                 <i class="fa-solid fa-wallet text-lg"></i>
@@ -213,6 +216,25 @@
             </div>
         </section>
 
+        <section id="advanced-stats" class="grid grid-cols-2 md:grid-cols-4 gap-4" data-aos="fade-up">
+            <div class="glass-panel p-4 rounded-xl text-center premium-hover">
+                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Profit Factor</p>
+                <p class="text-xl font-numbers font-bold text-white" id="stat-pf">0.00</p>
+            </div>
+            <div class="glass-panel p-4 rounded-xl text-center premium-hover">
+                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1" title="Rata-rata Win dibagi Rata-rata Loss">Realized R:R</p>
+                <p class="text-xl font-numbers font-bold text-brand-300" id="stat-rrr">1:0.00</p>
+            </div>
+            <div class="glass-panel p-4 rounded-xl text-center premium-hover">
+                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Streak (W/L)</p>
+                <p class="text-xl font-numbers font-bold text-white"><span class="text-green-400" id="stat-max-win">0</span> <span class="text-gray-600 text-sm">/</span> <span class="text-red-400" id="stat-max-loss">0</span></p>
+            </div>
+            <div class="glass-panel p-4 rounded-xl text-center premium-hover">
+                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-1">Best Session</p>
+                <p class="text-xl font-heading font-bold text-white mt-0.5" id="stat-best-session">-</p>
+            </div>
+        </section>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
             <section id="calendar-section" class="lg:col-span-5 glass-panel p-5 rounded-2xl" data-aos="fade-up">
                 <div class="flex justify-between items-center mb-4">
@@ -236,13 +258,12 @@
                     <div class="text-[9px] font-bold text-gray-500">Jum</div>
                     <div class="text-[9px] font-bold text-gray-500">Sab</div>
                 </div>
-                <div id="calendar-grid" class="grid grid-cols-7 gap-1">
-                    </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
             </section>
 
             <section class="lg:col-span-7 glass-panel p-5 rounded-2xl flex flex-col" data-aos="fade-up">
                 <div class="flex justify-between items-center mb-2">
-                    <h3 class="font-heading text-base font-bold text-white">Equity Curve</h3>
+                    <h3 class="font-heading text-base font-bold text-white">Filtered Equity Curve</h3>
                     <div class="flex items-center gap-1.5 bg-brand-500/10 px-2 py-1 rounded">
                         <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
                         <span class="text-[9px] text-brand-300 font-bold uppercase">Live</span>
@@ -292,25 +313,24 @@
                         </label>
                         <input type="number" id="pnl" step="0.01" class="glass-input font-numbers text-base text-brand-300 font-bold" placeholder="0.00" required>
                     </div>
-                    <button type="submit" class="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-2.5 rounded-xl transition-all text-xs uppercase tracking-wide mt-2">
-                        Simpan <i class="fa-solid fa-check ml-1"></i>
+                    <button type="submit" class="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-2.5 rounded-xl transition-all text-xs uppercase tracking-wide mt-2 active:scale-95">
+                        Simpan Jurnal <i class="fa-solid fa-check ml-1"></i>
                     </button>
                 </form>
             </section>
 
             <section class="lg:col-span-8 glass-panel rounded-2xl overflow-hidden flex flex-col min-h-[350px]" data-aos="fade-left">
-                <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
-                    <h3 class="font-heading text-sm font-bold text-white">Riwayat Transaksi</h3>
-                    <div class="flex gap-3">
-                        <div class="text-right">
-                            <p class="text-[8px] text-gray-400 font-bold uppercase">Profit Factor</p>
-                            <p class="text-sm font-numbers font-bold text-white leading-none" id="stat-pf">0.00</p>
-                        </div>
-                        <div class="w-px h-6 bg-white/10"></div>
-                        <div class="text-left">
-                            <p class="text-[8px] text-gray-400 font-bold uppercase">Total Lots</p>
-                            <p class="text-sm font-numbers font-bold text-white leading-none" id="stat-lots">0.00</p>
-                        </div>
+                <div class="p-3 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white/5 gap-3">
+                    <h3 class="font-heading text-sm font-bold text-white"><i class="fa-solid fa-filter text-gray-400 mr-1"></i> Filter Data</h3>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <select id="filter-asset" onchange="renderData()" class="filter-select flex-1 sm:flex-none">
+                            <option value="ALL">Semua Aset</option>
+                            </select>
+                        <select id="filter-result" onchange="renderData()" class="filter-select flex-1 sm:flex-none">
+                            <option value="ALL">Semua Hasil</option>
+                            <option value="WIN">Hanya Win</option>
+                            <option value="LOSS">Hanya Loss</option>
+                        </select>
                     </div>
                 </div>
                 <div class="overflow-x-auto flex-1">
@@ -319,6 +339,7 @@
                             <tr class="text-gray-500 text-[9px] uppercase border-b border-white/5">
                                 <th class="py-2.5 px-4 font-bold">Waktu</th>
                                 <th class="py-2.5 px-4 font-bold">Pair</th>
+                                <th class="py-2.5 px-4 font-bold text-center">Sesi</th>
                                 <th class="py-2.5 px-4 font-bold">Pos/Lot</th>
                                 <th class="py-2.5 px-4 font-bold">Harga</th>
                                 <th class="py-2.5 px-4 font-bold text-right">Profit</th>
@@ -334,10 +355,10 @@
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({ once: true, offset: 50, duration: 600 }); // Durasi animasi dicepatkan agar lebih snappy
+        AOS.init({ once: true, offset: 50, duration: 600 }); 
 
-        const STORAGE_KEY = 'farid_trade_compact';
-        const BALANCE_KEY = 'farid_compact_balance';
+        const STORAGE_KEY = 'farid_trade_advanced';
+        const BALANCE_KEY = 'farid_adv_balance';
         let equityChart;
         let currentCalendarDate = new Date();
 
@@ -357,6 +378,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initChart();
+            updateAssetFilterOptions();
             renderData();
         });
 
@@ -369,11 +391,20 @@
             const trades = getTrades();
             trades.push(tradeData);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+            updateAssetFilterOptions(); // Update opsi filter tiap ada aset baru
+        }
+
+        // Deteksi Sesi Berdasarkan Jam Entry (WIB = UTC+7)
+        function getSessionDetails(timestamp) {
+            const hour = new Date(timestamp).getHours();
+            if (hour >= 6 && hour < 14) return { name: 'ASIAN', icon: 'fa-sun', color: 'text-yellow-400', bg: 'bg-yellow-400/10' };
+            if (hour >= 14 && hour < 21) return { name: 'LONDON', icon: 'fa-cloud-sun', color: 'text-orange-400', bg: 'bg-orange-400/10' };
+            return { name: 'NEW YORK', icon: 'fa-moon', color: 'text-blue-400', bg: 'bg-blue-400/10' };
         }
 
         document.getElementById('tradeForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const now = Date.now();
+            const now = Date.now(); // Digunakan sebagai ID dan deteksi Sesi
             const newTrade = {
                 id: now,
                 date: new Date(now).toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute:'2-digit', hour12: false }),
@@ -399,12 +430,10 @@
             
             const multiplier = 100;
             let rawPnL = 0;
-            
             if(pos === 'Buy') rawPnL = (exit - entry) * lot * multiplier;
             if(pos === 'Sell') rawPnL = (entry - exit) * lot * multiplier;
             
-            const pnlInput = document.getElementById('pnl');
-            pnlInput.value = rawPnL.toFixed(2);
+            document.getElementById('pnl').value = rawPnL.toFixed(2);
         }
 
         function changeMonth(step) {
@@ -412,7 +441,179 @@
             renderCalendar();
         }
 
-        function renderCalendar() {
+        function updateAssetFilterOptions() {
+            const trades = getTrades();
+            const assets = [...new Set(trades.map(t => t.asset))];
+            const select = document.getElementById('filter-asset');
+            const currentVal = select.value;
+            
+            select.innerHTML = '<option value="ALL">Semua Aset</option>';
+            assets.forEach(a => { select.innerHTML += `<option value="${a}">${a}</option>`; });
+            
+            if (assets.includes(currentVal)) select.value = currentVal;
+        }
+
+        function renderData() {
+            const currentInitialBalance = getInitialBalance();
+            const targetLimit = currentInitialBalance * 0.08; 
+            const lossLimit = currentInitialBalance * 0.10;   
+
+            document.getElementById('ui-target-limit').innerText = `Target: $${targetLimit.toLocaleString()}`;
+            document.getElementById('ui-loss-limit').innerText = `Limit: $${lossLimit.toLocaleString()}`;
+            document.getElementById('prog-target').max = targetLimit;
+            document.getElementById('prog-loss').max = lossLimit;
+
+            const allTrades = getTrades();
+            
+            // LOGIKA FILTERING
+            const filterAsset = document.getElementById('filter-asset').value;
+            const filterResult = document.getElementById('filter-result').value;
+            
+            const trades = allTrades.filter(t => {
+                let matchAsset = (filterAsset === 'ALL' || t.asset === filterAsset);
+                let matchResult = (filterResult === 'ALL') || 
+                                  (filterResult === 'WIN' && t.pnl > 0) || 
+                                  (filterResult === 'LOSS' && t.pnl < 0);
+                return matchAsset && matchResult;
+            });
+
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            let totalPnL = 0, grossProfit = 0, grossLoss = 0, winCount = 0, totalLots = 0;
+            
+            // Advance Stats variables
+            let currentWinStreak = 0, maxWinStreak = 0;
+            let currentLossStreak = 0, maxLossStreak = 0;
+            let sessionPnl = { 'ASIAN': 0, 'LONDON': 0, 'NEW YORK': 0 };
+
+            let currentEquity = currentInitialBalance;
+            const chartData = [currentInitialBalance];
+            const chartCategories = ['Start'];
+
+            if (trades.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-gray-500 text-[10px] uppercase">Data kosong / Tidak cocok dengan filter</td></tr>`;
+            }
+
+            // Loop untuk Kalkulasi Analitik
+            trades.forEach((trade, index) => {
+                totalPnL += trade.pnl;
+                totalLots += trade.lot;
+                
+                const session = getSessionDetails(trade.id);
+                sessionPnl[session.name] += trade.pnl;
+
+                if (trade.pnl > 0) { 
+                    grossProfit += trade.pnl; 
+                    winCount++; 
+                    // Streak Logic
+                    currentWinStreak++; currentLossStreak = 0;
+                    if(currentWinStreak > maxWinStreak) maxWinStreak = currentWinStreak;
+                } else if (trade.pnl < 0) { 
+                    grossLoss += Math.abs(trade.pnl); 
+                    // Streak Logic
+                    currentLossStreak++; currentWinStreak = 0;
+                    if(currentLossStreak > maxLossStreak) maxLossStreak = currentLossStreak;
+                }
+                
+                currentEquity += trade.pnl;
+                chartData.push(currentEquity);
+                chartCategories.push(`T${index + 1}`);
+            });
+
+            // Loop untuk Render Tabel
+            const reversedTrades = [...trades].reverse();
+            reversedTrades.forEach(trade => {
+                const isProfit = trade.pnl >= 0;
+                const pnlColor = isProfit ? 'text-green-400' : 'text-red-400';
+                const posBadge = trade.position === 'Buy' ? 'text-green-400' : 'text-red-400';
+                const session = getSessionDetails(trade.id);
+
+                tbody.innerHTML += `
+                    <tr class="glass-tr">
+                        <td class="py-2.5 px-4 text-gray-400 text-[10px] font-sans">${trade.date}</td>
+                        <td class="py-2.5 px-4 font-bold text-white font-sans text-xs">${trade.asset}</td>
+                        <td class="py-2.5 px-4 text-center">
+                            <span class="${session.bg} ${session.color} px-1.5 py-0.5 rounded text-[8px] font-bold"><i class="fa-solid ${session.icon} mr-1"></i>${session.name}</span>
+                        </td>
+                        <td class="py-2.5 px-4">
+                            <span class="text-[9px] font-bold uppercase ${posBadge} mr-1">${trade.position}</span>
+                            <span class="text-gray-300 text-[10px]">${trade.lot.toFixed(2)}</span>
+                        </td>
+                        <td class="py-2.5 px-4 text-gray-400 text-[10px]">${trade.entry} <i class="fa-solid fa-arrow-right text-[6px] mx-1"></i> ${trade.exit}</td>
+                        <td class="py-2.5 px-4 text-right font-bold text-xs ${pnlColor}">${isProfit ? '+' : ''}$${trade.pnl.toFixed(2)}</td>
+                        <td class="py-2.5 px-4 text-center">
+                            <button onclick="deleteTrade(${trade.id})" class="text-gray-500 hover:text-red-400 transition-colors">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Update UI Utama
+            const finalBalance = currentInitialBalance + totalPnL;
+            document.getElementById('nav-balance').innerText = `$${finalBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            const netEl = document.getElementById('ui-net-pnl');
+            netEl.innerText = `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            netEl.className = `text-3xl font-numbers font-black ${totalPnL >= 0 ? 'text-white' : 'text-red-400'}`;
+            document.getElementById('ui-trade-count').innerText = trades.length;
+
+            const currentDrawdown = totalPnL < 0 ? Math.abs(totalPnL) : 0;
+            document.getElementById('ui-dd').innerText = `$${currentDrawdown.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            document.getElementById('prog-loss').value = currentDrawdown;
+
+            const currentProfit = totalPnL > 0 ? totalPnL : 0;
+            document.getElementById('ui-current-profit').innerText = `$${currentProfit.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            document.getElementById('prog-target').value = currentProfit;
+
+            const winRate = trades.length > 0 ? (winCount / trades.length * 100).toFixed(0) : 0;
+            const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? 'MAX' : '0.00');
+            
+            document.getElementById('stat-winrate').innerText = `${winRate}%`;
+            document.getElementById('stat-pf').innerText = profitFactor;
+            
+            // Advance Stats Updates
+            const avgWin = winCount > 0 ? (grossProfit / winCount) : 0;
+            const avgLoss = (trades.length - winCount) > 0 ? (grossLoss / (trades.length - winCount)) : 0;
+            const rrr = avgLoss > 0 ? (avgWin / avgLoss).toFixed(2) : (avgWin > 0 ? 'MAX' : '0.00');
+            
+            document.getElementById('stat-rrr').innerText = `1 : ${rrr}`;
+            document.getElementById('stat-max-win').innerText = maxWinStreak;
+            document.getElementById('stat-max-loss').innerText = maxLossStreak;
+
+            let bestSessionName = '-';
+            let highestPnl = -Infinity;
+            for (const [sName, sPnl] of Object.entries(sessionPnl)) {
+                if(sPnl > highestPnl && sPnl > 0) { highestPnl = sPnl; bestSessionName = sName; }
+            }
+            document.getElementById('stat-best-session').innerText = bestSessionName;
+            document.getElementById('stat-best-session').className = `text-xl font-heading font-bold mt-0.5 ${bestSessionName === 'ASIAN' ? 'text-yellow-400' : (bestSessionName === 'LONDON' ? 'text-orange-400' : (bestSessionName === 'NEW YORK' ? 'text-blue-400' : 'text-white'))}`;
+
+            updateChartData(chartCategories, chartData);
+            renderCalendar(trades); // Render kalender HANYA berdasarkan filter
+        }
+
+        function deleteTrade(id) {
+            if(confirm('Hapus jurnal ini?')) {
+                let trades = getTrades().filter(t => t.id !== id);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+                updateAssetFilterOptions();
+                renderData();
+            }
+        }
+
+        function clearAllData() {
+            if(confirm('Hapus seluruh data secara permanen?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                updateAssetFilterOptions();
+                renderData();
+            }
+        }
+
+        // Pindahkan logic renderCalendar agar menerima parameter filteredTrades
+        function renderCalendar(filteredTrades = getTrades()) {
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
             const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
@@ -422,9 +623,8 @@
             const firstDay = new Date(year, month, 1).getDay(); 
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            const trades = getTrades();
             const dailyData = {};
-            trades.forEach(t => {
+            filteredTrades.forEach(t => {
                 const tDate = new Date(t.id);
                 if (tDate.getFullYear() === year && tDate.getMonth() === month) {
                     const day = tDate.getDate();
@@ -459,109 +659,6 @@
                         </div>
                     `;
                 }
-            }
-        }
-
-        function renderData() {
-            const currentInitialBalance = getInitialBalance();
-            const targetLimit = currentInitialBalance * 0.08; 
-            const lossLimit = currentInitialBalance * 0.10;   
-
-            document.getElementById('ui-target-limit').innerText = `Target: $${targetLimit.toLocaleString()}`;
-            document.getElementById('ui-loss-limit').innerText = `Limit: $${lossLimit.toLocaleString()}`;
-            document.getElementById('prog-target').max = targetLimit;
-            document.getElementById('prog-loss').max = lossLimit;
-
-            const trades = getTrades();
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-
-            let totalPnL = 0, grossProfit = 0, grossLoss = 0, winCount = 0, totalLots = 0;
-            let currentEquity = currentInitialBalance;
-            const chartData = [currentInitialBalance];
-            const chartCategories = ['Start'];
-
-            const reversedTrades = [...trades].reverse();
-            
-            if (reversedTrades.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-500 text-[10px] uppercase">Data kosong</td></tr>`;
-            }
-
-            trades.forEach((trade, index) => {
-                totalPnL += trade.pnl;
-                totalLots += trade.lot;
-                if (trade.pnl > 0) { grossProfit += trade.pnl; winCount++; } 
-                else { grossLoss += Math.abs(trade.pnl); }
-                
-                currentEquity += trade.pnl;
-                chartData.push(currentEquity);
-                chartCategories.push(`T${index + 1}`);
-            });
-
-            reversedTrades.forEach(trade => {
-                const isProfit = trade.pnl >= 0;
-                const pnlColor = isProfit ? 'text-green-400' : 'text-red-400';
-                const posBadge = trade.position === 'Buy' ? 'text-green-400' : 'text-red-400';
-
-                tbody.innerHTML += `
-                    <tr class="glass-tr">
-                        <td class="py-2.5 px-4 text-gray-400 text-[10px] font-sans">${trade.date}</td>
-                        <td class="py-2.5 px-4 font-bold text-white font-sans text-xs">${trade.asset}</td>
-                        <td class="py-2.5 px-4">
-                            <span class="text-[9px] font-bold uppercase ${posBadge} mr-1">${trade.position}</span>
-                            <span class="text-gray-300 text-[10px]">${trade.lot.toFixed(2)}</span>
-                        </td>
-                        <td class="py-2.5 px-4 text-gray-400 text-[10px]">${trade.entry} <i class="fa-solid fa-arrow-right text-[6px] mx-1"></i> ${trade.exit}</td>
-                        <td class="py-2.5 px-4 text-right font-bold text-xs ${pnlColor}">${isProfit ? '+' : ''}$${trade.pnl.toFixed(2)}</td>
-                        <td class="py-2.5 px-4 text-center">
-                            <button onclick="deleteTrade(${trade.id})" class="text-gray-500 hover:text-red-400 transition-colors">
-                                <i class="fa-solid fa-xmark text-xs"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-
-            const finalBalance = currentInitialBalance + totalPnL;
-            document.getElementById('nav-balance').innerText = `$${finalBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            
-            const netEl = document.getElementById('ui-net-pnl');
-            netEl.innerText = `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            netEl.className = `text-3xl font-numbers font-black ${totalPnL >= 0 ? 'text-white' : 'text-red-400'}`;
-            
-            document.getElementById('ui-trade-count').innerText = trades.length;
-
-            const currentDrawdown = totalPnL < 0 ? Math.abs(totalPnL) : 0;
-            document.getElementById('ui-dd').innerText = `$${currentDrawdown.toLocaleString('en-US', {minimumFractionDigits:2})}`;
-            document.getElementById('prog-loss').value = currentDrawdown;
-
-            const currentProfit = totalPnL > 0 ? totalPnL : 0;
-            document.getElementById('ui-current-profit').innerText = `$${currentProfit.toLocaleString('en-US', {minimumFractionDigits:2})}`;
-            document.getElementById('prog-target').value = currentProfit;
-
-            const winRate = trades.length > 0 ? (winCount / trades.length * 100).toFixed(0) : 0;
-            const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? 'MAX' : '0.00');
-            
-            document.getElementById('stat-winrate').innerText = `${winRate}%`;
-            document.getElementById('stat-pf').innerText = profitFactor;
-            document.getElementById('stat-lots').innerText = totalLots.toFixed(2);
-
-            updateChartData(chartCategories, chartData);
-            renderCalendar(); 
-        }
-
-        function deleteTrade(id) {
-            if(confirm('Hapus jurnal ini?')) {
-                let trades = getTrades().filter(t => t.id !== id);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
-                renderData();
-            }
-        }
-
-        function clearAllData() {
-            if(confirm('Hapus seluruh data secara permanen?')) {
-                localStorage.removeItem(STORAGE_KEY);
-                renderData();
             }
         }
 
@@ -601,7 +698,7 @@
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = `FaridTrade_CompactBackup.json`;
+            a.href = url; a.download = `FaridTrade_AdvancedBackup.json`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
@@ -616,6 +713,7 @@
                     const merged = [...getTrades(), ...imported];
                     const unique = Array.from(new Map(merged.map(item => [item.id, item])).values()).sort((a,b) => a.id - b.id);
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
+                    updateAssetFilterOptions();
                     renderData();
                 } catch (error) { alert("File JSON tidak valid."); }
             };
