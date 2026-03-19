@@ -1,256 +1,323 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="dark antialiased">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farid Trade | Pro Funding Dashboard</title>
+    <title>Farid Trade | Pro Prop-Firm Dashboard</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { 
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                        mono: ['Inter', 'monospace'] 
+                    },
                     colors: {
-                        fp: { bg: '#0b0e14', card: '#151924', border: '#232838', blue: '#3b82f6', green: '#10b981', red: '#ef4444', text: '#9ca3af' }
+                        background: '#070a13', // Deepest dark navy
+                        surface: '#0f1423', // Elevated card color
+                        surfaceHover: '#161d33',
+                        border: '#1e293b', // Subtle slate border
+                        primary: '#3b82f6',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        muted: '#64748b'
                     }
                 }
             }
         }
     </script>
     <style>
-        body { background-color: #0b0e14; color: #f3f4f6; }
-        .hide-scroll::-webkit-scrollbar { display: none; }
-        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
-        .fp-card { background-color: #151924; border: 1px solid #232838; border-radius: 12px; }
-        .fp-input { background-color: #0b0e14; border: 1px solid #232838; color: white; padding: 0.75rem; border-radius: 8px; width: 100%; font-size: 0.875rem; transition: all 0.2s; }
-        .fp-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; }
+        body { background-color: #070a13; color: #f8fafc; }
         
-        progress::-webkit-progress-bar { background-color: #232838; border-radius: 8px; }
-        progress::-webkit-progress-value { border-radius: 8px; }
-        .progress-red::-webkit-progress-value { background-color: #ef4444; }
-        .progress-green::-webkit-progress-value { background-color: #10b981; }
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #334155; }
+        
+        /* Premium Card styling */
+        .glass-panel {
+            background-color: #0f1423;
+            border: 1px solid #1e293b;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        /* Sleek Form Inputs */
+        .premium-input {
+            background-color: #070a13;
+            border: 1px solid #1e293b;
+            color: #f8fafc;
+            padding: 0.875rem 1rem;
+            border-radius: 12px;
+            width: 100%;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+        .premium-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Modern Progress Bar */
+        progress { border-radius: 100px; height: 6px; }
+        progress::-webkit-progress-bar { background-color: #1e293b; border-radius: 100px; }
+        progress::-webkit-progress-value { border-radius: 100px; transition: width 0.5s ease-in-out; }
+        .prog-red::-webkit-progress-value { background: linear-gradient(90deg, #ef4444 0%, #fca5a5 100%); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        .prog-green::-webkit-progress-value { background: linear-gradient(90deg, #10b981 0%, #6ee7b7 100%); box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
+
+        /* Table styling */
+        .table-row { transition: background-color 0.2s ease; border-bottom: 1px solid #1e293b; }
+        .table-row:last-child { border-bottom: none; }
+        .table-row:hover { background-color: #161d33; }
+        
+        /* Badges */
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .badge-success { background-color: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .badge-danger { background-color: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .badge-primary { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
     </style>
 </head>
-<body class="flex h-screen overflow-hidden">
+<body class="flex flex-col h-screen overflow-hidden">
 
-    <aside class="w-64 bg-[#151924] border-r border-[#232838] flex flex-col h-full hidden md:flex z-20 shrink-0">
-        <div class="h-20 flex items-center px-6 border-b border-[#232838]">
-            <h1 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
-                <i class="fa-solid fa-chart-line text-blue-500"></i> Farid<span class="text-fp-text">Trade</span>
-            </h1>
+    <header class="h-20 bg-surface border-b border-border flex items-center justify-between px-6 lg:px-10 shrink-0 z-20">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-blue-700 flex items-center justify-center shadow-lg shadow-primary/20">
+                <i class="fa-solid fa-layer-group text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-xl tracking-tight text-white leading-none">Farid<span class="text-muted">Trade</span></h1>
+                <span class="text-[10px] text-primary font-bold tracking-widest uppercase">Pro Dashboard</span>
+            </div>
         </div>
-        <div class="p-6 flex-1 flex flex-col">
-            <p class="text-xs font-bold text-fp-text uppercase tracking-widest mb-4">Menu</p>
-            <nav class="space-y-2 mb-auto">
-                <a href="#" class="flex items-center gap-3 bg-blue-500/10 text-blue-500 px-4 py-3 rounded-lg font-semibold transition">
-                    <i class="fa-solid fa-gauge"></i> Dashboard
-                </a>
-            </nav>
-            <button onclick="clearAllData()" class="mt-auto flex items-center justify-center gap-2 text-red-500 hover:bg-red-500/10 px-4 py-3 rounded-lg font-semibold transition text-sm border border-red-500/20">
-                <i class="fa-solid fa-triangle-exclamation"></i> Hard Reset Data
+
+        <div class="flex items-center gap-6">
+            <div class="hidden md:flex flex-col items-end">
+                <span class="text-[10px] text-muted font-bold uppercase tracking-widest">Account #889012</span>
+                <span class="text-sm font-bold text-white font-mono">$100,000 Challenge</span>
+            </div>
+            <div class="w-px h-8 bg-border hidden md:block"></div>
+            <button onclick="clearAllData()" class="text-danger hover:bg-danger/10 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-transparent hover:border-danger/20">
+                <i class="fa-solid fa-power-off"></i> Reset
             </button>
         </div>
-    </aside>
+    </header>
 
-    <main class="flex-1 overflow-y-auto hide-scroll p-4 md:p-8">
-        
-        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-            <div>
-                <h2 class="text-2xl font-bold text-white mb-1">Overview</h2>
-                <p class="text-sm text-fp-text">Evaluasi jurnal trading secara profesional dan aman (Offline Storage).</p>
-            </div>
-            
-            <div class="flex items-center gap-4 bg-[#151924] border border-[#232838] p-2 rounded-lg shrink-0">
-                <div class="px-4 py-2 bg-[#232838] rounded-md">
-                    <p class="text-[10px] text-fp-text uppercase font-bold">Simulated Account</p>
-                    <p class="text-sm font-bold">$100,000 Challenge</p>
-                </div>
-                <div class="px-4 py-2">
-                    <p class="text-[10px] text-fp-text uppercase font-bold">Current Balance</p>
-                    <p class="text-sm font-bold text-white" id="ui-balance">$100,000.00</p>
-                </div>
-            </div>
-        </header>
+    <main class="flex-1 overflow-y-auto p-4 lg:p-8">
+        <div class="max-w-[1400px] mx-auto space-y-6">
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="fp-card p-6 border-red-500/20">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <p class="text-xs text-fp-text font-bold uppercase mb-1">Max Loss (10%)</p>
-                        <h3 class="text-2xl font-bold text-white">$10,000.00</h3>
-                    </div>
-                    <span id="max-loss-status" class="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded">SAFE</span>
-                </div>
-                <div class="mb-2 flex justify-between text-sm">
-                    <span class="text-fp-text text-xs">Drawdown: <span class="text-white font-bold" id="ui-dd">$0.00</span></span>
-                    <span class="text-fp-text text-xs">Limit: $10,000.00</span>
-                </div>
-                <progress id="prog-loss" value="0" max="10000" class="progress-red w-full h-2"></progress>
-            </div>
-
-            <div class="fp-card p-6 border-blue-500/30">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <p class="text-xs text-blue-400 font-bold uppercase mb-1">Profit Target (8%)</p>
-                        <h3 class="text-2xl font-bold text-white">$8,000.00</h3>
-                    </div>
-                    <span id="target-status" class="bg-blue-500/10 text-blue-500 text-[10px] font-bold px-2 py-1 rounded">ONGOING</span>
-                </div>
-                <div class="mb-2 flex justify-between text-sm">
-                    <span class="text-fp-text text-xs">Current Profit: <span class="text-white font-bold" id="ui-current-profit">$0.00</span></span>
-                    <span class="text-fp-text text-xs">Target: $8,000.00</span>
-                </div>
-                <progress id="prog-target" value="0" max="8000" class="progress-green w-full h-2"></progress>
-            </div>
-            
-            <div class="fp-card p-6 flex flex-col justify-center items-center text-center">
-                <p class="text-xs text-fp-text font-bold uppercase mb-2">Net PnL Keseluruhan</p>
-                <h3 class="text-3xl font-black" id="ui-net-pnl">$0.00</h3>
-                <p class="text-xs text-fp-text mt-2" id="ui-trade-count">0 Trades Taken</p>
-            </div>
-        </div>
-
-        <div class="fp-card p-6 mb-8 relative">
-            <div class="flex justify-between items-center mb-6">
+            <div class="glass-panel p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-blend-overlay">
                 <div>
-                    <h3 class="text-lg font-bold text-white">Equity Curve</h3>
-                    <p class="text-sm text-fp-text">Grafik pertumbuhan balance akun secara real-time.</p>
+                    <p class="text-sm text-muted font-medium mb-1">Current Balance</p>
+                    <h2 class="text-4xl lg:text-5xl font-mono font-black tracking-tight" id="ui-balance">$100,000.00</h2>
+                </div>
+                <div class="flex gap-4">
+                    <div class="bg-background border border-border px-5 py-3 rounded-2xl text-right">
+                        <p class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Net PnL</p>
+                        <p class="text-lg font-mono font-bold text-success" id="ui-net-pnl">+$0.00</p>
+                    </div>
+                    <div class="bg-background border border-border px-5 py-3 rounded-2xl text-right">
+                        <p class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Trades</p>
+                        <p class="text-lg font-mono font-bold text-white" id="ui-trade-count">0</p>
+                    </div>
                 </div>
             </div>
-            <div id="equity-chart" class="w-full h-80"></div>
-        </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Win Rate</p>
-                <p class="text-xl font-bold text-white" id="stat-winrate">0%</p>
-            </div>
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Profit Factor</p>
-                <p class="text-xl font-bold text-white" id="stat-pf">0.00</p>
-            </div>
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Average Win</p>
-                <p class="text-xl font-bold text-green-500" id="stat-avg-win">$0.00</p>
-            </div>
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Average Loss</p>
-                <p class="text-xl font-bold text-red-500" id="stat-avg-loss">$0.00</p>
-            </div>
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Total Lots</p>
-                <p class="text-xl font-bold text-white" id="stat-lots">0.00</p>
-            </div>
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Best Trade</p>
-                <p class="text-xl font-bold text-green-500" id="stat-best">$0.00</p>
-            </div>
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Worst Trade</p>
-                <p class="text-xl font-bold text-red-500" id="stat-worst">$0.00</p>
-            </div>
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Pair Favorit</p>
-                <p class="text-xl font-bold text-white" id="stat-fav">-</p>
-            </div>
-        </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-danger/10 flex items-center justify-center text-danger"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div>
+                                <h3 class="font-bold text-sm">Max Loss Limit</h3>
+                                <p class="text-xs text-muted">Batas kerugian 10% dari initial balance</p>
+                            </div>
+                        </div>
+                        <span id="max-loss-status" class="badge badge-success">SAFE</span>
+                    </div>
+                    
+                    <div class="flex justify-between items-end mb-2">
+                        <div>
+                            <p class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Current Drawdown</p>
+                            <p class="text-xl font-mono font-bold text-white" id="ui-dd">$0.00</p>
+                        </div>
+                        <p class="text-xs font-mono text-muted mb-1">Max: $10,000</p>
+                    </div>
+                    <progress id="prog-loss" value="0" max="10000" class="prog-red w-full"></progress>
+                </div>
 
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
-            
-            <div class="fp-card p-6 xl:col-span-1 h-fit">
-                <h3 class="text-lg font-bold text-white mb-4">Catat Posisi Baru</h3>
-                <form id="tradeForm" class="space-y-4">
-                    <div>
-                        <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Simbol / Pair</label>
-                        <input type="text" id="asset" class="fp-input uppercase" placeholder="Contoh: XAUUSD" required>
-                    </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Tipe</label>
-                            <select id="position" class="fp-input appearance-none">
-                                <option value="Buy">Buy</option>
-                                <option value="Sell">Sell</option>
-                            </select>
+                <div class="glass-panel p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"><i class="fa-solid fa-flag-checkered"></i></div>
+                            <div>
+                                <h3 class="font-bold text-sm">Profit Target</h3>
+                                <p class="text-xs text-muted">Target keuntungan 8% untuk lolos fase</p>
+                            </div>
                         </div>
-                        <div>
-                            <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Lot Size</label>
-                            <input type="number" id="lot" step="0.01" class="fp-input" placeholder="0.10" required>
-                        </div>
+                        <span id="target-status" class="badge badge-primary">ONGOING</span>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
+                    
+                    <div class="flex justify-between items-end mb-2">
                         <div>
-                            <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Entry Price</label>
-                            <input type="number" id="entry" step="0.00001" class="fp-input" required>
+                            <p class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Realized Profit</p>
+                            <p class="text-xl font-mono font-bold text-white" id="ui-current-profit">$0.00</p>
                         </div>
-                        <div>
-                            <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Close Price</label>
-                            <input type="number" id="exit" step="0.00001" class="fp-input" required>
-                        </div>
+                        <p class="text-xs font-mono text-muted mb-1">Target: $8,000</p>
                     </div>
-                    <div>
-                        <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 flex justify-between">
-                            <span>Final PnL ($)</span>
-                            <span onclick="autoCalculatePnL()" class="text-blue-500 cursor-pointer hover:underline"><i class="fa-solid fa-calculator"></i> Auto Calc</span>
-                        </label>
-                        <input type="number" id="pnl" step="0.01" class="fp-input" placeholder="Misal: 150.50 atau -45.00" required>
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg mt-2 transition text-sm">
-                        <i class="fa-solid fa-plus mr-1"></i> Simpan Jurnal
-                    </button>
-                </form>
+                    <progress id="prog-target" value="0" max="8000" class="prog-green w-full"></progress>
+                </div>
             </div>
 
-            <div class="fp-card xl:col-span-2 overflow-hidden flex flex-col">
-                <div class="p-5 border-b border-[#232838] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <h3 class="text-lg font-bold text-white">Transaction History</h3>
-                    <div class="flex gap-2">
-                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
-                        <button onclick="document.getElementById('importFile').click()" class="bg-[#232838] hover:bg-[#2a3042] text-white px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2">
-                            <i class="fa-solid fa-download"></i> Import
+            <div class="glass-panel p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-lg">Equity Curve</h3>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(59,130,246,0.8)]"></span>
+                        <span class="text-xs text-muted font-medium">Live Data</span>
+                    </div>
+                </div>
+                <div id="equity-chart" class="w-full h-[350px]"></div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-surface border border-border p-5 rounded-2xl">
+                    <p class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Win Rate</p>
+                    <p class="text-xl font-mono font-bold text-white" id="stat-winrate">0%</p>
+                </div>
+                <div class="bg-surface border border-border p-5 rounded-2xl">
+                    <p class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Profit Factor</p>
+                    <p class="text-xl font-mono font-bold text-white" id="stat-pf">0.00</p>
+                </div>
+                <div class="bg-surface border border-border p-5 rounded-2xl">
+                    <p class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Average Win</p>
+                    <p class="text-xl font-mono font-bold text-success" id="stat-avg-win">$0.00</p>
+                </div>
+                <div class="bg-surface border border-border p-5 rounded-2xl">
+                    <p class="text-[10px] text-muted font-bold uppercase tracking-widest mb-1">Average Loss</p>
+                    <p class="text-xl font-mono font-bold text-danger" id="stat-avg-loss">$0.00</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 pb-10">
+                
+                <div class="glass-panel p-6 xl:col-span-4 h-fit">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white"><i class="fa-solid fa-plus"></i></div>
+                        <h3 class="font-bold text-lg">New Journal Entry</h3>
+                    </div>
+
+                    <form id="tradeForm" class="space-y-5">
+                        <div>
+                            <label class="text-[10px] text-muted font-bold uppercase tracking-widest mb-2 block">Symbol / Asset</label>
+                            <input type="text" id="asset" class="premium-input uppercase" placeholder="e.g. XAUUSD" required>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] text-muted font-bold uppercase tracking-widest mb-2 block">Direction</label>
+                                <select id="position" class="premium-input appearance-none cursor-pointer">
+                                    <option value="Buy">Buy (Long)</option>
+                                    <option value="Sell">Sell (Short)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-muted font-bold uppercase tracking-widest mb-2 block">Lot Size</label>
+                                <input type="number" id="lot" step="0.01" class="premium-input font-mono" placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] text-muted font-bold uppercase tracking-widest mb-2 block">Entry Price</label>
+                                <input type="number" id="entry" step="0.00001" class="premium-input font-mono" placeholder="0.00000" required>
+                            </div>
+                            <div>
+                                <label class="text-[10px] text-muted font-bold uppercase tracking-widest mb-2 block">Close Price</label>
+                                <input type="number" id="exit" step="0.00001" class="premium-input font-mono" placeholder="0.00000" required>
+                            </div>
+                        </div>
+
+                        <div class="p-4 rounded-xl bg-background border border-border">
+                            <label class="text-[10px] text-muted font-bold uppercase tracking-widest mb-2 flex justify-between items-center">
+                                <span>Realized PnL ($)</span>
+                                <button type="button" onclick="autoCalculatePnL()" class="text-primary hover:text-blue-400 transition flex items-center gap-1">
+                                    <i class="fa-solid fa-calculator"></i> Auto Calc
+                                </button>
+                            </label>
+                            <input type="number" id="pnl" step="0.01" class="premium-input font-mono text-lg" placeholder="0.00" required>
+                        </div>
+
+                        <button type="submit" class="w-full bg-primary hover:bg-blue-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(59,130,246,0.3)] hover:shadow-[0_0_25px_rgba(59,130,246,0.5)] active:scale-[0.98]">
+                            Save Execution
                         </button>
-                        <button onclick="exportJSON()" class="bg-blue-500/10 text-blue-500 border border-blue-500/30 hover:bg-blue-500/20 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2">
-                            <i class="fa-solid fa-upload"></i> Backup JSON
-                        </button>
+                    </form>
+                </div>
+
+                <div class="glass-panel xl:col-span-8 overflow-hidden flex flex-col min-h-[500px]">
+                    <div class="p-6 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-white"><i class="fa-solid fa-list-ul"></i></div>
+                            <h3 class="font-bold text-lg">Trade History</h3>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
+                            <button onclick="document.getElementById('importFile').click()" class="bg-surface border border-border hover:bg-surfaceHover text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                                <i class="fa-solid fa-file-import text-muted"></i> Import JSON
+                            </button>
+                            <button onclick="exportJSON()" class="bg-surface border border-border hover:bg-surfaceHover text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-down text-primary"></i> Backup JSON
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto flex-1 p-2">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead>
+                                <tr class="text-muted text-[10px] uppercase tracking-widest">
+                                    <th class="py-4 px-6 font-semibold">Time</th>
+                                    <th class="py-4 px-6 font-semibold">Symbol</th>
+                                    <th class="py-4 px-6 font-semibold">Type</th>
+                                    <th class="py-4 px-6 font-semibold">Volume</th>
+                                    <th class="py-4 px-6 font-semibold">Open - Close</th>
+                                    <th class="py-4 px-6 font-semibold text-right">Profit</th>
+                                    <th class="py-4 px-6 font-semibold text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="text-sm">
+                                </tbody>
+                        </table>
                     </div>
                 </div>
-                <div class="overflow-x-auto flex-1">
-                    <table class="w-full text-left border-collapse whitespace-nowrap">
-                        <thead>
-                            <tr class="bg-[#0b0e14] text-fp-text text-[10px] uppercase tracking-wider">
-                                <th class="py-3 px-5 font-bold">Waktu</th>
-                                <th class="py-3 px-5 font-bold">Symbol</th>
-                                <th class="py-3 px-5 font-bold">Tipe</th>
-                                <th class="py-3 px-5 font-bold">Lot</th>
-                                <th class="py-3 px-5 font-bold">Entry - Exit</th>
-                                <th class="py-3 px-5 font-bold text-right">Profit</th>
-                                <th class="py-3 px-5 font-bold text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-body" class="text-xs font-medium">
-                            </tbody>
-                    </table>
-                </div>
-            </div>
 
+            </div>
         </div>
     </main>
 
     <script>
-        const STORAGE_KEY = 'fp_trade_journal';
+        const STORAGE_KEY = 'farid_trade_pro';
         const INITIAL_BALANCE = 100000;
-        let equityChart; // ApexChart instance
+        let equityChart;
 
         document.addEventListener('DOMContentLoaded', () => {
             initChart();
             renderData();
         });
 
-        // 1. Storage Operations
         function getTrades() {
             const data = localStorage.getItem(STORAGE_KEY);
             return data ? JSON.parse(data) : [];
@@ -258,17 +325,15 @@
 
         function saveTrade(tradeData) {
             const trades = getTrades();
-            trades.push(tradeData); // Push ke belakang agar kronologis di chart
+            trades.push(tradeData);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
         }
 
-        // 2. Form Submit
         document.getElementById('tradeForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
             const newTrade = {
                 id: Date.now(),
-                date: new Date().toLocaleString('en-CA', { hour12: false }).replace(',', ''), // format mirip MT5
+                date: new Date().toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute:'2-digit', hour12: false }),
                 asset: document.getElementById('asset').value.toUpperCase(),
                 position: document.getElementById('position').value,
                 lot: parseFloat(document.getElementById('lot').value),
@@ -276,13 +341,11 @@
                 exit: parseFloat(document.getElementById('exit').value),
                 pnl: parseFloat(document.getElementById('pnl').value)
             };
-
             saveTrade(newTrade);
             this.reset();
             renderData();
         });
 
-        // 3. Auto Calc Helper
         function autoCalculatePnL() {
             const entry = parseFloat(document.getElementById('entry').value);
             const exit = parseFloat(document.getElementById('exit').value);
@@ -297,12 +360,9 @@
             if(pos === 'Buy') rawPnL = (exit - entry) * lot;
             if(pos === 'Sell') rawPnL = (entry - exit) * lot;
             
-            // Note: Pada broker asli ada contract size. Ini rumus sederhana 1:1. 
-            // Untuk forex/gold sungguhan biasanya X 100000 atau X 100.
             document.getElementById('pnl').value = rawPnL.toFixed(2);
         }
 
-        // 4. Render UI & Calculate Stats
         function renderData() {
             const trades = getTrades();
             const tbody = document.getElementById('table-body');
@@ -312,141 +372,116 @@
             let grossProfit = 0;
             let grossLoss = 0;
             let winCount = 0;
-            let totalLots = 0;
-            let bestTrade = 0;
-            let worstTrade = 0;
-            let pairCount = {};
             
-            // Array untuk Chart (Mulai dari balance awal)
             let currentEquity = INITIAL_BALANCE;
             const chartData = [INITIAL_BALANCE];
             const chartCategories = ['Start'];
 
-            // Render Table (Reverse order agar terbaru di atas)
             const reversedTrades = [...trades].reverse();
             
             if (reversedTrades.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-fp-text">No transaction history.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="py-10 text-center text-muted">No executions recorded yet. Fill the form to start.</td></tr>`;
             }
 
-            // Loop untuk Kalkulasi dari awal ke akhir (Chronological)
             trades.forEach((trade, index) => {
                 totalPnL += trade.pnl;
-                totalLots += trade.lot;
-                pairCount[trade.asset] = (pairCount[trade.asset] || 0) + 1;
-
                 if (trade.pnl > 0) {
                     grossProfit += trade.pnl;
                     winCount++;
-                    if(trade.pnl > bestTrade) bestTrade = trade.pnl;
                 } else {
                     grossLoss += Math.abs(trade.pnl);
-                    if(trade.pnl < worstTrade) worstTrade = trade.pnl;
                 }
-
                 currentEquity += trade.pnl;
                 chartData.push(currentEquity);
                 chartCategories.push(`T${index + 1}`);
             });
 
-            // Loop untuk HTML Table (Terbaru di atas)
             reversedTrades.forEach(trade => {
                 const isProfit = trade.pnl >= 0;
-                const pnlColor = isProfit ? 'text-green-500' : 'text-red-500';
-                const posColor = trade.position === 'Buy' ? 'text-green-500' : 'text-red-500';
+                const pnlColor = isProfit ? 'text-success' : 'text-danger';
+                const badgeClass = trade.position === 'Buy' ? 'badge-success' : 'badge-danger';
 
                 tbody.innerHTML += `
-                    <tr class="border-b border-[#232838] hover:bg-[#232838]/50 transition">
-                        <td class="py-4 px-5 text-fp-text">${trade.date}</td>
-                        <td class="py-4 px-5 text-white font-bold">${trade.asset}</td>
-                        <td class="py-4 px-5"><span class="${posColor}">${trade.position}</span></td>
-                        <td class="py-4 px-5 text-white">${trade.lot.toFixed(2)}</td>
-                        <td class="py-4 px-5 text-fp-text">${trade.entry} <i class="fa-solid fa-arrow-right text-[8px] mx-1"></i> ${trade.exit}</td>
-                        <td class="py-4 px-5 text-right font-bold ${pnlColor}">${trade.pnl.toFixed(2)}</td>
-                        <td class="py-4 px-5 text-center">
-                            <button onclick="deleteTrade(${trade.id})" class="text-fp-text hover:text-red-500 transition"><i class="fa-solid fa-xmark"></i></button>
+                    <tr class="table-row">
+                        <td class="py-4 px-6 text-muted text-xs">${trade.date}</td>
+                        <td class="py-4 px-6 font-bold text-white">${trade.asset}</td>
+                        <td class="py-4 px-6"><span class="badge ${badgeClass}">${trade.position}</span></td>
+                        <td class="py-4 px-6 font-mono text-white">${trade.lot.toFixed(2)}</td>
+                        <td class="py-4 px-6 text-muted font-mono text-xs">${trade.entry} <i class="fa-solid fa-arrow-right text-[8px] mx-1"></i> ${trade.exit}</td>
+                        <td class="py-4 px-6 text-right font-mono font-bold ${pnlColor}">${isProfit ? '+' : ''}$${trade.pnl.toFixed(2)}</td>
+                        <td class="py-4 px-6 text-center">
+                            <button onclick="deleteTrade(${trade.id})" class="w-8 h-8 rounded-lg bg-surface hover:bg-danger/20 text-muted hover:text-danger transition-colors border border-border flex items-center justify-center mx-auto">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
                         </td>
                     </tr>
                 `;
             });
 
-            // --- Update UI Numbers ---
+            // Update Metrics
             const finalBalance = INITIAL_BALANCE + totalPnL;
             document.getElementById('ui-balance').innerText = `$${finalBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
             
             const netEl = document.getElementById('ui-net-pnl');
             netEl.innerText = `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            netEl.className = `text-3xl font-black ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`;
-            document.getElementById('ui-trade-count').innerText = `${trades.length} Trades Taken`;
+            netEl.className = `text-lg font-mono font-bold ${totalPnL >= 0 ? 'text-success' : 'text-danger'}`;
+            document.getElementById('ui-trade-count').innerText = trades.length;
 
-            // Progress Bars logic
             const currentDrawdown = totalPnL < 0 ? Math.abs(totalPnL) : 0;
             document.getElementById('ui-dd').innerText = `$${currentDrawdown.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('prog-loss').value = currentDrawdown;
             const lossStatus = document.getElementById('max-loss-status');
-            if(currentDrawdown >= 10000) { lossStatus.innerText = "FAILED"; lossStatus.className = "bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-1 rounded"; } 
-            else { lossStatus.innerText = "SAFE"; lossStatus.className = "bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded"; }
+            if(currentDrawdown >= 10000) { lossStatus.innerText = "FAILED"; lossStatus.className = "badge badge-danger"; } 
+            else { lossStatus.innerText = "SAFE"; lossStatus.className = "badge badge-success"; }
 
             const currentProfit = totalPnL > 0 ? totalPnL : 0;
             document.getElementById('ui-current-profit').innerText = `$${currentProfit.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('prog-target').value = currentProfit;
             const targetStatus = document.getElementById('target-status');
-            if(currentProfit >= 8000) { targetStatus.innerText = "PASSED"; targetStatus.className = "bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded"; }
-            else { targetStatus.innerText = "ONGOING"; targetStatus.className = "bg-blue-500/10 text-blue-500 text-[10px] font-bold px-2 py-1 rounded"; }
+            if(currentProfit >= 8000) { targetStatus.innerText = "PASSED"; targetStatus.className = "badge badge-success"; }
+            else { targetStatus.innerText = "ONGOING"; targetStatus.className = "badge badge-primary"; }
 
-            // Detailed Stats
             const winRate = trades.length > 0 ? (winCount / trades.length * 100).toFixed(1) : 0;
             const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? 'MAX' : '0.00');
             const avgWin = winCount > 0 ? (grossProfit / winCount).toFixed(2) : '0.00';
             const avgLoss = (trades.length - winCount) > 0 ? (grossLoss / (trades.length - winCount)).toFixed(2) : '0.00';
             
-            let favorite = '-';
-            if (Object.keys(pairCount).length > 0) favorite = Object.keys(pairCount).reduce((a, b) => pairCount[a] > pairCount[b] ? a : b);
-
             document.getElementById('stat-winrate').innerText = `${winRate}%`;
             document.getElementById('stat-pf').innerText = profitFactor;
             document.getElementById('stat-avg-win').innerText = `$${avgWin}`;
             document.getElementById('stat-avg-loss').innerText = `-$${avgLoss}`;
-            document.getElementById('stat-lots').innerText = totalLots.toFixed(2);
-            document.getElementById('stat-best').innerText = `+$${bestTrade.toFixed(2)}`;
-            document.getElementById('stat-worst').innerText = `${worstTrade.toFixed(2)}`;
-            document.getElementById('stat-fav').innerText = favorite;
 
-            // Update Chart
             updateChartData(chartCategories, chartData);
         }
 
-        // 5. Delete Trade
         function deleteTrade(id) {
-            if(confirm('Hapus jurnal ini?')) {
+            if(confirm('Delete this execution?')) {
                 let trades = getTrades().filter(t => t.id !== id);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
                 renderData();
             }
         }
 
-        // 6. Hard Reset
         function clearAllData() {
-            if(confirm('Peringatan: Semua data akan dihapus permanen! Pastikan sudah Backup JSON. Lanjutkan?')) {
+            if(confirm('DANGER! This will wipe all offline data. Ensure you have backed up JSON. Continue?')) {
                 localStorage.removeItem(STORAGE_KEY);
                 renderData();
             }
         }
 
-        // 7. ApexCharts Setup & Update
         function initChart() {
             const options = {
                 series: [{ name: 'Balance', data: [INITIAL_BALANCE] }],
-                chart: { type: 'area', height: 320, fontFamily: 'Inter, sans-serif', background: 'transparent', toolbar: { show: false } },
+                chart: { type: 'area', height: 350, fontFamily: 'Inter, sans-serif', background: 'transparent', toolbar: { show: false }, animations: { enabled: true, easing: 'easeinout', speed: 800 } },
                 colors: ['#3b82f6'],
-                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0.0, stops: [0, 100] } },
                 dataLabels: { enabled: false },
-                stroke: { curve: 'straight', width: 2 }, // Funding pips usually uses straight lines for equity
-                xaxis: { categories: ['Start'], axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#9ca3af', fontSize: '10px' } } },
-                yaxis: { labels: { formatter: (value) => "$" + value.toLocaleString(), style: { colors: '#9ca3af', fontSize: '12px' } } },
-                grid: { borderColor: '#232838', strokeDashArray: 4, yaxis: { lines: { show: true } }, xaxis: { lines: { show: false } } },
+                stroke: { curve: 'smooth', width: 2 },
+                xaxis: { categories: ['Start'], axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#64748b', fontSize: '12px' } } },
+                yaxis: { labels: { formatter: (value) => "$" + value.toLocaleString(), style: { colors: '#64748b', fontSize: '12px', fontFamily: 'Inter' } } },
+                grid: { borderColor: '#1e293b', strokeDashArray: 3, yaxis: { lines: { show: true } }, xaxis: { lines: { show: true } }, padding: { top: 0, right: 0, bottom: 0, left: 10 } },
                 theme: { mode: 'dark' },
-                tooltip: { theme: 'dark', y: { formatter: (val) => "$" + val.toLocaleString() } }
+                tooltip: { theme: 'dark', style: { fontSize: '14px', fontFamily: 'Inter' }, y: { formatter: (val) => "$" + val.toLocaleString() } }
             };
             equityChart = new ApexCharts(document.querySelector("#equity-chart"), options);
             equityChart.render();
@@ -454,26 +489,20 @@
 
         function updateChartData(categories, data) {
             if(equityChart) {
-                // Determine min/max to make the chart look proportional
-                const minVal = Math.min(...data) - 500;
-                
-                equityChart.updateOptions({
-                    xaxis: { categories: categories },
-                    yaxis: { min: minVal }
-                });
+                const minVal = Math.min(...data) - (Math.min(...data) * 0.005);
+                equityChart.updateOptions({ xaxis: { categories: categories }, yaxis: { min: minVal } });
                 equityChart.updateSeries([{ name: 'Balance', data: data }]);
             }
         }
 
-        // 8. JSON Export / Import
         function exportJSON() {
             const trades = getTrades();
-            if (trades.length === 0) { alert('Tidak ada data untuk dibackup!'); return; }
+            if (trades.length === 0) { alert('No data to backup!'); return; }
             const dataStr = JSON.stringify(trades, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = `FaridTrade_FP_Backup.json`;
+            a.href = url; a.download = `FaridTrade_Pro_Backup.json`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
@@ -487,14 +516,11 @@
                     const imported = JSON.parse(e.target.result);
                     if (!Array.isArray(imported)) throw new Error("Invalid Format");
                     const merged = [...getTrades(), ...imported];
-                    // Remove duplicates by ID, keep imported order
                     const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
-                    // Sort by ID to maintain chronological order
                     unique.sort((a,b) => a.id - b.id);
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
                     renderData();
-                    alert("Import sukses!");
-                } catch (error) { alert("Format JSON tidak valid."); }
+                } catch (error) { alert("Format JSON invalid."); }
             };
             reader.readAsText(file);
             event.target.value = '';
