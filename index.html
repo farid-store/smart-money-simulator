@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farid Trade | Dynamic Journal</title>
+    <title>Farid Trade | Compact Journal</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
@@ -31,327 +31,301 @@
         }
     </script>
     <style>
-        html, body { background-color: #020202; color: #f8fafc; overflow-x: hidden; width: 100%; position: relative; }
+        html, body { background-color: #020202; color: #f8fafc; overflow-x: hidden; width: 100%; position: relative; font-size: 14px; }
         
-        .ambient-glow-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(14,165,233,0.15) 0%, rgba(0,0,0,0) 60%); filter: blur(80px); z-index: -1; animation: pulse 8s infinite alternate; }
-        .ambient-glow-2 { position: absolute; bottom: 20%; right: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(129,140,248,0.1) 0%, rgba(0,0,0,0) 60%); filter: blur(80px); z-index: -1; animation: pulse 10s infinite alternate-reverse; }
+        .ambient-glow-1 { position: absolute; top: -10%; left: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(14,165,233,0.1) 0%, rgba(0,0,0,0) 60%); filter: blur(80px); z-index: -1; animation: pulse 8s infinite alternate; }
+        .ambient-glow-2 { position: absolute; bottom: 20%; right: -10%; width: 30vw; height: 30vw; background: radial-gradient(circle, rgba(129,140,248,0.08) 0%, rgba(0,0,0,0) 60%); filter: blur(80px); z-index: -1; animation: pulse 10s infinite alternate-reverse; }
         @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
 
-        .glass-pill { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-pill { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
         .glass-panel { background: linear-gradient(145deg, rgba(20,20,25,0.6) 0%, rgba(5,5,5,0.8) 100%); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.05); }
         
         .text-glow { background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .text-accent { background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .premium-hover { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.05); }
-        .premium-hover:hover { transform: translateY(-5px); border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 15px 40px -10px rgba(56, 189, 248, 0.2); }
+        .premium-hover { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; border: 1px solid rgba(255,255,255,0.05); }
+        .premium-hover:hover { transform: translateY(-3px); border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 10px 30px -10px rgba(56, 189, 248, 0.15); }
 
-        .glass-input { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 1rem 1.25rem; border-radius: 1rem; width: 100%; transition: all 0.3s ease; font-family: 'Space Grotesk', sans-serif;}
-        .glass-input:focus { outline: none; border-color: #38bdf8; background: rgba(56,189,248,0.05); box-shadow: 0 0 20px rgba(56, 189, 248, 0.15); }
+        .glass-input { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.6rem 1rem; border-radius: 0.75rem; width: 100%; transition: all 0.2s ease; font-family: 'Space Grotesk', sans-serif; font-size: 0.875rem;}
+        .glass-input:focus { outline: none; border-color: #38bdf8; background: rgba(56,189,248,0.05); box-shadow: 0 0 15px rgba(56, 189, 248, 0.1); }
         
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
 
-        progress { border-radius: 100px; height: 8px; background: rgba(255,255,255,0.05); }
+        progress { border-radius: 100px; height: 6px; background: rgba(255,255,255,0.05); }
         progress::-webkit-progress-bar { background-color: rgba(255,255,255,0.05); border-radius: 100px; }
         progress::-webkit-progress-value { border-radius: 100px; transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
-        .prog-red::-webkit-progress-value { background: linear-gradient(90deg, #ef4444 0%, #fca5a5 100%); box-shadow: 0 0 15px rgba(239, 68, 68, 0.5); }
-        .prog-green::-webkit-progress-value { background: linear-gradient(90deg, #10b981 0%, #6ee7b7 100%); box-shadow: 0 0 15px rgba(16, 185, 129, 0.5); }
+        .prog-red::-webkit-progress-value { background: linear-gradient(90deg, #ef4444 0%, #fca5a5 100%); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        .prog-green::-webkit-progress-value { background: linear-gradient(90deg, #10b981 0%, #6ee7b7 100%); box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); }
         
         .glass-tr { transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .glass-tr:hover { background: rgba(255,255,255,0.03); transform: scale(1.01); border-radius: 1rem; }
+        .glass-tr:hover { background: rgba(255,255,255,0.03); }
 
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; align-items: center; justify-content: center; }
-        .modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
+        .modal-overlay.active { display: flex; animation: fadeIn 0.2s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         
-        /* Smooth Scroll Padding for Header offset */
-        section { scroll-margin-top: 100px; }
+        section { scroll-margin-top: 80px; }
     </style>
 </head>
-<body class="antialiased selection:bg-brand-500 selection:text-white pb-32 md:pb-20">
+<body class="antialiased selection:bg-brand-500 selection:text-white pb-28 md:pb-16">
 
     <div class="ambient-glow-1"></div>
     <div class="ambient-glow-2"></div>
 
     <div id="balanceModal" class="modal-overlay">
-        <div class="glass-panel p-8 rounded-[2rem] w-[90%] max-w-md relative border border-brand-500/30 shadow-[0_0_30px_rgba(56,189,248,0.2)]">
-            <button onclick="closeBalanceModal()" class="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="font-heading text-2xl font-black text-white mb-2">Setting Modal Awal</h3>
-            <p class="text-gray-400 text-sm mb-6">Atur nominal modal (balance) untuk kalkulasi Drawdown dan Profit Target.</p>
-            
-            <div class="mb-6">
-                <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Initial Balance ($)</label>
-                <input type="number" id="newBalanceInput" class="glass-input text-xl text-brand-300 font-bold" placeholder="100000">
+        <div class="glass-panel p-6 rounded-2xl w-[90%] max-w-sm relative border border-brand-500/30">
+            <button onclick="closeBalanceModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-heading text-lg font-bold text-white mb-1">Set Saldo Awal</h3>
+            <p class="text-gray-400 text-xs mb-4">Modal untuk menghitung % Drawdown & Profit.</p>
+            <div class="mb-4">
+                <input type="number" id="newBalanceInput" class="glass-input text-lg text-brand-300 font-bold" placeholder="100000">
             </div>
-            
-            <button onclick="saveNewBalance()" class="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_25px_rgba(56,189,248,0.5)] active:scale-95">
-                Simpan Perubahan Saldo
+            <button onclick="saveNewBalance()" class="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-2.5 rounded-xl transition-all text-sm active:scale-95">
+                Simpan Saldo
             </button>
         </div>
     </div>
 
-    <div class="fixed w-full top-6 z-50 px-4 sm:px-6 flex justify-center pointer-events-none">
-        <nav class="glass-pill rounded-full px-5 py-2.5 flex justify-between items-center w-full max-w-7xl pointer-events-auto shadow-[0_10px_40px_rgba(0,0,0,0.5)]" id="navbar">
-            <a href="#" class="flex items-center gap-3 group">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_15px_rgba(56,189,248,0.5)] group-hover:scale-110 transition-transform">FT</div>
-                <span class="font-heading font-black text-2xl tracking-tight text-white group-hover:text-brand-300 transition-colors hidden sm:block">Farid<span class="text-gray-400 font-medium">Trade</span></span>
+    <div class="fixed w-full top-4 z-50 px-4 flex justify-center pointer-events-none">
+        <nav class="glass-pill rounded-full px-4 py-2 flex justify-between items-center w-full max-w-6xl pointer-events-auto shadow-lg" id="navbar">
+            <a href="#" class="flex items-center gap-2 group">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white font-bold text-xs shadow-md">FT</div>
+                <span class="font-heading font-black text-xl tracking-tight text-white hidden sm:block">Farid<span class="text-gray-400 font-medium">Trade</span></span>
             </a>
             
-            <div class="hidden md:flex gap-8 items-center font-bold text-sm">
+            <div class="hidden md:flex gap-6 items-center font-bold text-xs">
                 <a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Stats</a>
                 <a href="#calendar-section" class="text-gray-400 hover:text-white transition-colors">Calendar</a>
                 <a href="#trade-form-section" class="text-gray-400 hover:text-white transition-colors">New Trade</a>
-                <a href="#history-section" class="text-gray-400 hover:text-white transition-colors">History</a>
             </div>
 
-            <div class="flex items-center gap-4 sm:gap-6">
-                <div class="text-right flex items-center gap-3">
+            <div class="flex items-center gap-4">
+                <div class="text-right flex items-center gap-2">
                     <div>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live Balance</p>
-                        <p class="text-lg font-numbers font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400" id="nav-balance">$0.00</p>
+                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest leading-none">Live Balance</p>
+                        <p class="text-base font-numbers font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-300 leading-tight" id="nav-balance">$0.00</p>
                     </div>
-                    <button onclick="openBalanceModal()" class="hidden md:flex w-8 h-8 rounded-full bg-white/5 hover:bg-brand-500/20 text-gray-400 hover:text-brand-300 transition-colors border border-transparent hover:border-brand-500/30 items-center justify-center" title="Edit Saldo Awal">
-                        <i class="fa-solid fa-pen text-xs"></i>
+                    <button onclick="openBalanceModal()" class="hidden md:flex w-7 h-7 rounded-full bg-white/5 hover:bg-brand-500/20 text-gray-400 hover:text-brand-300 transition-colors items-center justify-center">
+                        <i class="fa-solid fa-pen text-[10px]"></i>
                     </button>
                 </div>
+                <div class="w-px h-6 bg-white/10 hidden sm:block"></div>
+                <button onclick="clearAllData()" class="text-red-400 hover:text-red-300 px-2 py-1 rounded text-xs font-bold transition-all flex items-center gap-1">
+                    <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Reset</span>
+                </button>
             </div>
         </nav>
     </div>
 
-    <div class="fixed bottom-6 w-full z-50 px-4 flex justify-center md:hidden pointer-events-none">
-        <nav class="glass-pill rounded-[2rem] px-6 py-3 flex justify-between items-end w-full max-w-md pointer-events-auto shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10">
-            
-            <a href="#dashboard" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-12 pb-1">
-                <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
-                <span class="text-[9px] font-bold uppercase tracking-widest">Stats</span>
+    <div class="fixed bottom-4 w-full z-50 px-4 flex justify-center md:hidden pointer-events-none">
+        <nav class="glass-pill rounded-3xl px-5 py-2.5 flex justify-between items-end w-full max-w-sm pointer-events-auto shadow-2xl border border-white/10">
+            <a href="#dashboard" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
+                <i class="fa-solid fa-chart-pie text-lg"></i>
+                <span class="text-[8px] font-bold uppercase">Stats</span>
             </a>
-            
-            <a href="#calendar-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-12 pb-1">
-                <i class="fa-solid fa-calendar-days text-xl mb-1"></i>
-                <span class="text-[9px] font-bold uppercase tracking-widest">Cal</span>
+            <a href="#calendar-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
+                <i class="fa-solid fa-calendar-days text-lg"></i>
+                <span class="text-[8px] font-bold uppercase">Cal</span>
             </a>
-            
-            <a href="#trade-form-section" class="flex flex-col items-center group relative -mt-8">
-                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-[0_10px_20px_rgba(56,189,248,0.4)] group-hover:scale-110 transition-transform mb-1 border-4 border-[#0a0a0a]">
-                    <i class="fa-solid fa-plus text-2xl"></i>
+            <a href="#trade-form-section" class="flex flex-col items-center group relative -mt-6">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-lg border-4 border-[#0a0a0a] active:scale-95 transition-transform">
+                    <i class="fa-solid fa-plus text-xl"></i>
                 </div>
             </a>
-            
-            <a href="#history-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-12 pb-1">
-                <i class="fa-solid fa-list-ul text-xl mb-1"></i>
-                <span class="text-[9px] font-bold uppercase tracking-widest">List</span>
+            <a href="#history-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
+                <i class="fa-solid fa-list-ul text-lg"></i>
+                <span class="text-[8px] font-bold uppercase">List</span>
             </a>
-            
-            <a href="#" onclick="openBalanceModal()" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-12 pb-1">
-                <i class="fa-solid fa-wallet text-xl mb-1"></i>
-                <span class="text-[9px] font-bold uppercase tracking-widest">Modal</span>
+            <a href="#" onclick="openBalanceModal()" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-10 pb-0.5">
+                <i class="fa-solid fa-wallet text-lg"></i>
+                <span class="text-[8px] font-bold uppercase">Modal</span>
             </a>
         </nav>
     </div>
 
-    <main class="pt-32 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
+    <main class="pt-24 px-4 sm:px-6 max-w-6xl mx-auto space-y-5">
         
-        <div data-aos="fade-down" class="flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div class="text-center lg:text-left">
-                <h1 class="font-heading text-4xl md:text-5xl font-black text-glow tracking-tighter mb-2">
-                    Trading <span class="text-accent">Workspace.</span>
-                </h1>
-                <p class="text-gray-400 font-medium text-sm sm:text-base">Pantau objektif evaluasimu secara real-time dan interaktif.</p>
+        <div data-aos="fade-down" class="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="font-heading text-3xl font-black text-glow tracking-tight mb-1">Trading <span class="text-accent">Workspace.</span></h1>
             </div>
             
-            <div class="flex flex-wrap justify-center lg:justify-end gap-3 w-full lg:w-auto">
+            <div class="flex gap-2">
                 <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
-                <button onclick="document.getElementById('importFile').click()" class="glass-pill hover:bg-white/10 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 hover:scale-105">
+                <button onclick="document.getElementById('importFile').click()" class="glass-pill hover:bg-white/10 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-cloud-arrow-up text-gray-400"></i> Import
                 </button>
-                
-                <button onclick="exportJSON()" class="bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/30 text-brand-300 px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.1)] hover:scale-105">
+                <button onclick="exportJSON()" class="bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/30 text-brand-300 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
                     <i class="fa-solid fa-cloud-arrow-down"></i> Backup
-                </button>
-
-                <button onclick="clearAllData()" class="glass-pill hover:bg-red-500/20 text-red-400 px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 hover:scale-105 hover:border-red-500/30">
-                    <i class="fa-solid fa-trash-can"></i> Reset
                 </button>
             </div>
         </div>
 
-        <section id="dashboard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="glass-panel p-8 rounded-[2rem] premium-hover group relative overflow-hidden" data-aos="fade-up">
-                <div class="absolute -right-10 -top-10 w-32 h-32 bg-brand-500/20 blur-3xl rounded-full transition-colors"></div>
-                <div class="flex justify-between items-start mb-6 relative z-10">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-brand-500/10 flex items-center justify-center border border-brand-500/20"><i class="fa-solid fa-flag-checkered text-brand-400 text-xl"></i></div>
-                        <div>
-                            <p class="text-[10px] text-brand-400 font-bold uppercase tracking-widest mb-1">Objektif Utama</p>
-                            <h3 class="font-heading text-xl font-bold text-white">Profit Target 8%</h3>
-                        </div>
+        <section id="dashboard" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="glass-panel p-5 rounded-2xl premium-hover relative overflow-hidden" data-aos="fade-up">
+                <div class="absolute -right-6 -top-6 w-20 h-20 bg-brand-500/20 blur-2xl rounded-full"></div>
+                <div class="flex items-center gap-3 mb-4 relative z-10">
+                    <div class="w-9 h-9 rounded-full bg-brand-500/10 flex items-center justify-center border border-brand-500/20"><i class="fa-solid fa-flag-checkered text-brand-400 text-sm"></i></div>
+                    <div>
+                        <p class="text-[9px] text-brand-400 font-bold uppercase tracking-widest leading-tight">Objektif</p>
+                        <h3 class="font-heading text-sm font-bold text-white">Target 8%</h3>
                     </div>
                 </div>
                 <div class="relative z-10">
-                    <h2 class="text-4xl font-numbers font-black text-white mb-2" id="ui-current-profit">$0.00</h2>
-                    <div class="flex justify-between text-xs text-gray-400 font-bold mb-3 uppercase tracking-wider">
-                        <span>Current</span>
-                        <span id="ui-target-limit">Target: $0.00</span>
+                    <h2 class="text-2xl font-numbers font-black text-white mb-1 leading-none" id="ui-current-profit">$0.00</h2>
+                    <div class="flex justify-between text-[10px] text-gray-400 font-bold mb-2 uppercase">
+                        <span>Current</span><span id="ui-target-limit">Target: $0</span>
                     </div>
                     <progress id="prog-target" value="0" max="100" class="prog-green w-full"></progress>
-                    <p class="text-xs text-brand-300 mt-4 font-bold" id="target-status">STATUS: ONGOING</p>
                 </div>
             </div>
 
-            <div class="glass-panel p-8 rounded-[2rem] premium-hover group relative overflow-hidden" data-aos="fade-up" data-aos-delay="100">
-                <div class="absolute -right-10 -top-10 w-32 h-32 bg-red-500/10 blur-3xl rounded-full transition-colors"></div>
-                <div class="flex justify-between items-start mb-6 relative z-10">
-                    <div class="flex items-center gap-4">
-                        <div class="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20"><i class="fa-solid fa-shield-halved text-red-400 text-xl"></i></div>
-                        <div>
-                            <p class="text-[10px] text-red-400 font-bold uppercase tracking-widest mb-1">Manajemen Risiko</p>
-                            <h3 class="font-heading text-xl font-bold text-white">Max Loss 10%</h3>
-                        </div>
+            <div class="glass-panel p-5 rounded-2xl premium-hover relative overflow-hidden" data-aos="fade-up" data-aos-delay="50">
+                <div class="absolute -right-6 -top-6 w-20 h-20 bg-red-500/10 blur-2xl rounded-full"></div>
+                <div class="flex items-center gap-3 mb-4 relative z-10">
+                    <div class="w-9 h-9 rounded-full bg-red-500/10 flex items-center justify-center border border-red-500/20"><i class="fa-solid fa-shield-halved text-red-400 text-sm"></i></div>
+                    <div>
+                        <p class="text-[9px] text-red-400 font-bold uppercase tracking-widest leading-tight">Risiko</p>
+                        <h3 class="font-heading text-sm font-bold text-white">Max Loss 10%</h3>
                     </div>
                 </div>
                 <div class="relative z-10">
-                    <h2 class="text-4xl font-numbers font-black text-white mb-2" id="ui-dd">$0.00</h2>
-                    <div class="flex justify-between text-xs text-gray-400 font-bold mb-3 uppercase tracking-wider">
-                        <span>Drawdown</span>
-                        <span id="ui-loss-limit">Limit: $0.00</span>
+                    <h2 class="text-2xl font-numbers font-black text-white mb-1 leading-none" id="ui-dd">$0.00</h2>
+                    <div class="flex justify-between text-[10px] text-gray-400 font-bold mb-2 uppercase">
+                        <span>Drawdown</span><span id="ui-loss-limit">Limit: $0</span>
                     </div>
                     <progress id="prog-loss" value="0" max="100" class="prog-red w-full"></progress>
-                    <p class="text-xs text-green-400 mt-4 font-bold" id="max-loss-status">STATUS: SAFE</p>
                 </div>
             </div>
 
-            <div class="glass-panel p-8 rounded-[2rem] premium-hover flex flex-col justify-center items-center text-center relative overflow-hidden group" data-aos="fade-up" data-aos-delay="200">
-                <div class="absolute inset-0 bg-gradient-to-t from-brand-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-4">Total Net PnL</p>
-                <h2 class="text-5xl font-numbers font-black drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]" id="ui-net-pnl">$0.00</h2>
-                <div class="mt-6 flex gap-4">
-                    <div class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-gray-300">
-                        <i class="fa-solid fa-bolt text-yellow-400 mr-1"></i> <span id="stat-winrate">0%</span> Win Rate
+            <div class="glass-panel p-5 rounded-2xl premium-hover flex flex-col justify-center items-center text-center relative overflow-hidden" data-aos="fade-up" data-aos-delay="100">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-1">Total Net PnL</p>
+                <h2 class="text-3xl font-numbers font-black" id="ui-net-pnl">$0.00</h2>
+                <div class="mt-3 flex gap-2">
+                    <div class="px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-bold text-gray-300">
+                        <span id="stat-winrate" class="text-yellow-400">0%</span> Win
                     </div>
-                    <div class="px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-gray-300">
+                    <div class="px-3 py-1 rounded-md bg-white/5 border border-white/10 text-[10px] font-bold text-gray-300">
                         <span id="ui-trade-count">0</span> Trades
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="calendar-section" class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10"><i class="fa-regular fa-calendar-days text-white"></i></div>
-                    <h3 class="font-heading text-2xl font-black text-white">Trading Calendar</h3>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <section id="calendar-section" class="lg:col-span-5 glass-panel p-5 rounded-2xl" data-aos="fade-up">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-regular fa-calendar-days text-white"></i>
+                        <h3 class="font-heading text-base font-bold text-white">Calendar</h3>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white/5 border border-white/10 px-2 py-1 rounded-lg">
+                        <button onclick="changeMonth(-1)" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-chevron-left text-[10px]"></i></button>
+                        <span id="calendar-month-year" class="font-bold text-brand-300 text-[10px] uppercase w-20 text-center">MMM YYYY</span>
+                        <button onclick="changeMonth(1)" class="text-gray-400 hover:text-white transition"><i class="fa-solid fa-chevron-right text-[10px]"></i></button>
+                    </div>
                 </div>
                 
-                <div class="flex items-center gap-4 bg-white/5 border border-white/10 p-1.5 rounded-full">
-                    <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"><i class="fa-solid fa-chevron-left text-xs text-gray-400"></i></button>
-                    <span id="calendar-month-year" class="font-bold text-brand-300 uppercase tracking-widest text-sm w-32 text-center">BULAN TAHUN</span>
-                    <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition-colors"><i class="fa-solid fa-chevron-right text-xs text-gray-400"></i></button>
+                <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                    <div class="text-[9px] font-bold text-gray-500">Min</div>
+                    <div class="text-[9px] font-bold text-gray-500">Sen</div>
+                    <div class="text-[9px] font-bold text-gray-500">Sel</div>
+                    <div class="text-[9px] font-bold text-gray-500">Rab</div>
+                    <div class="text-[9px] font-bold text-gray-500">Kam</div>
+                    <div class="text-[9px] font-bold text-gray-500">Jum</div>
+                    <div class="text-[9px] font-bold text-gray-500">Sab</div>
                 </div>
-            </div>
-            
-            <div class="grid grid-cols-7 gap-2 md:gap-3 text-center mb-3">
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Min</div>
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sen</div>
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sel</div>
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Rab</div>
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Kam</div>
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Jum</div>
-                <div class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Sab</div>
-            </div>
-            
-            <div id="calendar-grid" class="grid grid-cols-7 gap-2 md:gap-3">
-                </div>
-        </section>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                    </div>
+            </section>
 
-        <section class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <h3 class="font-heading text-xl sm:text-2xl font-black text-white">Live Equity Curve</h3>
-                <div class="flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 px-3 py-1.5 rounded-full">
-                    <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse shadow-[0_0_10px_rgba(56,189,248,0.8)]"></span>
-                    <span class="hidden sm:inline text-[10px] text-brand-300 font-bold uppercase tracking-widest">Realtime Render</span>
+            <section class="lg:col-span-7 glass-panel p-5 rounded-2xl flex flex-col" data-aos="fade-up">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-heading text-base font-bold text-white">Equity Curve</h3>
+                    <div class="flex items-center gap-1.5 bg-brand-500/10 px-2 py-1 rounded">
+                        <span class="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse"></span>
+                        <span class="text-[9px] text-brand-300 font-bold uppercase">Live</span>
+                    </div>
                 </div>
-            </div>
-            <div id="equity-chart" class="w-full h-[300px] sm:h-[350px]"></div>
-        </section>
+                <div id="equity-chart" class="w-full flex-1 min-h-[180px] sm:min-h-[220px]"></div>
+            </section>
+        </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5" id="history-section">
             
-            <section id="trade-form-section" class="lg:col-span-4 glass-panel p-6 sm:p-8 rounded-[2rem] h-fit relative overflow-hidden" data-aos="fade-right">
-                <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-brand-500/10 blur-3xl rounded-full"></div>
-                <h3 class="font-heading text-2xl font-black text-white mb-6 relative z-10"><i class="fa-solid fa-pen-to-square text-brand-400 mr-2"></i> Eksekusi Baru</h3>
+            <section id="trade-form-section" class="lg:col-span-4 glass-panel p-5 rounded-2xl h-fit relative" data-aos="fade-right">
+                <h3 class="font-heading text-lg font-bold text-white mb-4"><i class="fa-solid fa-pen-to-square text-brand-400 text-sm mr-1"></i> Eksekusi Baru</h3>
                 
-                <form id="tradeForm" class="space-y-5 relative z-10">
+                <form id="tradeForm" class="space-y-3">
                     <div>
-                        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Pair / Aset</label>
+                        <label class="text-[9px] text-gray-400 font-bold uppercase mb-1 block">Pair / Aset</label>
                         <input type="text" id="asset" class="glass-input uppercase" placeholder="e.g. XAUUSD" required>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Posisi</label>
-                            <select id="position" class="glass-input appearance-none cursor-pointer">
-                                <option value="Buy">Buy (Long)</option>
-                                <option value="Sell">Sell (Short)</option>
+                            <label class="text-[9px] text-gray-400 font-bold uppercase mb-1 block">Posisi</label>
+                            <select id="position" class="glass-input appearance-none">
+                                <option value="Buy">Buy</option>
+                                <option value="Sell">Sell</option>
                             </select>
                         </div>
                         <div>
-                            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Lot Size</label>
+                            <label class="text-[9px] text-gray-400 font-bold uppercase mb-1 block">Lot Size</label>
                             <input type="number" id="lot" step="0.01" class="glass-input font-numbers" placeholder="0.00" required>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Harga Entry</label>
+                            <label class="text-[9px] text-gray-400 font-bold uppercase mb-1 block">Entry</label>
                             <input type="number" id="entry" step="0.00001" class="glass-input font-numbers" placeholder="0.00" required>
                         </div>
                         <div>
-                            <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Harga Exit</label>
+                            <label class="text-[9px] text-gray-400 font-bold uppercase mb-1 block">Exit</label>
                             <input type="number" id="exit" step="0.00001" class="glass-input font-numbers" placeholder="0.00" required>
                         </div>
                     </div>
-                    <div class="pt-2">
-                        <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 flex justify-between items-center">
+                    <div class="pt-1">
+                        <label class="text-[9px] text-gray-400 font-bold uppercase mb-1 flex justify-between items-center">
                             <span>Realized PnL ($)</span>
-                            <span onclick="autoCalculatePnL()" class="text-brand-400 cursor-pointer hover:text-white transition-colors bg-brand-500/10 px-2 py-1 rounded border border-brand-500/20"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Auto Calc</span>
+                            <span onclick="autoCalculatePnL()" class="text-brand-400 cursor-pointer hover:text-white bg-brand-500/10 px-1.5 py-0.5 rounded text-[9px]"><i class="fa-solid fa-calculator"></i> Auto</span>
                         </label>
-                        <input type="number" id="pnl" step="0.01" class="glass-input font-numbers text-xl text-brand-300 font-bold" placeholder="$0.00" required>
+                        <input type="number" id="pnl" step="0.01" class="glass-input font-numbers text-base text-brand-300 font-bold" placeholder="0.00" required>
                     </div>
-                    <button type="submit" class="w-full bg-gradient-to-r from-brand-600 to-brand-400 hover:from-brand-500 hover:to-brand-300 text-white font-black py-4 rounded-xl transition-all shadow-[0_10px_30px_-10px_rgba(56,189,248,0.5)] active:scale-95 text-sm uppercase tracking-wider mt-4">
-                        Simpan Jurnal <i class="fa-solid fa-paper-plane ml-2"></i>
+                    <button type="submit" class="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-2.5 rounded-xl transition-all text-xs uppercase tracking-wide mt-2">
+                        Simpan <i class="fa-solid fa-check ml-1"></i>
                     </button>
                 </form>
             </section>
 
-            <section id="history-section" class="lg:col-span-8 glass-panel rounded-[2rem] overflow-hidden flex flex-col min-h-[500px]" data-aos="fade-left">
-                <div class="p-6 md:p-8 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div>
-                        <h3 class="font-heading text-2xl font-black text-white">Riwayat Transaksi</h3>
-                        <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Disimpan di local storage</p>
-                    </div>
-                    <div class="flex gap-4">
-                        <div class="text-center px-4 border-r border-white/10">
-                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Profit Factor</p>
-                            <p class="text-lg font-numbers font-bold text-white" id="stat-pf">0.00</p>
+            <section class="lg:col-span-8 glass-panel rounded-2xl overflow-hidden flex flex-col min-h-[350px]" data-aos="fade-left">
+                <div class="p-4 border-b border-white/5 flex justify-between items-center bg-white/5">
+                    <h3 class="font-heading text-sm font-bold text-white">Riwayat Transaksi</h3>
+                    <div class="flex gap-3">
+                        <div class="text-right">
+                            <p class="text-[8px] text-gray-400 font-bold uppercase">Profit Factor</p>
+                            <p class="text-sm font-numbers font-bold text-white leading-none" id="stat-pf">0.00</p>
                         </div>
-                        <div class="text-center px-4">
-                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Total Lots</p>
-                            <p class="text-lg font-numbers font-bold text-white" id="stat-lots">0.00</p>
+                        <div class="w-px h-6 bg-white/10"></div>
+                        <div class="text-left">
+                            <p class="text-[8px] text-gray-400 font-bold uppercase">Total Lots</p>
+                            <p class="text-sm font-numbers font-bold text-white leading-none" id="stat-lots">0.00</p>
                         </div>
                     </div>
                 </div>
-                <div class="overflow-x-auto flex-1 p-4">
+                <div class="overflow-x-auto flex-1">
                     <table class="w-full text-left whitespace-nowrap">
                         <thead>
-                            <tr class="text-gray-500 text-[10px] uppercase tracking-widest border-b border-white/5">
-                                <th class="pb-4 px-4 font-bold">Waktu</th>
-                                <th class="pb-4 px-4 font-bold">Pair</th>
-                                <th class="pb-4 px-4 font-bold">Pos/Lot</th>
-                                <th class="pb-4 px-4 font-bold">Harga Buka - Tutup</th>
-                                <th class="pb-4 px-4 font-bold text-right">Profit</th>
-                                <th class="pb-4 px-4 font-bold text-center">Aksi</th>
+                            <tr class="text-gray-500 text-[9px] uppercase border-b border-white/5">
+                                <th class="py-2.5 px-4 font-bold">Waktu</th>
+                                <th class="py-2.5 px-4 font-bold">Pair</th>
+                                <th class="py-2.5 px-4 font-bold">Pos/Lot</th>
+                                <th class="py-2.5 px-4 font-bold">Harga</th>
+                                <th class="py-2.5 px-4 font-bold text-right">Profit</th>
+                                <th class="py-2.5 px-4 font-bold text-center">Del</th>
                             </tr>
                         </thead>
-                        <tbody id="table-body" class="text-sm font-numbers"></tbody>
+                        <tbody id="table-body" class="text-xs font-numbers"></tbody>
                     </table>
                 </div>
             </section>
@@ -360,25 +334,16 @@
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        AOS.init({ once: true, offset: 50, duration: 800 });
+        AOS.init({ once: true, offset: 50, duration: 600 }); // Durasi animasi dicepatkan agar lebih snappy
 
-        const STORAGE_KEY = 'farid_trade_dynamic';
-        const BALANCE_KEY = 'farid_initial_balance';
+        const STORAGE_KEY = 'farid_trade_compact';
+        const BALANCE_KEY = 'farid_compact_balance';
         let equityChart;
         let currentCalendarDate = new Date();
 
-        function getInitialBalance() {
-            return parseFloat(localStorage.getItem(BALANCE_KEY)) || 100000;
-        }
-
-        function openBalanceModal() {
-            document.getElementById('newBalanceInput').value = getInitialBalance();
-            document.getElementById('balanceModal').classList.add('active');
-        }
-
-        function closeBalanceModal() {
-            document.getElementById('balanceModal').classList.remove('active');
-        }
+        function getInitialBalance() { return parseFloat(localStorage.getItem(BALANCE_KEY)) || 100000; }
+        function openBalanceModal() { document.getElementById('newBalanceInput').value = getInitialBalance(); document.getElementById('balanceModal').classList.add('active'); }
+        function closeBalanceModal() { document.getElementById('balanceModal').classList.remove('active'); }
 
         function saveNewBalance() {
             const newBal = parseFloat(document.getElementById('newBalanceInput').value);
@@ -387,9 +352,7 @@
                 closeBalanceModal();
                 initChart(); 
                 renderData(); 
-            } else {
-                alert("Masukkan angka saldo yang valid!");
-            }
+            } else { alert("Angka saldo tidak valid!"); }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -432,9 +395,7 @@
             const lot = parseFloat(document.getElementById('lot').value);
             const pos = document.getElementById('position').value;
             
-            if(isNaN(entry) || isNaN(exit) || isNaN(lot)) {
-                alert("Mohon isi Posisi, Lot, Entry, dan Exit untuk Kalkulasi Otomatis."); return;
-            }
+            if(isNaN(entry) || isNaN(exit) || isNaN(lot)) { alert("Lengkapi data Form."); return; }
             
             const multiplier = 100;
             let rawPnL = 0;
@@ -444,9 +405,6 @@
             
             const pnlInput = document.getElementById('pnl');
             pnlInput.value = rawPnL.toFixed(2);
-            
-            pnlInput.classList.add('scale-105', 'bg-brand-500/20');
-            setTimeout(() => pnlInput.classList.remove('scale-105', 'bg-brand-500/20'), 300);
         }
 
         function changeMonth(step) {
@@ -457,7 +415,7 @@
         function renderCalendar() {
             const year = currentCalendarDate.getFullYear();
             const month = currentCalendarDate.getMonth();
-            const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+            const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
 
             document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
 
@@ -478,9 +436,7 @@
             const grid = document.getElementById('calendar-grid');
             grid.innerHTML = '';
 
-            for (let i = 0; i < firstDay; i++) {
-                grid.innerHTML += `<div class="p-2 min-h-[70px]"></div>`;
-            }
+            for (let i = 0; i < firstDay; i++) { grid.innerHTML += `<div class="p-1 min-h-[50px]"></div>`; }
 
             for (let day = 1; day <= daysInMonth; day++) {
                 if (dailyData[day]) {
@@ -491,15 +447,15 @@
                     const sign = isProfit ? '+' : '';
 
                     grid.innerHTML += `
-                        <div class="${bgClass} rounded-2xl p-2.5 min-h-[70px] flex flex-col justify-between border premium-hover transition-transform cursor-default shadow-sm">
-                            <span class="text-xs ${textClass} font-bold text-left opacity-70">${day}</span>
-                            <span class="font-numbers ${textClass} font-bold text-xs sm:text-sm text-right break-all leading-tight mt-1">${sign}$${pnl.toFixed(2)}</span>
+                        <div class="${bgClass} rounded-lg p-1.5 min-h-[50px] flex flex-col justify-between border cursor-default">
+                            <span class="text-[9px] ${textClass} font-bold text-left opacity-70">${day}</span>
+                            <span class="font-numbers ${textClass} font-bold text-[10px] text-right break-all leading-none mt-1">${sign}$${Math.abs(pnl).toFixed(0)}</span>
                         </div>
                     `;
                 } else {
                     grid.innerHTML += `
-                        <div class="bg-white/5 rounded-2xl p-2.5 min-h-[70px] flex flex-col border border-white/5 opacity-30 hover:opacity-50 transition-opacity">
-                            <span class="text-xs text-gray-500 text-left font-bold">${day}</span>
+                        <div class="bg-white/5 rounded-lg p-1.5 min-h-[50px] flex flex-col border border-white/5 opacity-30">
+                            <span class="text-[9px] text-gray-500 text-left font-bold">${day}</span>
                         </div>
                     `;
                 }
@@ -528,7 +484,7 @@
             const reversedTrades = [...trades].reverse();
             
             if (reversedTrades.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-12 text-center text-gray-500 font-sans font-bold text-xs uppercase tracking-widest"><i class="fa-solid fa-ghost text-2xl mb-3 block opacity-50"></i>Belum ada data eksekusi</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-500 text-[10px] uppercase">Data kosong</td></tr>`;
             }
 
             trades.forEach((trade, index) => {
@@ -544,22 +500,22 @@
 
             reversedTrades.forEach(trade => {
                 const isProfit = trade.pnl >= 0;
-                const pnlColor = isProfit ? 'text-green-400 drop-shadow-[0_0_5px_rgba(74,222,128,0.5)]' : 'text-red-400 drop-shadow-[0_0_5px_rgba(248,113,113,0.5)]';
-                const posBadge = trade.position === 'Buy' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20';
+                const pnlColor = isProfit ? 'text-green-400' : 'text-red-400';
+                const posBadge = trade.position === 'Buy' ? 'text-green-400' : 'text-red-400';
 
                 tbody.innerHTML += `
                     <tr class="glass-tr">
-                        <td class="py-4 px-4 text-gray-400 text-xs font-sans">${trade.date}</td>
-                        <td class="py-4 px-4 font-bold text-white font-sans">${trade.asset}</td>
-                        <td class="py-4 px-4">
-                            <span class="px-2 py-1 rounded text-[10px] font-bold uppercase border ${posBadge} mr-2">${trade.position}</span>
-                            <span class="text-white">${trade.lot.toFixed(2)}</span>
+                        <td class="py-2.5 px-4 text-gray-400 text-[10px] font-sans">${trade.date}</td>
+                        <td class="py-2.5 px-4 font-bold text-white font-sans text-xs">${trade.asset}</td>
+                        <td class="py-2.5 px-4">
+                            <span class="text-[9px] font-bold uppercase ${posBadge} mr-1">${trade.position}</span>
+                            <span class="text-gray-300 text-[10px]">${trade.lot.toFixed(2)}</span>
                         </td>
-                        <td class="py-4 px-4 text-gray-400 text-xs">${trade.entry} <i class="fa-solid fa-arrow-right text-[8px] mx-1 text-gray-600"></i> ${trade.exit}</td>
-                        <td class="py-4 px-4 text-right font-bold text-lg ${pnlColor}">${isProfit ? '+' : ''}$${trade.pnl.toFixed(2)}</td>
-                        <td class="py-4 px-4 text-center">
-                            <button onclick="deleteTrade(${trade.id})" class="w-8 h-8 rounded-full bg-white/5 hover:bg-red-500/20 text-gray-500 hover:text-red-400 transition-colors border border-transparent hover:border-red-500/30 flex items-center justify-center mx-auto">
-                                <i class="fa-solid fa-trash-can text-xs"></i>
+                        <td class="py-2.5 px-4 text-gray-400 text-[10px]">${trade.entry} <i class="fa-solid fa-arrow-right text-[6px] mx-1"></i> ${trade.exit}</td>
+                        <td class="py-2.5 px-4 text-right font-bold text-xs ${pnlColor}">${isProfit ? '+' : ''}$${trade.pnl.toFixed(2)}</td>
+                        <td class="py-2.5 px-4 text-center">
+                            <button onclick="deleteTrade(${trade.id})" class="text-gray-500 hover:text-red-400 transition-colors">
+                                <i class="fa-solid fa-xmark text-xs"></i>
                             </button>
                         </td>
                     </tr>
@@ -571,25 +527,19 @@
             
             const netEl = document.getElementById('ui-net-pnl');
             netEl.innerText = `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-            netEl.className = `text-5xl font-numbers font-black drop-shadow-[0_0_20px_rgba(255,255,255,0.1)] ${totalPnL >= 0 ? 'text-white' : 'text-red-400'}`;
+            netEl.className = `text-3xl font-numbers font-black ${totalPnL >= 0 ? 'text-white' : 'text-red-400'}`;
             
             document.getElementById('ui-trade-count').innerText = trades.length;
 
             const currentDrawdown = totalPnL < 0 ? Math.abs(totalPnL) : 0;
             document.getElementById('ui-dd').innerText = `$${currentDrawdown.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('prog-loss').value = currentDrawdown;
-            const lossStatus = document.getElementById('max-loss-status');
-            if(currentDrawdown >= lossLimit) { lossStatus.innerText = "STATUS: FAILED"; lossStatus.className = "text-xs font-bold text-red-500 mt-4"; } 
-            else { lossStatus.innerText = "STATUS: SAFE"; lossStatus.className = "text-xs font-bold text-green-400 mt-4"; }
 
             const currentProfit = totalPnL > 0 ? totalPnL : 0;
             document.getElementById('ui-current-profit').innerText = `$${currentProfit.toLocaleString('en-US', {minimumFractionDigits:2})}`;
             document.getElementById('prog-target').value = currentProfit;
-            const targetStatus = document.getElementById('target-status');
-            if(currentProfit >= targetLimit) { targetStatus.innerText = "STATUS: PASSED"; targetStatus.className = "text-xs font-bold text-green-400 mt-4"; }
-            else { targetStatus.innerText = "STATUS: ONGOING"; targetStatus.className = "text-xs font-bold text-brand-300 mt-4"; }
 
-            const winRate = trades.length > 0 ? (winCount / trades.length * 100).toFixed(1) : 0;
+            const winRate = trades.length > 0 ? (winCount / trades.length * 100).toFixed(0) : 0;
             const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? 'MAX' : '0.00');
             
             document.getElementById('stat-winrate').innerText = `${winRate}%`;
@@ -601,7 +551,7 @@
         }
 
         function deleteTrade(id) {
-            if(confirm('Hapus jurnal transaksi ini?')) {
+            if(confirm('Hapus jurnal ini?')) {
                 let trades = getTrades().filter(t => t.id !== id);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
                 renderData();
@@ -609,7 +559,7 @@
         }
 
         function clearAllData() {
-            if(confirm('BAHAYA: Seluruh data lokal akan dihapus. Lanjutkan?')) {
+            if(confirm('Hapus seluruh data secara permanen?')) {
                 localStorage.removeItem(STORAGE_KEY);
                 renderData();
             }
@@ -621,16 +571,16 @@
 
             const options = {
                 series: [{ name: 'Balance', data: [startBalance] }],
-                chart: { type: 'area', height: '100%', fontFamily: 'Plus Jakarta Sans, sans-serif', background: 'transparent', toolbar: { show: false }, animations: { enabled: true, easing: 'easeinout', speed: 800 } },
+                chart: { type: 'area', height: '100%', fontFamily: 'Plus Jakarta Sans, sans-serif', background: 'transparent', toolbar: { show: false } },
                 colors: ['#38bdf8'],
                 fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.0, stops: [0, 100] } },
                 dataLabels: { enabled: false },
-                stroke: { curve: 'smooth', width: 3 },
-                xaxis: { categories: ['Start'], axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#64748b', fontSize: '10px', fontWeight: 'bold' } } },
-                yaxis: { labels: { formatter: (value) => "$" + value.toLocaleString(), style: { colors: '#64748b', fontSize: '12px', fontFamily: 'Space Grotesk', fontWeight: 'bold' } } },
+                stroke: { curve: 'smooth', width: 2 },
+                xaxis: { categories: ['Start'], axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#64748b', fontSize: '9px', fontWeight: 'bold' } } },
+                yaxis: { labels: { formatter: (value) => "$" + value.toLocaleString(), style: { colors: '#64748b', fontSize: '10px', fontFamily: 'Space Grotesk' } } },
                 grid: { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 4, yaxis: { lines: { show: true } }, xaxis: { lines: { show: false } } },
                 theme: { mode: 'dark' },
-                tooltip: { theme: 'dark', style: { fontSize: '14px', fontFamily: 'Space Grotesk' }, y: { formatter: (val) => "$" + val.toLocaleString() } }
+                tooltip: { theme: 'dark', style: { fontSize: '12px' }, y: { formatter: (val) => "$" + val.toLocaleString() } }
             };
             equityChart = new ApexCharts(document.querySelector("#equity-chart"), options);
             equityChart.render();
@@ -646,12 +596,12 @@
 
         function exportJSON() {
             const trades = getTrades();
-            if (trades.length === 0) { alert('Belum ada data untuk dibackup.'); return; }
+            if (trades.length === 0) { alert('Data kosong.'); return; }
             const dataStr = JSON.stringify(trades, null, 2);
             const blob = new Blob([dataStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = `FaridTrade_DynamicBackup.json`;
+            a.href = url; a.download = `FaridTrade_CompactBackup.json`;
             document.body.appendChild(a); a.click(); document.body.removeChild(a);
             URL.revokeObjectURL(url);
         }
@@ -663,10 +613,8 @@
             reader.onload = function(e) {
                 try {
                     const imported = JSON.parse(e.target.result);
-                    if (!Array.isArray(imported)) throw new Error("Format tidak valid");
                     const merged = [...getTrades(), ...imported];
-                    const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
-                    unique.sort((a,b) => a.id - b.id);
+                    const unique = Array.from(new Map(merged.map(item => [item.id, item])).values()).sort((a,b) => a.id - b.id);
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
                     renderData();
                 } catch (error) { alert("File JSON tidak valid."); }
