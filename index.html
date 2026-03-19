@@ -1,404 +1,303 @@
 <!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Farid Trade | Premium Trading Journal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farid Trade | Funding Dashboard</title>
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: { 
-                        sans: ['Plus Jakarta Sans', 'sans-serif'],
-                        heading: ['Outfit', 'sans-serif']
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        dark: '#020202', surface: '#0a0a0a', 
-                        brand: { 300: '#7dd3fc', 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' }
+                        fp: { bg: '#0b0e14', card: '#151924', border: '#232838', blue: '#3b82f6', green: '#10b981', red: '#ef4444', text: '#9ca3af' }
                     }
                 }
             }
         }
     </script>
     <style>
-        html, body { background-color: #020202; color: #f8fafc; overflow-x: hidden; width: 100%; position: relative; }
-        .glass-pill { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        .glass-panel { background: linear-gradient(145deg, rgba(25,25,25,0.4) 0%, rgba(10,10,10,0.8) 100%); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.05); }
-        .text-glow { background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .text-accent { background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .ambient-glow-1 { position: absolute; top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(14,165,233,0.12) 0%, rgba(0,0,0,0) 60%); filter: blur(60px); z-index: -1; animation: pulse 8s infinite alternate; }
-        .ambient-glow-2 { position: absolute; bottom: 20%; right: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(129,140,248,0.08) 0%, rgba(0,0,0,0) 60%); filter: blur(60px); z-index: -1; animation: pulse 10s infinite alternate-reverse; }
-        @keyframes pulse { 0% { opacity: 0.5; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
-        .premium-hover { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255,255,255,0.05); }
-        .premium-hover:hover { transform: translateY(-4px); border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 10px 40px -10px rgba(56, 189, 248, 0.15); }
-        .form-input { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 0.75rem 1rem; border-radius: 1rem; width: 100%; transition: all 0.3s ease; }
-        .form-input:focus { outline: none; border-color: #38bdf8; background: rgba(255,255,255,0.08); box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+        body { background-color: #0b0e14; color: #f3f4f6; }
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        .fp-card { background-color: #151924; border: 1px solid #232838; border-radius: 12px; }
+        
+        /* Custom Progress Bar */
+        progress::-webkit-progress-bar { background-color: #232838; border-radius: 8px; }
+        progress::-webkit-progress-value { border-radius: 8px; }
+        .progress-red::-webkit-progress-value { background-color: #ef4444; }
+        .progress-green::-webkit-progress-value { background-color: #10b981; }
     </style>
 </head>
-<body class="antialiased selection:bg-brand-500 selection:text-white pb-20">
+<body class="flex h-screen overflow-hidden">
 
-    <div class="ambient-glow-1"></div>
-    <div class="ambient-glow-2"></div>
-
-    <div class="fixed w-full top-6 z-50 px-4 flex justify-center pointer-events-none">
-        <nav class="glass-pill rounded-full px-5 py-3 flex justify-between items-center w-full max-w-6xl pointer-events-auto shadow-[0_10px_40px_rgba(0,0,0,0.5)]" id="navbar">
-            <a href="#" class="flex items-center gap-3 group">
-                <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-black font-bold text-sm group-hover:bg-brand-500 group-hover:text-white transition-colors">FT</div>
-                <span class="font-heading font-bold text-xl tracking-tight text-white group-hover:text-brand-300 transition-colors">Farid<span class="text-gray-400 group-hover:text-white transition-colors">Trade</span></span>
-            </a>
-            
-            <div class="hidden lg:flex gap-7 items-center">
-                <a href="#dashboard" class="text-sm font-semibold text-brand-400">Dashboard</a>
-                <a href="#new-trade" class="text-sm font-semibold text-gray-300 hover:text-white transition">Catat Jurnal</a>
-                <a href="#history" class="text-sm font-semibold text-gray-300 hover:text-white transition">Riwayat</a>
-            </div>
-            
-            <div class="flex items-center gap-3 pointer-events-auto">
-                <button onclick="clearAllData()" class="text-xs text-red-400 hover:text-red-300 font-bold px-3 py-1 rounded-full border border-red-500/30 hover:bg-red-500/10 transition-colors">Reset Data</button>
-            </div>
-        </nav>
-    </div>
-
-    <section id="dashboard" class="pt-36 pb-10 px-6 max-w-7xl mx-auto">
-        <div data-aos="fade-down">
-            <h1 class="font-heading text-4xl md:text-5xl font-black text-glow tracking-tighter mb-2">
-                Trading <span class="text-accent">Dashboard.</span>
+    <aside class="w-64 bg-[#151924] border-r border-[#232838] flex flex-col h-full hidden md:flex z-20">
+        <div class="h-20 flex items-center px-6 border-b border-[#232838]">
+            <h1 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-chart-line text-blue-500"></i> Farid<span class="text-fp-text">Trade</span>
             </h1>
-            <p class="text-gray-400 font-medium">Evaluasi performa dan kontrol emosi tradingmu secara offline.</p>
         </div>
-    </section>
-
-    <section class="py-6 px-6 max-w-7xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="glass-panel rounded-[2rem] p-8 relative overflow-hidden group premium-hover">
-                <div class="relative z-10">
-                    <p class="text-brand-400 font-bold text-xs uppercase tracking-widest mb-2">Win Rate</p>
-                    <h3 class="text-4xl font-black text-white" id="stat-winrate">0<span class="text-xl text-gray-500">%</span></h3>
-                    <p class="text-gray-400 text-sm mt-2 font-bold" id="stat-total-trades">0 Transaksi Tercatat</p>
-                </div>
-                <i class="fa-solid fa-bullseye absolute -right-4 -bottom-4 text-white/5 text-9xl group-hover:text-brand-500/10 transition-colors"></i>
-            </div>
-
-            <div class="glass-panel rounded-[2rem] p-8 relative overflow-hidden group premium-hover">
-                <div class="relative z-10">
-                    <p class="text-green-400 font-bold text-xs uppercase tracking-widest mb-2">Net PnL (Total)</p>
-                    <h3 class="text-4xl font-black text-white" id="stat-pnl"><span class="text-xl text-gray-500">$</span>0.00</h3>
-                    <p class="text-gray-400 text-sm mt-2" id="stat-pnl-status">Akurasi Performa</p>
-                </div>
-                <i class="fa-solid fa-sack-dollar absolute -right-4 -bottom-4 text-white/5 text-9xl group-hover:text-green-500/10 transition-colors"></i>
-            </div>
-
-            <div class="glass-panel rounded-[2rem] p-8 relative overflow-hidden group premium-hover">
-                <div class="relative z-10">
-                    <p class="text-purple-400 font-bold text-xs uppercase tracking-widest mb-2">Pair Terfavorit</p>
-                    <h3 class="text-4xl font-black text-white" id="stat-favorite">-</h3>
-                    <p class="text-gray-400 text-sm mt-2">Aset yang paling sering ditradingkan</p>
-                </div>
-                <i class="fa-solid fa-chart-candlestick absolute -right-4 -bottom-4 text-white/5 text-9xl group-hover:text-purple-500/10 transition-colors"></i>
-            </div>
+        <div class="p-6">
+            <p class="text-xs font-bold text-fp-text uppercase tracking-widest mb-4">Menu</p>
+            <nav class="space-y-2">
+                <a href="#" class="flex items-center gap-3 bg-blue-500/10 text-blue-500 px-4 py-3 rounded-lg font-semibold transition">
+                    <i class="fa-solid fa-gauge"></i> Dashboard
+                </a>
+                <a href="#" class="flex items-center gap-3 text-fp-text hover:text-white hover:bg-[#232838] px-4 py-3 rounded-lg font-semibold transition">
+                    <i class="fa-solid fa-list-check"></i> Trading Rules
+                </a>
+                <a href="#" class="flex items-center gap-3 text-fp-text hover:text-white hover:bg-[#232838] px-4 py-3 rounded-lg font-semibold transition">
+                    <i class="fa-solid fa-clock-rotate-left"></i> History
+                </a>
+            </nav>
         </div>
-    </section>
+    </aside>
 
-    <section class="py-10 px-6 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8" id="new-trade">
-        <div class="lg:col-span-1 glass-panel rounded-[2.5rem] p-8 h-fit">
-            <div class="mb-8">
-                <h3 class="font-heading text-2xl font-black text-white mb-1">Catat Eksekusi</h3>
-                <p class="text-gray-500 text-sm">Disiplin mencatat adalah kunci konsistensi.</p>
+    <main class="flex-1 overflow-y-auto hide-scroll p-4 md:p-8">
+        
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+                <h2 class="text-2xl font-bold text-white mb-1">Overview</h2>
+                <p class="text-sm text-fp-text">Welcome back, pantau metrik evaluasimu disini.</p>
             </div>
-
-            <form id="tradeForm" class="space-y-5">
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Aset / Pair</label>
-                    <input type="text" id="asset" class="form-input uppercase" placeholder="Contoh: BTCUSDT, XAUUSD" required>
+            
+            <div class="flex items-center gap-4 bg-[#151924] border border-[#232838] p-2 rounded-lg">
+                <div class="px-4 py-2 bg-[#232838] rounded-md">
+                    <p class="text-[10px] text-fp-text uppercase font-bold">Account</p>
+                    <p class="text-sm font-bold">#889012 - Phase 1</p>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Posisi</label>
-                        <select id="position" class="form-input appearance-none">
-                            <option value="Long">Long (Buy)</option>
-                            <option value="Short">Short (Sell)</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Lot / Size</label>
-                        <input type="number" id="lot" step="0.01" class="form-input" placeholder="0.10" required>
-                    </div>
+                <div class="px-4 py-2">
+                    <p class="text-[10px] text-fp-text uppercase font-bold">Balance</p>
+                    <p class="text-sm font-bold text-white">$102,450.00</p>
                 </div>
-
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Entry</label>
-                        <input type="number" id="entry" step="0.00001" class="form-input" placeholder="Harga masuk" required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Exit</label>
-                        <input type="number" id="exit" step="0.00001" class="form-input" placeholder="Harga keluar" required>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block flex justify-between">
-                        <span>Realized PnL ($)</span>
-                        <span id="autoCalcHint" class="text-brand-400 cursor-pointer text-[10px]" onclick="autoCalculatePnL()">Auto-Calc <i class="fa-solid fa-calculator"></i></span>
-                    </label>
-                    <input type="number" id="pnl" step="0.01" class="form-input" placeholder="Masukkan PnL akhir" required>
-                </div>
-
-                <div>
-                    <label class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 block">Jurnal Emosi & Setup</label>
-                    <textarea id="notes" class="form-input hide-scroll" rows="3" placeholder="Mengapa masuk posisi ini?"></textarea>
-                </div>
-
-                <button type="submit" class="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 transition-transform hover:scale-[1.02]">
-                    <i class="fa-solid fa-save"></i> Simpan ke Jurnal
+                <button class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-bold transition">
+                    Share <i class="fa-solid fa-share-nodes ml-1"></i>
                 </button>
-            </form>
-        </div>
+            </div>
+        </header>
 
-        <div class="lg:col-span-2 glass-panel rounded-[2.5rem] p-8 overflow-hidden flex flex-col" id="history">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                <div>
-                    <h3 class="font-heading text-2xl font-black text-white mb-1">Riwayat Jurnal</h3>
-                    <p class="text-gray-500 text-sm">Data tersimpan aman di local browser.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="fp-card p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-xs text-fp-text font-bold uppercase mb-1">Max Daily Loss (5%)</p>
+                        <h3 class="text-2xl font-bold text-white">$5,000.00</h3>
+                    </div>
+                    <span class="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded">PASSED</span>
                 </div>
-                
-                <div class="flex gap-3">
-                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
-                    <button onclick="document.getElementById('importFile').click()" class="bg-white/5 border border-white/10 hover:bg-white/10 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-file-import"></i> Import JSON
-                    </button>
-                    <button onclick="exportJSON()" class="bg-brand-500/20 border border-brand-500/50 hover:bg-brand-500/40 text-brand-300 px-4 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
-                        <i class="fa-solid fa-file-export"></i> Backup JSON
-                    </button>
+                <div class="mb-2 flex justify-between text-sm">
+                    <span class="text-fp-text text-xs">Current: <span class="text-white font-bold">$450.00</span></span>
+                    <span class="text-fp-text text-xs">Limit: $5,000.00</span>
                 </div>
+                <progress value="9" max="100" class="progress-red w-full h-2"></progress>
             </div>
 
-            <div class="overflow-x-auto hide-scroll flex-1">
+            <div class="fp-card p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-xs text-fp-text font-bold uppercase mb-1">Max Loss (10%)</p>
+                        <h3 class="text-2xl font-bold text-white">$10,000.00</h3>
+                    </div>
+                    <span class="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded">PASSED</span>
+                </div>
+                <div class="mb-2 flex justify-between text-sm">
+                    <span class="text-fp-text text-xs">Current: <span class="text-white font-bold">$1,200.00</span></span>
+                    <span class="text-fp-text text-xs">Limit: $10,000.00</span>
+                </div>
+                <progress value="12" max="100" class="progress-red w-full h-2"></progress>
+            </div>
+
+            <div class="fp-card p-6 border-blue-500/30">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <p class="text-xs text-blue-400 font-bold uppercase mb-1">Profit Target (8%)</p>
+                        <h3 class="text-2xl font-bold text-white">$8,000.00</h3>
+                    </div>
+                    <span class="bg-blue-500/10 text-blue-500 text-[10px] font-bold px-2 py-1 rounded">ONGOING</span>
+                </div>
+                <div class="mb-2 flex justify-between text-sm">
+                    <span class="text-fp-text text-xs">Current: <span class="text-white font-bold">$2,450.00</span></span>
+                    <span class="text-fp-text text-xs">Target: $8,000.00</span>
+                </div>
+                <progress value="30" max="100" class="progress-green w-full h-2"></progress>
+            </div>
+        </div>
+
+        <div class="fp-card p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Equity Curve</h3>
+                    <p class="text-sm text-fp-text">Pertumbuhan akun sejak awal fase.</p>
+                </div>
+                <div class="flex gap-2">
+                    <span class="text-sm font-bold px-3 py-1 rounded bg-[#232838] text-white">Net PnL: <span class="text-green-500">+$2,450.00</span></span>
+                </div>
+            </div>
+            <div id="equity-chart" class="w-full h-80"></div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Win Rate</p>
+                <p class="text-xl font-bold text-white">65.4%</p>
+            </div>
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Profit Factor</p>
+                <p class="text-xl font-bold text-white">1.85</p>
+            </div>
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Average Win</p>
+                <p class="text-xl font-bold text-green-500">$320.50</p>
+            </div>
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Average Loss</p>
+                <p class="text-xl font-bold text-red-500">-$175.20</p>
+            </div>
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Total Trades</p>
+                <p class="text-xl font-bold text-white">42</p>
+            </div>
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Lots Traded</p>
+                <p class="text-xl font-bold text-white">18.5</p>
+            </div>
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Best Trade</p>
+                <p class="text-xl font-bold text-green-500">+$850.00</p>
+            </div>
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Worst Trade</p>
+                <p class="text-xl font-bold text-red-500">-$420.00</p>
+            </div>
+        </div>
+
+        <div class="fp-card overflow-hidden">
+            <div class="p-6 border-b border-[#232838]">
+                <h3 class="text-lg font-bold text-white">Recent Transactions</h3>
+            </div>
+            <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
-                        <tr class="border-b border-white/10 text-gray-400 text-xs uppercase tracking-widest">
-                            <th class="pb-4 font-bold">Waktu</th>
-                            <th class="pb-4 font-bold">Pair</th>
-                            <th class="pb-4 font-bold">Posisi / Lot</th>
-                            <th class="pb-4 font-bold">Entry - Exit</th>
-                            <th class="pb-4 font-bold text-right">PnL</th>
-                            <th class="pb-4 font-bold text-center">Aksi</th>
+                        <tr class="bg-[#0b0e14] text-fp-text text-xs uppercase tracking-wider">
+                            <th class="py-3 px-6 font-semibold">Open Time</th>
+                            <th class="py-3 px-6 font-semibold">Symbol</th>
+                            <th class="py-3 px-6 font-semibold">Type</th>
+                            <th class="py-3 px-6 font-semibold">Volume</th>
+                            <th class="py-3 px-6 font-semibold">Open Price</th>
+                            <th class="py-3 px-6 font-semibold">Close Price</th>
+                            <th class="py-3 px-6 font-semibold text-right">Profit</th>
                         </tr>
                     </thead>
-                    <tbody class="text-sm" id="table-body">
-                        </tbody>
+                    <tbody class="text-sm font-medium">
+                        <tr class="border-b border-[#232838] hover:bg-[#232838]/50 transition">
+                            <td class="py-4 px-6 text-fp-text">2026.03.19 14:30</td>
+                            <td class="py-4 px-6 text-white font-bold">XAUUSD</td>
+                            <td class="py-4 px-6"><span class="text-green-500">Buy</span></td>
+                            <td class="py-4 px-6 text-white">1.00</td>
+                            <td class="py-4 px-6 text-fp-text">2150.50</td>
+                            <td class="py-4 px-6 text-fp-text">2153.00</td>
+                            <td class="py-4 px-6 text-right text-green-500">250.00</td>
+                        </tr>
+                        <tr class="border-b border-[#232838] hover:bg-[#232838]/50 transition">
+                            <td class="py-4 px-6 text-fp-text">2026.03.18 09:15</td>
+                            <td class="py-4 px-6 text-white font-bold">BTCUSD</td>
+                            <td class="py-4 px-6"><span class="text-red-500">Sell</span></td>
+                            <td class="py-4 px-6 text-white">0.50</td>
+                            <td class="py-4 px-6 text-fp-text">68500.00</td>
+                            <td class="py-4 px-6 text-fp-text">68750.00</td>
+                            <td class="py-4 px-6 text-right text-red-500">-125.00</td>
+                        </tr>
+                        <tr class="border-b border-[#232838] hover:bg-[#232838]/50 transition">
+                            <td class="py-4 px-6 text-fp-text">2026.03.17 20:45</td>
+                            <td class="py-4 px-6 text-white font-bold">EURUSD</td>
+                            <td class="py-4 px-6"><span class="text-green-500">Buy</span></td>
+                            <td class="py-4 px-6 text-white">2.00</td>
+                            <td class="py-4 px-6 text-fp-text">1.09200</td>
+                            <td class="py-4 px-6 text-fp-text">1.09350</td>
+                            <td class="py-4 px-6 text-right text-green-500">300.00</td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
         </div>
-    </section>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    </main>
+
     <script>
-        AOS.init({ once: true, offset: 50, duration: 800 });
+        document.addEventListener('DOMContentLoaded', function () {
+            // Data dummy simulasi equity curve (dari modal awal $100,000)
+            const equityData = [
+                100000, 100250, 100100, 100800, 100450, 101200, 101000, 101850, 101500, 102450
+            ];
+            const categories = ['Trade 1', 'Trade 2', 'Trade 3', 'Trade 4', 'Trade 5', 'Trade 6', 'Trade 7', 'Trade 8', 'Trade 9', 'Trade 10'];
 
-        // --- Core Logic: Trading Journal ---
-        const STORAGE_KEY = 'farid_trade_journal';
-
-        // Initialize App
-        document.addEventListener('DOMContentLoaded', () => {
-            renderData();
-        });
-
-        // 1. Get Data from Local Storage
-        function getTrades() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : [];
-        }
-
-        // 2. Save New Trade
-        document.getElementById('tradeForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const newTrade = {
-                id: Date.now(),
-                date: new Date().toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-                asset: document.getElementById('asset').value.toUpperCase(),
-                position: document.getElementById('position').value,
-                lot: parseFloat(document.getElementById('lot').value),
-                entry: parseFloat(document.getElementById('entry').value),
-                exit: parseFloat(document.getElementById('exit').value),
-                pnl: parseFloat(document.getElementById('pnl').value),
-                notes: document.getElementById('notes').value
-            };
-
-            const trades = getTrades();
-            trades.unshift(newTrade); // Add to the beginning of the array
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
-            
-            this.reset();
-            renderData();
-        });
-
-        // 3. Render Table & Update Dashboard
-        function renderData() {
-            const trades = getTrades();
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-
-            let totalPnL = 0;
-            let winCount = 0;
-            let pairCount = {};
-
-            if (trades.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-gray-500">Belum ada jurnal yang dicatat.</td></tr>`;
-            } else {
-                trades.forEach(trade => {
-                    // Analytics Calculation
-                    totalPnL += trade.pnl;
-                    if (trade.pnl > 0) winCount++;
-                    pairCount[trade.asset] = (pairCount[trade.asset] || 0) + 1;
-
-                    // Row Styling based on PnL
-                    const isProfit = trade.pnl >= 0;
-                    const pnlColor = isProfit ? 'text-green-400' : 'text-red-400';
-                    const posColor = trade.position === 'Long' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30';
-
-                    const tr = document.createElement('tr');
-                    tr.className = "border-b border-white/5 hover:bg-white/5 transition-colors group";
-                    tr.innerHTML = `
-                        <td class="py-4 text-gray-400 text-xs">${trade.date}</td>
-                        <td class="py-4 font-bold text-white">${trade.asset}</td>
-                        <td class="py-4">
-                            <span class="${posColor} border px-2 py-1 rounded-md text-[10px] font-bold uppercase">${trade.position}</span>
-                            <span class="text-gray-400 ml-2 text-xs">${trade.lot} Lot</span>
-                        </td>
-                        <td class="py-4 text-gray-300 text-xs">${trade.entry} <i class="fa-solid fa-arrow-right text-[10px] mx-1 text-gray-600"></i> ${trade.exit}</td>
-                        <td class="py-4 text-right font-black ${pnlColor}">${isProfit ? '+' : ''}$${trade.pnl.toFixed(2)}</td>
-                        <td class="py-4 text-center">
-                            <button onclick="deleteTrade(${trade.id})" class="text-gray-600 hover:text-red-400 transition-colors"><i class="fa-solid fa-trash"></i></button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            }
-
-            // Update Dashboard UI
-            const winRate = trades.length > 0 ? Math.round((winCount / trades.length) * 100) : 0;
-            document.getElementById('stat-winrate').innerHTML = `${winRate}<span class="text-xl text-gray-500">%</span>`;
-            document.getElementById('stat-total-trades').innerText = `${trades.length} Transaksi Tercatat`;
-
-            const pnlEl = document.getElementById('stat-pnl');
-            pnlEl.innerHTML = `<span class="text-xl text-gray-500">$</span>${totalPnL > 0 ? '+' : ''}${totalPnL.toFixed(2)}`;
-            pnlEl.className = `text-4xl font-black ${totalPnL >= 0 ? 'text-white' : 'text-red-400'}`;
-            
-            // Find Most Traded Pair
-            if (Object.keys(pairCount).length > 0) {
-                const favorite = Object.keys(pairCount).reduce((a, b) => pairCount[a] > pairCount[b] ? a : b);
-                document.getElementById('stat-favorite').innerText = favorite;
-            } else {
-                document.getElementById('stat-favorite').innerText = '-';
-            }
-        }
-
-        // 4. Delete Single Trade
-        function deleteTrade(id) {
-            if(confirm('Yakin ingin menghapus riwayat ini?')) {
-                let trades = getTrades();
-                trades = trades.filter(t => t.id !== id);
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
-                renderData();
-            }
-        }
-
-        // 5. Clear All Data
-        function clearAllData() {
-            if(confirm('PERINGATAN! Ini akan menghapus semua jurnal dari browser. Pastikan sudah Backup JSON. Lanjutkan?')) {
-                localStorage.removeItem(STORAGE_KEY);
-                renderData();
-            }
-        }
-
-        // 6. Helper: Auto Calculate PnL Points (Simplified logic)
-        function autoCalculatePnL() {
-            const entry = parseFloat(document.getElementById('entry').value);
-            const exit = parseFloat(document.getElementById('exit').value);
-            const lot = parseFloat(document.getElementById('lot').value);
-            const pos = document.getElementById('position').value;
-            
-            if(isNaN(entry) || isNaN(exit) || isNaN(lot)) {
-                alert("Isi Posisi, Lot, Entry, dan Exit terlebih dahulu untuk kalkulasi otomatis.");
-                return;
-            }
-
-            // Rumus dasar poin (Disesuaikan jika trading crypto/forex beda kontrak)
-            let rawPnL = 0;
-            if(pos === 'Long') rawPnL = (exit - entry) * lot;
-            if(pos === 'Short') rawPnL = (entry - exit) * lot;
-            
-            // Masukkan ke input PnL
-            document.getElementById('pnl').value = rawPnL.toFixed(2);
-        }
-
-        // --- JSON Backup & Restore ---
-
-        // Export Data to JSON
-        function exportJSON() {
-            const trades = getTrades();
-            if (trades.length === 0) {
-                alert('Tidak ada data untuk di-backup!');
-                return;
-            }
-            
-            const dataStr = JSON.stringify(trades, null, 2);
-            const blob = new Blob([dataStr], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `FaridTrade_Backup_${new Date().toISOString().split('T')[0]}.json`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // Import Data from JSON
-        function importJSON(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (!Array.isArray(importedData)) throw new Error("Format JSON tidak valid.");
-                    
-                    // Gabungkan data lama dan baru (opsional: overwrite)
-                    const existingData = getTrades();
-                    const mergedData = [...importedData, ...existingData];
-                    
-                    // Hapus duplikat berdasarkan ID
-                    const uniqueData = Array.from(new Map(mergedData.map(item => [item.id, item])).values());
-                    
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(uniqueData));
-                    renderData();
-                    alert("Data berhasil di-import!");
-                    
-                } catch (error) {
-                    alert("Gagal membaca file JSON. Pastikan formatnya benar.");
+            const options = {
+                series: [{
+                    name: 'Equity',
+                    data: equityData
+                }],
+                chart: {
+                    type: 'area',
+                    height: 320,
+                    fontFamily: 'Inter, sans-serif',
+                    background: 'transparent',
+                    toolbar: { show: false },
+                    zoom: { enabled: false }
+                },
+                colors: ['#3b82f6'], // Biru ala prop firm
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.4,
+                        opacityTo: 0.05,
+                        stops: [0, 100]
+                    }
+                },
+                dataLabels: { enabled: false },
+                stroke: {
+                    curve: 'smooth',
+                    width: 2
+                },
+                xaxis: {
+                    categories: categories,
+                    axisBorder: { show: false },
+                    axisTicks: { show: false },
+                    labels: {
+                        style: { colors: '#9ca3af', fontSize: '12px' }
+                    }
+                },
+                yaxis: {
+                    min: 99000, // Supaya chart tidak mulai dari nol
+                    labels: {
+                        formatter: function (value) { return "$" + value.toLocaleString(); },
+                        style: { colors: '#9ca3af', fontSize: '12px' }
+                    }
+                },
+                grid: {
+                    borderColor: '#232838',
+                    strokeDashArray: 4,
+                    yaxis: { lines: { show: true } },
+                    xaxis: { lines: { show: false } }
+                },
+                theme: { mode: 'dark' },
+                tooltip: {
+                    theme: 'dark',
+                    y: { formatter: function (val) { return "$" + val.toLocaleString(); } }
                 }
             };
-            reader.readAsText(file);
-            
-            // Reset input file agar bisa import file yang sama lagi jika perlu
-            event.target.value = '';
-        }
+
+            const chart = new ApexCharts(document.querySelector("#equity-chart"), options);
+            chart.render();
+        });
     </script>
 </body>
 </html>
