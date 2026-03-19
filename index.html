@@ -73,18 +73,18 @@
     <div class="ambient-glow-2"></div>
 
     <div id="balanceModal" class="modal-overlay">
-        <div class="glass-panel p-8 rounded-[2rem] w-[90%] max-w-md relative">
-            <button onclick="closeBalanceModal()" class="absolute top-6 right-6 text-gray-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-            <h3 class="font-heading text-2xl font-black text-white mb-2">Setting Saldo Awal</h3>
-            <p class="text-gray-400 text-sm mb-6">Atur modal awal untuk menghitung akurasi Drawdown dan persentase Profit Target.</p>
+        <div class="glass-panel p-8 rounded-[2rem] w-[90%] max-w-md relative border border-brand-500/30 shadow-[0_0_30px_rgba(56,189,248,0.2)]">
+            <button onclick="closeBalanceModal()" class="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="font-heading text-2xl font-black text-white mb-2">Setting Modal Awal</h3>
+            <p class="text-gray-400 text-sm mb-6">Atur nominal modal (balance) untuk kalkulasi Drawdown dan Profit Target.</p>
             
             <div class="mb-6">
                 <label class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-2 block">Initial Balance ($)</label>
                 <input type="number" id="newBalanceInput" class="glass-input text-xl text-brand-300 font-bold" placeholder="100000">
             </div>
             
-            <button onclick="saveNewBalance()" class="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_25px_rgba(56,189,248,0.5)]">
-                Simpan Saldo
+            <button onclick="saveNewBalance()" class="w-full bg-brand-500 hover:bg-brand-400 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(56,189,248,0.3)] hover:shadow-[0_0_25px_rgba(56,189,248,0.5)] active:scale-95">
+                Simpan Perubahan Saldo
             </button>
         </div>
     </div>
@@ -93,42 +93,43 @@
         <nav class="glass-pill rounded-full px-5 py-2.5 flex justify-between items-center w-full max-w-7xl pointer-events-auto shadow-[0_10px_40px_rgba(0,0,0,0.5)]" id="navbar">
             <a href="#" class="flex items-center gap-3 group">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white font-bold text-sm shadow-[0_0_15px_rgba(56,189,248,0.5)] group-hover:scale-110 transition-transform">FT</div>
-                <span class="font-heading font-black text-2xl tracking-tight text-white group-hover:text-brand-300 transition-colors">Farid<span class="text-gray-400 font-medium">Trade</span></span>
+                <span class="font-heading font-black text-2xl tracking-tight text-white group-hover:text-brand-300 transition-colors hidden sm:block">Farid<span class="text-gray-400 font-medium">Trade</span></span>
             </a>
             
-            <div class="hidden md:flex items-center gap-6">
-                <div class="text-right flex items-center gap-3">
-                    <div>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live Balance</p>
-                        <p class="text-lg font-numbers font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400" id="nav-balance">$0.00</p>
-                    </div>
-                    <button onclick="openBalanceModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-brand-500/20 text-gray-400 hover:text-brand-300 transition-colors border border-transparent hover:border-brand-500/30 flex items-center justify-center" title="Edit Saldo Awal">
-                        <i class="fa-solid fa-pen text-xs"></i>
-                    </button>
+            <div class="flex items-center gap-4 sm:gap-6">
+                <div class="text-right">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live Balance</p>
+                    <p class="text-lg font-numbers font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400" id="nav-balance">$0.00</p>
                 </div>
-                <div class="w-px h-8 bg-white/10"></div>
-                <button onclick="clearAllData()" class="text-red-400 hover:text-white hover:bg-red-500/20 px-4 py-2 rounded-full text-xs font-bold transition-all border border-transparent hover:border-red-500/30 flex items-center gap-2">
-                    <i class="fa-solid fa-power-off"></i> Reset
+                <div class="w-px h-8 bg-white/10 hidden sm:block"></div>
+                <button onclick="clearAllData()" class="text-red-400 hover:text-white hover:bg-red-500/20 px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all border border-transparent hover:border-red-500/30 flex items-center gap-2">
+                    <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Reset Data</span>
                 </button>
             </div>
         </nav>
     </div>
 
     <main class="pt-32 px-4 sm:px-6 max-w-7xl mx-auto space-y-8">
-        <div data-aos="fade-down" class="text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
-            <div>
+        <div data-aos="fade-down" class="flex flex-col lg:flex-row justify-between items-center gap-6">
+            <div class="text-center lg:text-left">
                 <h1 class="font-heading text-4xl md:text-5xl font-black text-glow tracking-tighter mb-2">
                     Trading <span class="text-accent">Workspace.</span>
                 </h1>
-                <p class="text-gray-400 font-medium">Pantau objektif evaluasimu secara real-time dan interaktif.</p>
+                <p class="text-gray-400 font-medium text-sm sm:text-base">Pantau objektif evaluasimu secara real-time dan interaktif.</p>
             </div>
-            <div class="flex gap-3">
+            
+            <div class="flex flex-wrap justify-center lg:justify-end gap-3 w-full lg:w-auto">
+                <button onclick="openBalanceModal()" class="glass-pill border-brand-500/30 hover:bg-brand-500/10 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.1)] hover:scale-105">
+                    <i class="fa-solid fa-wallet text-brand-400"></i> Set Modal
+                </button>
+                
                 <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
-                <button onclick="document.getElementById('importFile').click()" class="glass-pill hover:bg-white/10 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2">
+                <button onclick="document.getElementById('importFile').click()" class="glass-pill hover:bg-white/10 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 hover:scale-105">
                     <i class="fa-solid fa-cloud-arrow-up text-gray-400"></i> Import
                 </button>
-                <button onclick="exportJSON()" class="bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/30 text-brand-300 px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.1)]">
-                    <i class="fa-solid fa-cloud-arrow-down"></i> Backup JSON
+                
+                <button onclick="exportJSON()" class="bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/30 text-brand-300 px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.1)] hover:scale-105">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Backup
                 </button>
             </div>
         </div>
@@ -195,17 +196,17 @@
 
         <div class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
             <div class="flex justify-between items-center mb-4 px-2">
-                <h3 class="font-heading text-2xl font-black text-white">Live Equity Curve</h3>
+                <h3 class="font-heading text-xl sm:text-2xl font-black text-white">Live Equity Curve</h3>
                 <div class="flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 px-3 py-1.5 rounded-full">
                     <span class="w-2 h-2 rounded-full bg-brand-400 animate-pulse shadow-[0_0_10px_rgba(56,189,248,0.8)]"></span>
-                    <span class="text-[10px] text-brand-300 font-bold uppercase tracking-widest">Realtime Render</span>
+                    <span class="hidden sm:inline text-[10px] text-brand-300 font-bold uppercase tracking-widest">Realtime Render</span>
                 </div>
             </div>
-            <div id="equity-chart" class="w-full h-[350px]"></div>
+            <div id="equity-chart" class="w-full h-[300px] sm:h-[350px]"></div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-4 glass-panel p-8 rounded-[2rem] h-fit relative overflow-hidden" data-aos="fade-right">
+            <div class="lg:col-span-4 glass-panel p-6 sm:p-8 rounded-[2rem] h-fit relative overflow-hidden" data-aos="fade-right">
                 <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-brand-500/10 blur-3xl rounded-full"></div>
                 <h3 class="font-heading text-2xl font-black text-white mb-6 relative z-10"><i class="fa-solid fa-pen-to-square text-brand-400 mr-2"></i> Eksekusi Baru</h3>
                 
@@ -251,7 +252,7 @@
             </div>
 
             <div class="lg:col-span-8 glass-panel rounded-[2rem] overflow-hidden flex flex-col min-h-[500px]" data-aos="fade-left">
-                <div class="p-6 md:p-8 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="p-6 md:p-8 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h3 class="font-heading text-2xl font-black text-white">Riwayat Transaksi</h3>
                         <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mt-1">Disimpan di local storage</p>
@@ -353,7 +354,7 @@
             renderData();
         });
 
-        // REVISI LOGIKA KALKULASI PNL (Multiplier x100)
+        // LOGIKA KALKULASI PNL (Multiplier x100)
         function autoCalculatePnL() {
             const entry = parseFloat(document.getElementById('entry').value);
             const exit = parseFloat(document.getElementById('exit').value);
@@ -383,7 +384,6 @@
             const targetLimit = currentInitialBalance * 0.08; // 8% Profit Target
             const lossLimit = currentInitialBalance * 0.10;   // 10% Max Loss
 
-            // Update label target & limit sesuai modal awal
             document.getElementById('ui-target-limit').innerText = `Target: $${targetLimit.toLocaleString()}`;
             document.getElementById('ui-loss-limit').innerText = `Limit: $${lossLimit.toLocaleString()}`;
             document.getElementById('prog-target').max = targetLimit;
@@ -439,7 +439,6 @@
                 `;
             });
 
-            // Update Semua Angka di Dashboard
             const finalBalance = currentInitialBalance + totalPnL;
             document.getElementById('nav-balance').innerText = `$${finalBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
             
@@ -490,11 +489,11 @@
 
         function initChart() {
             const startBalance = getInitialBalance();
-            if(equityChart) equityChart.destroy(); // Hancurkan chart lama jika ada perubahan saldo
+            if(equityChart) equityChart.destroy();
 
             const options = {
                 series: [{ name: 'Balance', data: [startBalance] }],
-                chart: { type: 'area', height: 350, fontFamily: 'Plus Jakarta Sans, sans-serif', background: 'transparent', toolbar: { show: false }, animations: { enabled: true, easing: 'easeinout', speed: 800 } },
+                chart: { type: 'area', height: '100%', fontFamily: 'Plus Jakarta Sans, sans-serif', background: 'transparent', toolbar: { show: false }, animations: { enabled: true, easing: 'easeinout', speed: 800 } },
                 colors: ['#38bdf8'],
                 fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.0, stops: [0, 100] } },
                 dataLabels: { enabled: false },
@@ -511,7 +510,7 @@
 
         function updateChartData(categories, data) {
             if(equityChart) {
-                const minVal = Math.min(...data) - (getInitialBalance() * 0.005); // Skala dinamis
+                const minVal = Math.min(...data) - (getInitialBalance() * 0.005);
                 equityChart.updateOptions({ xaxis: { categories: categories }, yaxis: { min: minVal } });
                 equityChart.updateSeries([{ name: 'Balance', data: data }]);
             }
