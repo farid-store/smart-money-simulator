@@ -37,7 +37,7 @@
         .ambient-glow-2 { position: absolute; bottom: 20%; right: -10%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(129,140,248,0.1) 0%, rgba(0,0,0,0) 60%); filter: blur(80px); z-index: -1; animation: pulse 10s infinite alternate-reverse; }
         @keyframes pulse { 0% { opacity: 0.4; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1.1); } }
 
-        .glass-pill { background: rgba(10, 10, 10, 0.4); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
+        .glass-pill { background: rgba(10, 10, 10, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
         .glass-panel { background: linear-gradient(145deg, rgba(20,20,25,0.6) 0%, rgba(5,5,5,0.8) 100%); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.05); }
         
         .text-glow { background: linear-gradient(to right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
@@ -64,9 +64,12 @@
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; align-items: center; justify-content: center; }
         .modal-overlay.active { display: flex; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Smooth Scroll Padding for Header offset */
+        section { scroll-margin-top: 100px; }
     </style>
 </head>
-<body class="antialiased selection:bg-brand-500 selection:text-white pb-20">
+<body class="antialiased selection:bg-brand-500 selection:text-white pb-32 md:pb-20">
 
     <div class="ambient-glow-1"></div>
     <div class="ambient-glow-2"></div>
@@ -95,21 +98,55 @@
                 <span class="font-heading font-black text-2xl tracking-tight text-white group-hover:text-brand-300 transition-colors hidden sm:block">Farid<span class="text-gray-400 font-medium">Trade</span></span>
             </a>
             
+            <div class="hidden md:flex gap-8 items-center font-bold text-sm">
+                <a href="#dashboard" class="text-gray-400 hover:text-white transition-colors">Stats</a>
+                <a href="#calendar-section" class="text-gray-400 hover:text-white transition-colors">Calendar</a>
+                <a href="#trade-form-section" class="text-gray-400 hover:text-white transition-colors">New Trade</a>
+                <a href="#history-section" class="text-gray-400 hover:text-white transition-colors">History</a>
+            </div>
+
             <div class="flex items-center gap-4 sm:gap-6">
                 <div class="text-right flex items-center gap-3">
                     <div>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Live Balance</p>
                         <p class="text-lg font-numbers font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400" id="nav-balance">$0.00</p>
                     </div>
-                    <button onclick="openBalanceModal()" class="w-8 h-8 rounded-full bg-white/5 hover:bg-brand-500/20 text-gray-400 hover:text-brand-300 transition-colors border border-transparent hover:border-brand-500/30 flex items-center justify-center" title="Edit Saldo Awal">
+                    <button onclick="openBalanceModal()" class="hidden md:flex w-8 h-8 rounded-full bg-white/5 hover:bg-brand-500/20 text-gray-400 hover:text-brand-300 transition-colors border border-transparent hover:border-brand-500/30 items-center justify-center" title="Edit Saldo Awal">
                         <i class="fa-solid fa-pen text-xs"></i>
                     </button>
                 </div>
-                <div class="w-px h-8 bg-white/10 hidden sm:block"></div>
-                <button onclick="clearAllData()" class="text-red-400 hover:text-white hover:bg-red-500/20 px-3 sm:px-4 py-2 rounded-full text-xs font-bold transition-all border border-transparent hover:border-red-500/30 flex items-center gap-2">
-                    <i class="fa-solid fa-power-off"></i> <span class="hidden sm:inline">Reset Data</span>
-                </button>
             </div>
+        </nav>
+    </div>
+
+    <div class="fixed bottom-6 w-full z-50 px-4 flex justify-center md:hidden pointer-events-none">
+        <nav class="glass-pill rounded-[2rem] px-6 py-3 flex justify-between items-end w-full max-w-md pointer-events-auto shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10">
+            
+            <a href="#dashboard" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-12 pb-1">
+                <i class="fa-solid fa-chart-pie text-xl mb-1"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Stats</span>
+            </a>
+            
+            <a href="#calendar-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-12 pb-1">
+                <i class="fa-solid fa-calendar-days text-xl mb-1"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Cal</span>
+            </a>
+            
+            <a href="#trade-form-section" class="flex flex-col items-center group relative -mt-8">
+                <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-brand-600 to-brand-400 flex items-center justify-center text-white shadow-[0_10px_20px_rgba(56,189,248,0.4)] group-hover:scale-110 transition-transform mb-1 border-4 border-[#0a0a0a]">
+                    <i class="fa-solid fa-plus text-2xl"></i>
+                </div>
+            </a>
+            
+            <a href="#history-section" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-12 pb-1">
+                <i class="fa-solid fa-list-ul text-xl mb-1"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">List</span>
+            </a>
+            
+            <a href="#" onclick="openBalanceModal()" class="flex flex-col items-center gap-1 text-gray-500 hover:text-brand-400 transition-colors w-12 pb-1">
+                <i class="fa-solid fa-wallet text-xl mb-1"></i>
+                <span class="text-[9px] font-bold uppercase tracking-widest">Modal</span>
+            </a>
         </nav>
     </div>
 
@@ -124,20 +161,22 @@
             </div>
             
             <div class="flex flex-wrap justify-center lg:justify-end gap-3 w-full lg:w-auto">
-                <button onclick="openBalanceModal()" class="glass-pill border-brand-500/30 hover:bg-brand-500/10 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(56,189,248,0.1)] hover:scale-105">
-                    <i class="fa-solid fa-wallet text-brand-400"></i> Set Modal
-                </button>
                 <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
                 <button onclick="document.getElementById('importFile').click()" class="glass-pill hover:bg-white/10 text-white px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 hover:scale-105">
                     <i class="fa-solid fa-cloud-arrow-up text-gray-400"></i> Import
                 </button>
+                
                 <button onclick="exportJSON()" class="bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/30 text-brand-300 px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(56,189,248,0.1)] hover:scale-105">
                     <i class="fa-solid fa-cloud-arrow-down"></i> Backup
+                </button>
+
+                <button onclick="clearAllData()" class="glass-pill hover:bg-red-500/20 text-red-400 px-5 py-3 rounded-2xl text-sm font-bold transition-all flex items-center gap-2 hover:scale-105 hover:border-red-500/30">
+                    <i class="fa-solid fa-trash-can"></i> Reset
                 </button>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section id="dashboard" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="glass-panel p-8 rounded-[2rem] premium-hover group relative overflow-hidden" data-aos="fade-up">
                 <div class="absolute -right-10 -top-10 w-32 h-32 bg-brand-500/20 blur-3xl rounded-full transition-colors"></div>
                 <div class="flex justify-between items-start mb-6 relative z-10">
@@ -195,9 +234,9 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
+        <section id="calendar-section" class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
             <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10"><i class="fa-regular fa-calendar-days text-white"></i></div>
@@ -223,9 +262,9 @@
             
             <div id="calendar-grid" class="grid grid-cols-7 gap-2 md:gap-3">
                 </div>
-        </div>
+        </section>
 
-        <div class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
+        <section class="glass-panel p-6 md:p-8 rounded-[2rem]" data-aos="fade-up">
             <div class="flex justify-between items-center mb-4 px-2">
                 <h3 class="font-heading text-xl sm:text-2xl font-black text-white">Live Equity Curve</h3>
                 <div class="flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 px-3 py-1.5 rounded-full">
@@ -234,10 +273,11 @@
                 </div>
             </div>
             <div id="equity-chart" class="w-full h-[300px] sm:h-[350px]"></div>
-        </div>
+        </section>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <div class="lg:col-span-4 glass-panel p-6 sm:p-8 rounded-[2rem] h-fit relative overflow-hidden" data-aos="fade-right">
+            
+            <section id="trade-form-section" class="lg:col-span-4 glass-panel p-6 sm:p-8 rounded-[2rem] h-fit relative overflow-hidden" data-aos="fade-right">
                 <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-brand-500/10 blur-3xl rounded-full"></div>
                 <h3 class="font-heading text-2xl font-black text-white mb-6 relative z-10"><i class="fa-solid fa-pen-to-square text-brand-400 mr-2"></i> Eksekusi Baru</h3>
                 
@@ -280,9 +320,9 @@
                         Simpan Jurnal <i class="fa-solid fa-paper-plane ml-2"></i>
                     </button>
                 </form>
-            </div>
+            </section>
 
-            <div class="lg:col-span-8 glass-panel rounded-[2rem] overflow-hidden flex flex-col min-h-[500px]" data-aos="fade-left">
+            <section id="history-section" class="lg:col-span-8 glass-panel rounded-[2rem] overflow-hidden flex flex-col min-h-[500px]" data-aos="fade-left">
                 <div class="p-6 md:p-8 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h3 class="font-heading text-2xl font-black text-white">Riwayat Transaksi</h3>
@@ -314,7 +354,7 @@
                         <tbody id="table-body" class="text-sm font-numbers"></tbody>
                     </table>
                 </div>
-            </div>
+            </section>
         </div>
     </main>
 
@@ -370,7 +410,6 @@
 
         document.getElementById('tradeForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            // Simpan timestamp di ID, karena kita butuh exact Date untuk Kalender
             const now = Date.now();
             const newTrade = {
                 id: now,
@@ -397,7 +436,6 @@
                 alert("Mohon isi Posisi, Lot, Entry, dan Exit untuk Kalkulasi Otomatis."); return;
             }
             
-            // Rumus Real (10 Pips = $1 per 0.01 lot)
             const multiplier = 100;
             let rawPnL = 0;
             
@@ -423,14 +461,13 @@
 
             document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
 
-            const firstDay = new Date(year, month, 1).getDay(); // 0 (Sun) to 6 (Sat)
+            const firstDay = new Date(year, month, 1).getDay(); 
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-            // Kumpulkan data per hari
             const trades = getTrades();
             const dailyData = {};
             trades.forEach(t => {
-                const tDate = new Date(t.id); // Kita set id = Date.now() saat save
+                const tDate = new Date(t.id);
                 if (tDate.getFullYear() === year && tDate.getMonth() === month) {
                     const day = tDate.getDate();
                     if (!dailyData[day]) dailyData[day] = { pnl: 0 };
@@ -441,12 +478,10 @@
             const grid = document.getElementById('calendar-grid');
             grid.innerHTML = '';
 
-            // Blank spaces untuk awal bulan
             for (let i = 0; i < firstDay; i++) {
                 grid.innerHTML += `<div class="p-2 min-h-[70px]"></div>`;
             }
 
-            // Render Tanggal
             for (let day = 1; day <= daysInMonth; day++) {
                 if (dailyData[day]) {
                     const pnl = dailyData[day].pnl;
@@ -456,7 +491,7 @@
                     const sign = isProfit ? '+' : '';
 
                     grid.innerHTML += `
-                        <div class="${bgClass} rounded-2xl p-2.5 min-h-[70px] flex flex-col justify-between border premium-hover transition-transform cursor-default">
+                        <div class="${bgClass} rounded-2xl p-2.5 min-h-[70px] flex flex-col justify-between border premium-hover transition-transform cursor-default shadow-sm">
                             <span class="text-xs ${textClass} font-bold text-left opacity-70">${day}</span>
                             <span class="font-numbers ${textClass} font-bold text-xs sm:text-sm text-right break-all leading-tight mt-1">${sign}$${pnl.toFixed(2)}</span>
                         </div>
@@ -562,7 +597,7 @@
             document.getElementById('stat-lots').innerText = totalLots.toFixed(2);
 
             updateChartData(chartCategories, chartData);
-            renderCalendar(); // UPDATE KALENDER SETIAP ADA DATA BARU
+            renderCalendar(); 
         }
 
         function deleteTrade(id) {
