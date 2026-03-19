@@ -3,12 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farid Trade | Funding Dashboard</title>
+    <title>Farid Trade | Pro Funding Dashboard</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
@@ -29,8 +27,9 @@
         .hide-scroll::-webkit-scrollbar { display: none; }
         .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         .fp-card { background-color: #151924; border: 1px solid #232838; border-radius: 12px; }
+        .fp-input { background-color: #0b0e14; border: 1px solid #232838; color: white; padding: 0.75rem; border-radius: 8px; width: 100%; font-size: 0.875rem; transition: all 0.2s; }
+        .fp-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f6; }
         
-        /* Custom Progress Bar */
         progress::-webkit-progress-bar { background-color: #232838; border-radius: 8px; }
         progress::-webkit-progress-value { border-radius: 8px; }
         .progress-red::-webkit-progress-value { background-color: #ef4444; }
@@ -39,25 +38,22 @@
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-64 bg-[#151924] border-r border-[#232838] flex flex-col h-full hidden md:flex z-20">
+    <aside class="w-64 bg-[#151924] border-r border-[#232838] flex flex-col h-full hidden md:flex z-20 shrink-0">
         <div class="h-20 flex items-center px-6 border-b border-[#232838]">
             <h1 class="text-xl font-black text-white tracking-tight flex items-center gap-2">
                 <i class="fa-solid fa-chart-line text-blue-500"></i> Farid<span class="text-fp-text">Trade</span>
             </h1>
         </div>
-        <div class="p-6">
+        <div class="p-6 flex-1 flex flex-col">
             <p class="text-xs font-bold text-fp-text uppercase tracking-widest mb-4">Menu</p>
-            <nav class="space-y-2">
+            <nav class="space-y-2 mb-auto">
                 <a href="#" class="flex items-center gap-3 bg-blue-500/10 text-blue-500 px-4 py-3 rounded-lg font-semibold transition">
                     <i class="fa-solid fa-gauge"></i> Dashboard
                 </a>
-                <a href="#" class="flex items-center gap-3 text-fp-text hover:text-white hover:bg-[#232838] px-4 py-3 rounded-lg font-semibold transition">
-                    <i class="fa-solid fa-list-check"></i> Trading Rules
-                </a>
-                <a href="#" class="flex items-center gap-3 text-fp-text hover:text-white hover:bg-[#232838] px-4 py-3 rounded-lg font-semibold transition">
-                    <i class="fa-solid fa-clock-rotate-left"></i> History
-                </a>
             </nav>
+            <button onclick="clearAllData()" class="mt-auto flex items-center justify-center gap-2 text-red-500 hover:bg-red-500/10 px-4 py-3 rounded-lg font-semibold transition text-sm border border-red-500/20">
+                <i class="fa-solid fa-triangle-exclamation"></i> Hard Reset Data
+            </button>
         </div>
     </aside>
 
@@ -66,53 +62,35 @@
         <header class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
             <div>
                 <h2 class="text-2xl font-bold text-white mb-1">Overview</h2>
-                <p class="text-sm text-fp-text">Welcome back, pantau metrik evaluasimu disini.</p>
+                <p class="text-sm text-fp-text">Evaluasi jurnal trading secara profesional dan aman (Offline Storage).</p>
             </div>
             
-            <div class="flex items-center gap-4 bg-[#151924] border border-[#232838] p-2 rounded-lg">
+            <div class="flex items-center gap-4 bg-[#151924] border border-[#232838] p-2 rounded-lg shrink-0">
                 <div class="px-4 py-2 bg-[#232838] rounded-md">
-                    <p class="text-[10px] text-fp-text uppercase font-bold">Account</p>
-                    <p class="text-sm font-bold">#889012 - Phase 1</p>
+                    <p class="text-[10px] text-fp-text uppercase font-bold">Simulated Account</p>
+                    <p class="text-sm font-bold">$100,000 Challenge</p>
                 </div>
                 <div class="px-4 py-2">
-                    <p class="text-[10px] text-fp-text uppercase font-bold">Balance</p>
-                    <p class="text-sm font-bold text-white">$102,450.00</p>
+                    <p class="text-[10px] text-fp-text uppercase font-bold">Current Balance</p>
+                    <p class="text-sm font-bold text-white" id="ui-balance">$100,000.00</p>
                 </div>
-                <button class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-bold transition">
-                    Share <i class="fa-solid fa-share-nodes ml-1"></i>
-                </button>
             </div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div class="fp-card p-6">
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <p class="text-xs text-fp-text font-bold uppercase mb-1">Max Daily Loss (5%)</p>
-                        <h3 class="text-2xl font-bold text-white">$5,000.00</h3>
-                    </div>
-                    <span class="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded">PASSED</span>
-                </div>
-                <div class="mb-2 flex justify-between text-sm">
-                    <span class="text-fp-text text-xs">Current: <span class="text-white font-bold">$450.00</span></span>
-                    <span class="text-fp-text text-xs">Limit: $5,000.00</span>
-                </div>
-                <progress value="9" max="100" class="progress-red w-full h-2"></progress>
-            </div>
-
-            <div class="fp-card p-6">
+            <div class="fp-card p-6 border-red-500/20">
                 <div class="flex justify-between items-start mb-4">
                     <div>
                         <p class="text-xs text-fp-text font-bold uppercase mb-1">Max Loss (10%)</p>
                         <h3 class="text-2xl font-bold text-white">$10,000.00</h3>
                     </div>
-                    <span class="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded">PASSED</span>
+                    <span id="max-loss-status" class="bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded">SAFE</span>
                 </div>
                 <div class="mb-2 flex justify-between text-sm">
-                    <span class="text-fp-text text-xs">Current: <span class="text-white font-bold">$1,200.00</span></span>
+                    <span class="text-fp-text text-xs">Drawdown: <span class="text-white font-bold" id="ui-dd">$0.00</span></span>
                     <span class="text-fp-text text-xs">Limit: $10,000.00</span>
                 </div>
-                <progress value="12" max="100" class="progress-red w-full h-2"></progress>
+                <progress id="prog-loss" value="0" max="10000" class="progress-red w-full h-2"></progress>
             </div>
 
             <div class="fp-card p-6 border-blue-500/30">
@@ -121,24 +99,27 @@
                         <p class="text-xs text-blue-400 font-bold uppercase mb-1">Profit Target (8%)</p>
                         <h3 class="text-2xl font-bold text-white">$8,000.00</h3>
                     </div>
-                    <span class="bg-blue-500/10 text-blue-500 text-[10px] font-bold px-2 py-1 rounded">ONGOING</span>
+                    <span id="target-status" class="bg-blue-500/10 text-blue-500 text-[10px] font-bold px-2 py-1 rounded">ONGOING</span>
                 </div>
                 <div class="mb-2 flex justify-between text-sm">
-                    <span class="text-fp-text text-xs">Current: <span class="text-white font-bold">$2,450.00</span></span>
+                    <span class="text-fp-text text-xs">Current Profit: <span class="text-white font-bold" id="ui-current-profit">$0.00</span></span>
                     <span class="text-fp-text text-xs">Target: $8,000.00</span>
                 </div>
-                <progress value="30" max="100" class="progress-green w-full h-2"></progress>
+                <progress id="prog-target" value="0" max="8000" class="progress-green w-full h-2"></progress>
+            </div>
+            
+            <div class="fp-card p-6 flex flex-col justify-center items-center text-center">
+                <p class="text-xs text-fp-text font-bold uppercase mb-2">Net PnL Keseluruhan</p>
+                <h3 class="text-3xl font-black" id="ui-net-pnl">$0.00</h3>
+                <p class="text-xs text-fp-text mt-2" id="ui-trade-count">0 Trades Taken</p>
             </div>
         </div>
 
-        <div class="fp-card p-6 mb-8">
+        <div class="fp-card p-6 mb-8 relative">
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h3 class="text-lg font-bold text-white">Equity Curve</h3>
-                    <p class="text-sm text-fp-text">Pertumbuhan akun sejak awal fase.</p>
-                </div>
-                <div class="flex gap-2">
-                    <span class="text-sm font-bold px-3 py-1 rounded bg-[#232838] text-white">Net PnL: <span class="text-green-500">+$2,450.00</span></span>
+                    <p class="text-sm text-fp-text">Grafik pertumbuhan balance akun secara real-time.</p>
                 </div>
             </div>
             <div id="equity-chart" class="w-full h-80"></div>
@@ -147,157 +128,377 @@
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div class="fp-card p-5 text-center">
                 <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Win Rate</p>
-                <p class="text-xl font-bold text-white">65.4%</p>
+                <p class="text-xl font-bold text-white" id="stat-winrate">0%</p>
             </div>
             <div class="fp-card p-5 text-center">
                 <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Profit Factor</p>
-                <p class="text-xl font-bold text-white">1.85</p>
+                <p class="text-xl font-bold text-white" id="stat-pf">0.00</p>
             </div>
             <div class="fp-card p-5 text-center">
                 <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Average Win</p>
-                <p class="text-xl font-bold text-green-500">$320.50</p>
+                <p class="text-xl font-bold text-green-500" id="stat-avg-win">$0.00</p>
             </div>
             <div class="fp-card p-5 text-center">
                 <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Average Loss</p>
-                <p class="text-xl font-bold text-red-500">-$175.20</p>
+                <p class="text-xl font-bold text-red-500" id="stat-avg-loss">$0.00</p>
             </div>
             <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Total Trades</p>
-                <p class="text-xl font-bold text-white">42</p>
-            </div>
-            <div class="fp-card p-5 text-center">
-                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Lots Traded</p>
-                <p class="text-xl font-bold text-white">18.5</p>
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Total Lots</p>
+                <p class="text-xl font-bold text-white" id="stat-lots">0.00</p>
             </div>
             <div class="fp-card p-5 text-center">
                 <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Best Trade</p>
-                <p class="text-xl font-bold text-green-500">+$850.00</p>
+                <p class="text-xl font-bold text-green-500" id="stat-best">$0.00</p>
             </div>
             <div class="fp-card p-5 text-center">
                 <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Worst Trade</p>
-                <p class="text-xl font-bold text-red-500">-$420.00</p>
+                <p class="text-xl font-bold text-red-500" id="stat-worst">$0.00</p>
+            </div>
+            <div class="fp-card p-5 text-center">
+                <p class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1">Pair Favorit</p>
+                <p class="text-xl font-bold text-white" id="stat-fav">-</p>
             </div>
         </div>
 
-        <div class="fp-card overflow-hidden">
-            <div class="p-6 border-b border-[#232838]">
-                <h3 class="text-lg font-bold text-white">Recent Transactions</h3>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-10">
+            
+            <div class="fp-card p-6 xl:col-span-1 h-fit">
+                <h3 class="text-lg font-bold text-white mb-4">Catat Posisi Baru</h3>
+                <form id="tradeForm" class="space-y-4">
+                    <div>
+                        <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Simbol / Pair</label>
+                        <input type="text" id="asset" class="fp-input uppercase" placeholder="Contoh: XAUUSD" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Tipe</label>
+                            <select id="position" class="fp-input appearance-none">
+                                <option value="Buy">Buy</option>
+                                <option value="Sell">Sell</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Lot Size</label>
+                            <input type="number" id="lot" step="0.01" class="fp-input" placeholder="0.10" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Entry Price</label>
+                            <input type="number" id="entry" step="0.00001" class="fp-input" required>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 block">Close Price</label>
+                            <input type="number" id="exit" step="0.00001" class="fp-input" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-[10px] text-fp-text font-bold uppercase tracking-wide mb-1 flex justify-between">
+                            <span>Final PnL ($)</span>
+                            <span onclick="autoCalculatePnL()" class="text-blue-500 cursor-pointer hover:underline"><i class="fa-solid fa-calculator"></i> Auto Calc</span>
+                        </label>
+                        <input type="number" id="pnl" step="0.01" class="fp-input" placeholder="Misal: 150.50 atau -45.00" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg mt-2 transition text-sm">
+                        <i class="fa-solid fa-plus mr-1"></i> Simpan Jurnal
+                    </button>
+                </form>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse whitespace-nowrap">
-                    <thead>
-                        <tr class="bg-[#0b0e14] text-fp-text text-xs uppercase tracking-wider">
-                            <th class="py-3 px-6 font-semibold">Open Time</th>
-                            <th class="py-3 px-6 font-semibold">Symbol</th>
-                            <th class="py-3 px-6 font-semibold">Type</th>
-                            <th class="py-3 px-6 font-semibold">Volume</th>
-                            <th class="py-3 px-6 font-semibold">Open Price</th>
-                            <th class="py-3 px-6 font-semibold">Close Price</th>
-                            <th class="py-3 px-6 font-semibold text-right">Profit</th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-sm font-medium">
-                        <tr class="border-b border-[#232838] hover:bg-[#232838]/50 transition">
-                            <td class="py-4 px-6 text-fp-text">2026.03.19 14:30</td>
-                            <td class="py-4 px-6 text-white font-bold">XAUUSD</td>
-                            <td class="py-4 px-6"><span class="text-green-500">Buy</span></td>
-                            <td class="py-4 px-6 text-white">1.00</td>
-                            <td class="py-4 px-6 text-fp-text">2150.50</td>
-                            <td class="py-4 px-6 text-fp-text">2153.00</td>
-                            <td class="py-4 px-6 text-right text-green-500">250.00</td>
-                        </tr>
-                        <tr class="border-b border-[#232838] hover:bg-[#232838]/50 transition">
-                            <td class="py-4 px-6 text-fp-text">2026.03.18 09:15</td>
-                            <td class="py-4 px-6 text-white font-bold">BTCUSD</td>
-                            <td class="py-4 px-6"><span class="text-red-500">Sell</span></td>
-                            <td class="py-4 px-6 text-white">0.50</td>
-                            <td class="py-4 px-6 text-fp-text">68500.00</td>
-                            <td class="py-4 px-6 text-fp-text">68750.00</td>
-                            <td class="py-4 px-6 text-right text-red-500">-125.00</td>
-                        </tr>
-                        <tr class="border-b border-[#232838] hover:bg-[#232838]/50 transition">
-                            <td class="py-4 px-6 text-fp-text">2026.03.17 20:45</td>
-                            <td class="py-4 px-6 text-white font-bold">EURUSD</td>
-                            <td class="py-4 px-6"><span class="text-green-500">Buy</span></td>
-                            <td class="py-4 px-6 text-white">2.00</td>
-                            <td class="py-4 px-6 text-fp-text">1.09200</td>
-                            <td class="py-4 px-6 text-fp-text">1.09350</td>
-                            <td class="py-4 px-6 text-right text-green-500">300.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
 
+            <div class="fp-card xl:col-span-2 overflow-hidden flex flex-col">
+                <div class="p-5 border-b border-[#232838] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <h3 class="text-lg font-bold text-white">Transaction History</h3>
+                    <div class="flex gap-2">
+                        <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
+                        <button onclick="document.getElementById('importFile').click()" class="bg-[#232838] hover:bg-[#2a3042] text-white px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-download"></i> Import
+                        </button>
+                        <button onclick="exportJSON()" class="bg-blue-500/10 text-blue-500 border border-blue-500/30 hover:bg-blue-500/20 px-3 py-2 rounded text-xs font-bold transition flex items-center gap-2">
+                            <i class="fa-solid fa-upload"></i> Backup JSON
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto flex-1">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-[#0b0e14] text-fp-text text-[10px] uppercase tracking-wider">
+                                <th class="py-3 px-5 font-bold">Waktu</th>
+                                <th class="py-3 px-5 font-bold">Symbol</th>
+                                <th class="py-3 px-5 font-bold">Tipe</th>
+                                <th class="py-3 px-5 font-bold">Lot</th>
+                                <th class="py-3 px-5 font-bold">Entry - Exit</th>
+                                <th class="py-3 px-5 font-bold text-right">Profit</th>
+                                <th class="py-3 px-5 font-bold text-center">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="text-xs font-medium">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
     </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Data dummy simulasi equity curve (dari modal awal $100,000)
-            const equityData = [
-                100000, 100250, 100100, 100800, 100450, 101200, 101000, 101850, 101500, 102450
-            ];
-            const categories = ['Trade 1', 'Trade 2', 'Trade 3', 'Trade 4', 'Trade 5', 'Trade 6', 'Trade 7', 'Trade 8', 'Trade 9', 'Trade 10'];
+        const STORAGE_KEY = 'fp_trade_journal';
+        const INITIAL_BALANCE = 100000;
+        let equityChart; // ApexChart instance
 
-            const options = {
-                series: [{
-                    name: 'Equity',
-                    data: equityData
-                }],
-                chart: {
-                    type: 'area',
-                    height: 320,
-                    fontFamily: 'Inter, sans-serif',
-                    background: 'transparent',
-                    toolbar: { show: false },
-                    zoom: { enabled: false }
-                },
-                colors: ['#3b82f6'], // Biru ala prop firm
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.4,
-                        opacityTo: 0.05,
-                        stops: [0, 100]
-                    }
-                },
-                dataLabels: { enabled: false },
-                stroke: {
-                    curve: 'smooth',
-                    width: 2
-                },
-                xaxis: {
-                    categories: categories,
-                    axisBorder: { show: false },
-                    axisTicks: { show: false },
-                    labels: {
-                        style: { colors: '#9ca3af', fontSize: '12px' }
-                    }
-                },
-                yaxis: {
-                    min: 99000, // Supaya chart tidak mulai dari nol
-                    labels: {
-                        formatter: function (value) { return "$" + value.toLocaleString(); },
-                        style: { colors: '#9ca3af', fontSize: '12px' }
-                    }
-                },
-                grid: {
-                    borderColor: '#232838',
-                    strokeDashArray: 4,
-                    yaxis: { lines: { show: true } },
-                    xaxis: { lines: { show: false } }
-                },
-                theme: { mode: 'dark' },
-                tooltip: {
-                    theme: 'dark',
-                    y: { formatter: function (val) { return "$" + val.toLocaleString(); } }
-                }
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            renderData();
+        });
+
+        // 1. Storage Operations
+        function getTrades() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+
+        function saveTrade(tradeData) {
+            const trades = getTrades();
+            trades.push(tradeData); // Push ke belakang agar kronologis di chart
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+        }
+
+        // 2. Form Submit
+        document.getElementById('tradeForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newTrade = {
+                id: Date.now(),
+                date: new Date().toLocaleString('en-CA', { hour12: false }).replace(',', ''), // format mirip MT5
+                asset: document.getElementById('asset').value.toUpperCase(),
+                position: document.getElementById('position').value,
+                lot: parseFloat(document.getElementById('lot').value),
+                entry: parseFloat(document.getElementById('entry').value),
+                exit: parseFloat(document.getElementById('exit').value),
+                pnl: parseFloat(document.getElementById('pnl').value)
             };
 
-            const chart = new ApexCharts(document.querySelector("#equity-chart"), options);
-            chart.render();
+            saveTrade(newTrade);
+            this.reset();
+            renderData();
         });
+
+        // 3. Auto Calc Helper
+        function autoCalculatePnL() {
+            const entry = parseFloat(document.getElementById('entry').value);
+            const exit = parseFloat(document.getElementById('exit').value);
+            const lot = parseFloat(document.getElementById('lot').value);
+            const pos = document.getElementById('position').value;
+            
+            if(isNaN(entry) || isNaN(exit) || isNaN(lot)) {
+                alert("Isi Tipe, Lot, Entry, dan Exit terlebih dahulu."); return;
+            }
+            
+            let rawPnL = 0;
+            if(pos === 'Buy') rawPnL = (exit - entry) * lot;
+            if(pos === 'Sell') rawPnL = (entry - exit) * lot;
+            
+            // Note: Pada broker asli ada contract size. Ini rumus sederhana 1:1. 
+            // Untuk forex/gold sungguhan biasanya X 100000 atau X 100.
+            document.getElementById('pnl').value = rawPnL.toFixed(2);
+        }
+
+        // 4. Render UI & Calculate Stats
+        function renderData() {
+            const trades = getTrades();
+            const tbody = document.getElementById('table-body');
+            tbody.innerHTML = '';
+
+            let totalPnL = 0;
+            let grossProfit = 0;
+            let grossLoss = 0;
+            let winCount = 0;
+            let totalLots = 0;
+            let bestTrade = 0;
+            let worstTrade = 0;
+            let pairCount = {};
+            
+            // Array untuk Chart (Mulai dari balance awal)
+            let currentEquity = INITIAL_BALANCE;
+            const chartData = [INITIAL_BALANCE];
+            const chartCategories = ['Start'];
+
+            // Render Table (Reverse order agar terbaru di atas)
+            const reversedTrades = [...trades].reverse();
+            
+            if (reversedTrades.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-8 text-center text-fp-text">No transaction history.</td></tr>`;
+            }
+
+            // Loop untuk Kalkulasi dari awal ke akhir (Chronological)
+            trades.forEach((trade, index) => {
+                totalPnL += trade.pnl;
+                totalLots += trade.lot;
+                pairCount[trade.asset] = (pairCount[trade.asset] || 0) + 1;
+
+                if (trade.pnl > 0) {
+                    grossProfit += trade.pnl;
+                    winCount++;
+                    if(trade.pnl > bestTrade) bestTrade = trade.pnl;
+                } else {
+                    grossLoss += Math.abs(trade.pnl);
+                    if(trade.pnl < worstTrade) worstTrade = trade.pnl;
+                }
+
+                currentEquity += trade.pnl;
+                chartData.push(currentEquity);
+                chartCategories.push(`T${index + 1}`);
+            });
+
+            // Loop untuk HTML Table (Terbaru di atas)
+            reversedTrades.forEach(trade => {
+                const isProfit = trade.pnl >= 0;
+                const pnlColor = isProfit ? 'text-green-500' : 'text-red-500';
+                const posColor = trade.position === 'Buy' ? 'text-green-500' : 'text-red-500';
+
+                tbody.innerHTML += `
+                    <tr class="border-b border-[#232838] hover:bg-[#232838]/50 transition">
+                        <td class="py-4 px-5 text-fp-text">${trade.date}</td>
+                        <td class="py-4 px-5 text-white font-bold">${trade.asset}</td>
+                        <td class="py-4 px-5"><span class="${posColor}">${trade.position}</span></td>
+                        <td class="py-4 px-5 text-white">${trade.lot.toFixed(2)}</td>
+                        <td class="py-4 px-5 text-fp-text">${trade.entry} <i class="fa-solid fa-arrow-right text-[8px] mx-1"></i> ${trade.exit}</td>
+                        <td class="py-4 px-5 text-right font-bold ${pnlColor}">${trade.pnl.toFixed(2)}</td>
+                        <td class="py-4 px-5 text-center">
+                            <button onclick="deleteTrade(${trade.id})" class="text-fp-text hover:text-red-500 transition"><i class="fa-solid fa-xmark"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // --- Update UI Numbers ---
+            const finalBalance = INITIAL_BALANCE + totalPnL;
+            document.getElementById('ui-balance').innerText = `$${finalBalance.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            
+            const netEl = document.getElementById('ui-net-pnl');
+            netEl.innerText = `${totalPnL >= 0 ? '+' : ''}$${totalPnL.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+            netEl.className = `text-3xl font-black ${totalPnL >= 0 ? 'text-green-500' : 'text-red-500'}`;
+            document.getElementById('ui-trade-count').innerText = `${trades.length} Trades Taken`;
+
+            // Progress Bars logic
+            const currentDrawdown = totalPnL < 0 ? Math.abs(totalPnL) : 0;
+            document.getElementById('ui-dd').innerText = `$${currentDrawdown.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            document.getElementById('prog-loss').value = currentDrawdown;
+            const lossStatus = document.getElementById('max-loss-status');
+            if(currentDrawdown >= 10000) { lossStatus.innerText = "FAILED"; lossStatus.className = "bg-red-500/10 text-red-500 text-[10px] font-bold px-2 py-1 rounded"; } 
+            else { lossStatus.innerText = "SAFE"; lossStatus.className = "bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded"; }
+
+            const currentProfit = totalPnL > 0 ? totalPnL : 0;
+            document.getElementById('ui-current-profit').innerText = `$${currentProfit.toLocaleString('en-US', {minimumFractionDigits:2})}`;
+            document.getElementById('prog-target').value = currentProfit;
+            const targetStatus = document.getElementById('target-status');
+            if(currentProfit >= 8000) { targetStatus.innerText = "PASSED"; targetStatus.className = "bg-green-500/10 text-green-500 text-[10px] font-bold px-2 py-1 rounded"; }
+            else { targetStatus.innerText = "ONGOING"; targetStatus.className = "bg-blue-500/10 text-blue-500 text-[10px] font-bold px-2 py-1 rounded"; }
+
+            // Detailed Stats
+            const winRate = trades.length > 0 ? (winCount / trades.length * 100).toFixed(1) : 0;
+            const profitFactor = grossLoss > 0 ? (grossProfit / grossLoss).toFixed(2) : (grossProfit > 0 ? 'MAX' : '0.00');
+            const avgWin = winCount > 0 ? (grossProfit / winCount).toFixed(2) : '0.00';
+            const avgLoss = (trades.length - winCount) > 0 ? (grossLoss / (trades.length - winCount)).toFixed(2) : '0.00';
+            
+            let favorite = '-';
+            if (Object.keys(pairCount).length > 0) favorite = Object.keys(pairCount).reduce((a, b) => pairCount[a] > pairCount[b] ? a : b);
+
+            document.getElementById('stat-winrate').innerText = `${winRate}%`;
+            document.getElementById('stat-pf').innerText = profitFactor;
+            document.getElementById('stat-avg-win').innerText = `$${avgWin}`;
+            document.getElementById('stat-avg-loss').innerText = `-$${avgLoss}`;
+            document.getElementById('stat-lots').innerText = totalLots.toFixed(2);
+            document.getElementById('stat-best').innerText = `+$${bestTrade.toFixed(2)}`;
+            document.getElementById('stat-worst').innerText = `${worstTrade.toFixed(2)}`;
+            document.getElementById('stat-fav').innerText = favorite;
+
+            // Update Chart
+            updateChartData(chartCategories, chartData);
+        }
+
+        // 5. Delete Trade
+        function deleteTrade(id) {
+            if(confirm('Hapus jurnal ini?')) {
+                let trades = getTrades().filter(t => t.id !== id);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(trades));
+                renderData();
+            }
+        }
+
+        // 6. Hard Reset
+        function clearAllData() {
+            if(confirm('Peringatan: Semua data akan dihapus permanen! Pastikan sudah Backup JSON. Lanjutkan?')) {
+                localStorage.removeItem(STORAGE_KEY);
+                renderData();
+            }
+        }
+
+        // 7. ApexCharts Setup & Update
+        function initChart() {
+            const options = {
+                series: [{ name: 'Balance', data: [INITIAL_BALANCE] }],
+                chart: { type: 'area', height: 320, fontFamily: 'Inter, sans-serif', background: 'transparent', toolbar: { show: false } },
+                colors: ['#3b82f6'],
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [0, 100] } },
+                dataLabels: { enabled: false },
+                stroke: { curve: 'straight', width: 2 }, // Funding pips usually uses straight lines for equity
+                xaxis: { categories: ['Start'], axisBorder: { show: false }, axisTicks: { show: false }, labels: { style: { colors: '#9ca3af', fontSize: '10px' } } },
+                yaxis: { labels: { formatter: (value) => "$" + value.toLocaleString(), style: { colors: '#9ca3af', fontSize: '12px' } } },
+                grid: { borderColor: '#232838', strokeDashArray: 4, yaxis: { lines: { show: true } }, xaxis: { lines: { show: false } } },
+                theme: { mode: 'dark' },
+                tooltip: { theme: 'dark', y: { formatter: (val) => "$" + val.toLocaleString() } }
+            };
+            equityChart = new ApexCharts(document.querySelector("#equity-chart"), options);
+            equityChart.render();
+        }
+
+        function updateChartData(categories, data) {
+            if(equityChart) {
+                // Determine min/max to make the chart look proportional
+                const minVal = Math.min(...data) - 500;
+                
+                equityChart.updateOptions({
+                    xaxis: { categories: categories },
+                    yaxis: { min: minVal }
+                });
+                equityChart.updateSeries([{ name: 'Balance', data: data }]);
+            }
+        }
+
+        // 8. JSON Export / Import
+        function exportJSON() {
+            const trades = getTrades();
+            if (trades.length === 0) { alert('Tidak ada data untuk dibackup!'); return; }
+            const dataStr = JSON.stringify(trades, null, 2);
+            const blob = new Blob([dataStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `FaridTrade_FP_Backup.json`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function importJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) throw new Error("Invalid Format");
+                    const merged = [...getTrades(), ...imported];
+                    // Remove duplicates by ID, keep imported order
+                    const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
+                    // Sort by ID to maintain chronological order
+                    unique.sort((a,b) => a.id - b.id);
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(unique));
+                    renderData();
+                    alert("Import sukses!");
+                } catch (error) { alert("Format JSON tidak valid."); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
     </script>
 </body>
 </html>
