@@ -184,7 +184,6 @@ html,body{width:100%;height:100%;overflow:hidden;position:fixed;background:var(-
   </div>
 </div>
 
-<!-- SHOP -->
 <div id="shop-overlay">
   <div id="shop-box">
     <div class="shop-header">
@@ -202,7 +201,6 @@ html,body{width:100%;height:100%;overflow:hidden;position:fixed;background:var(-
   </div>
 </div>
 
-<!-- GAME OVER -->
 <div id="gameover"><div id="gameover-box">
   <div id="go-title">GAME OVER</div>
   <div id="go-stats"></div>
@@ -210,7 +208,6 @@ html,body{width:100%;height:100%;overflow:hidden;position:fixed;background:var(-
   <button id="go-btn" onclick="restartGame()">🎮 MAIN LAGI</button>
 </div></div>
 
-<!-- JACKPOT WIN -->
 <div id="jackpot-win"><div class="jw-inner">
   <div class="jw-coins">🌟💰🌟</div>
   <div class="jw-title">JACKPOT!!!</div>
@@ -288,34 +285,36 @@ function startAmbience(){
 }
 
 // ── SFX LIBRARY ──
-const SFX={
-  shoot:(){ _sfx([{t:'square',f:800,ef:200,d:0.05,v:0.3}]); },
-  hit:(){   _sfx([{t:'sawtooth',f:300,ef:80,d:0.08,v:0.4}]); },
-  coin:(){  _sfx([{t:'sine',f:1200,ef:1600,d:0.1,v:0.5},{t:'sine',f:1500,ef:1800,d:0.08,v:0.4,delay:0.05}]); },
-  explosion:(){_sfx([{t:'sawtooth',f:80,ef:20,d:0.4,v:0.8,noise:true}]);_screenRumble();},
-  laser:(){   _sfx([{t:'sawtooth',f:2000,ef:200,d:0.25,v:0.5}]); },
-  bonus_appear:(){ _sfx([{t:'sine',f:600,ef:1200,d:0.15,v:0.6},{t:'triangle',f:800,ef:1600,d:0.2,v:0.5,delay:0.1}]); },
-  jackpot_appear:(){_sfx([{t:'sine',f:440,ef:880,d:0.2,v:0.7},{t:'sine',f:660,ef:1320,d:0.2,v:0.7,delay:0.1},{t:'sine',f:880,ef:1760,d:0.2,v:0.7,delay:0.2}]);},
-  jackpot_win:(){
+// FIX: Mengganti semua format invalid seperti shoot:(){ menjadi shoot() {
+const SFX = {
+  shoot() { _sfx([{t:'square',f:800,ef:200,d:0.05,v:0.3}]); },
+  hit() {   _sfx([{t:'sawtooth',f:300,ef:80,d:0.08,v:0.4}]); },
+  coin() {  _sfx([{t:'sine',f:1200,ef:1600,d:0.1,v:0.5},{t:'sine',f:1500,ef:1800,d:0.08,v:0.4,delay:0.05}]); },
+  explosion() { _sfx([{t:'sawtooth',f:80,ef:20,d:0.4,v:0.8,noise:true}]);_screenRumble(); },
+  laser() {   _sfx([{t:'sawtooth',f:2000,ef:200,d:0.25,v:0.5}]); },
+  bonus_appear() { _sfx([{t:'sine',f:600,ef:1200,d:0.15,v:0.6},{t:'triangle',f:800,ef:1600,d:0.2,v:0.5,delay:0.1}]); },
+  jackpot_appear() { _sfx([{t:'sine',f:440,ef:880,d:0.2,v:0.7},{t:'sine',f:660,ef:1320,d:0.2,v:0.7,delay:0.1},{t:'sine',f:880,ef:1760,d:0.2,v:0.7,delay:0.2}]); },
+  jackpot_win() {
     [261,330,392,523,659,784].forEach((f,i)=>{
       setTimeout(()=>_sfx([{t:'sine',f,ef:f*2,d:0.35,v:0.8}]),i*80);
     });
   },
-  boss_appear:(){_sfx([{t:'sawtooth',f:60,ef:40,d:0.6,v:0.9,noise:true},{t:'square',f:120,ef:80,d:0.4,v:0.6,delay:0.1}]);},
-  roulette_spin:(){_sfx([{t:'triangle',f:400+Math.random()*200,ef:300,d:0.06,v:0.3}]);},
-  roulette_win:(){_sfx([{t:'sine',f:880,ef:1760,d:0.3,v:0.9},{t:'sine',f:1100,ef:2200,d:0.3,v:0.9,delay:0.1}]);},
-  ghost_appear:(){_sfx([{t:'sine',f:200,ef:600,d:0.3,v:0.4}]);},
-  electric_appear:(){_sfx([{t:'sawtooth',f:1000,ef:200,d:0.15,v:0.5,noise:true}]);},
-  bomb_appear:(){_sfx([{t:'square',f:80,ef:40,d:0.2,v:0.7}]);},
-  drill_appear:(){_sfx([{t:'sawtooth',f:300,ef:600,d:0.2,v:0.6}]);},
-  nuke:(){
+  boss_appear() { _sfx([{t:'sawtooth',f:60,ef:40,d:0.6,v:0.9,noise:true},{t:'square',f:120,ef:80,d:0.4,v:0.6,delay:0.1}]); },
+  roulette_spin() { _sfx([{t:'triangle',f:400+Math.random()*200,ef:300,d:0.06,v:0.3}]); },
+  roulette_win() { _sfx([{t:'sine',f:880,ef:1760,d:0.3,v:0.9},{t:'sine',f:1100,ef:2200,d:0.3,v:0.9,delay:0.1}]); },
+  ghost_appear() { _sfx([{t:'sine',f:200,ef:600,d:0.3,v:0.4}]); },
+  electric_appear() { _sfx([{t:'sawtooth',f:1000,ef:200,d:0.15,v:0.5,noise:true}]); },
+  bomb_appear() { _sfx([{t:'square',f:80,ef:40,d:0.2,v:0.7}]); },
+  drill_appear() { _sfx([{t:'sawtooth',f:300,ef:600,d:0.2,v:0.6}]); },
+  nuke() {
     _sfx([{t:'sawtooth',f:40,ef:10,d:1.5,v:1.0,noise:true}]);
     _screenRumble(40);
   },
-  levelup:(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>_sfx([{t:'sine',f,ef:f*1.5,d:0.2,v:0.8}]),i*100));},
-  combo:(){  _sfx([{t:'triangle',f:600+comboKills*80,ef:1200,d:0.12,v:0.6}]); },
-  achievement:(){_sfx([{t:'sine',f:880,ef:1760,d:0.15,v:0.8},{t:'sine',f:1100,ef:2200,d:0.15,v:0.8,delay:0.15},{t:'sine',f:1320,ef:2640,d:0.2,v:0.8,delay:0.3}]);}
+  levelup() { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>_sfx([{t:'sine',f,ef:f*1.5,d:0.2,v:0.8}]),i*100)); },
+  combo() {  _sfx([{t:'triangle',f:600+comboKills*80,ef:1200,d:0.12,v:0.6}]); },
+  achievement() { _sfx([{t:'sine',f:880,ef:1760,d:0.15,v:0.8},{t:'sine',f:1100,ef:2200,d:0.15,v:0.8,delay:0.15},{t:'sine',f:1320,ef:2640,d:0.2,v:0.8,delay:0.3}]); }
 };
+
 function _sfx(layers){
   if(!soundOn||!AC) return;
   layers.forEach(l=>{
@@ -430,15 +429,15 @@ const MISSIONS=[
 ];
 const ACHIEVEMENTS={
   first_kill:  {name:'First Blood',    desc:'Bunuh ikan pertama!',         icon:'🩸',done:false},
-  kill_50:     {name:'Sharpshooter',   desc:'50 ikan dijatuhkan',           icon:'🎯',done:false},
-  kill_200:    {name:'Ocean Destroyer',desc:'200 ikan dijatuhkan',          icon:'💀',done:false},
-  jackpot_hit: {name:'Lucky Emperor',  desc:'Menangkan Jackpot!',           icon:'🎰',done:false},
-  combo_x5:    {name:'Combo Fever',    desc:'Capai combo 5×!',              icon:'🔥',done:false},
-  combo_x10:   {name:'Insane Combo',   desc:'Capai combo 10×!',             icon:'⚡',done:false},
-  win_10k:     {name:'Millionaire Jr.',desc:'Kumpulkan 10k kemenangan',     icon:'💰',done:false},
-  win_100k:    {name:'Ocean Emperor',  desc:'Kumpulkan 100k kemenangan',    icon:'👑',done:false},
-  level_10:    {name:'Veteran',        desc:'Capai Level 10',               icon:'⭐',done:false},
-  all_weapons: {name:'Arsenal',        desc:'Miliki semua senjata',         icon:'🔫',done:false},
+  kill_50:     {name:'Sharpshooter',   desc:'50 ikan dijatuhkan',          icon:'🎯',done:false},
+  kill_200:    {name:'Ocean Destroyer',desc:'200 ikan dijatuhkan',         icon:'💀',done:false},
+  jackpot_hit: {name:'Lucky Emperor',  desc:'Menangkan Jackpot!',          icon:'🎰',done:false},
+  combo_x5:    {name:'Combo Fever',    desc:'Capai combo 5×!',             icon:'🔥',done:false},
+  combo_x10:   {name:'Insane Combo',   desc:'Capai combo 10×!',            icon:'⚡',done:false},
+  win_10k:     {name:'Millionaire Jr.',desc:'Kumpulkan 10k kemenangan',    icon:'💰',done:false},
+  win_100k:    {name:'Ocean Emperor',  desc:'Kumpulkan 100k kemenangan',   icon:'👑',done:false},
+  level_10:    {name:'Veteran',        desc:'Capai Level 10',              icon:'⭐',done:false},
+  all_weapons: {name:'Arsenal',        desc:'Miliki semua senjata',        icon:'🔫',done:false},
 };
 
 // ═══════════════════════════════════════════════════════════════════
