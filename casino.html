@@ -3,155 +3,355 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Ocean Emperor — 6 Players Arcade</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<title>Ocean Emperor V5 — 6 Players Arcade</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root {
-  --neon-blue:#00e5ff; --neon-gold:#ffd700; --neon-red:#ff1744;
-  --neon-green:#00ff88; --neon-purple:#e040fb; --neon-orange:#ff9100;
-  --bg-deep:#000811; --bg-panel:rgba(0,8,28,0.96);
+  --c-blue:#00e5ff;--c-gold:#ffd700;--c-red:#ff2266;--c-green:#00ffaa;
+  --c-purple:#c040ff;--c-orange:#ff7700;--c-pink:#ff4fa0;--c-teal:#00ffd0;
+  --bg0:#000a1a;--bg1:#001228;--bg2:#001f3f;
+  --panel:rgba(0,10,30,0.96);--panel2:rgba(0,18,40,0.92);
+  --glow-blue:0 0 20px rgba(0,229,255,0.6);
+  --glow-gold:0 0 20px rgba(255,215,0,0.6);
+  --border:rgba(0,229,255,0.18);
+  --border-gold:rgba(255,215,0,0.35);
+  --font-main:'Exo 2',sans-serif;
+  --font-hud:'Orbitron',sans-serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;position:fixed;background:var(--bg0);font-family:var(--font-main);user-select:none;cursor:crosshair;}
 
-html, body {
-  background:var(--bg-deep);
-  font-family:'Rajdhani',sans-serif;
-  overflow:hidden;
-  width:100%;
-  height:100%;
-  position:fixed;
-  user-select:none;
-  cursor:crosshair;
+#gameCanvas{display:block;position:fixed;top:0;left:0;z-index:1;}
+
+/* ─── HUD LAYER ─── */
+#ui{position:fixed;inset:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;}
+
+/* TOP BAR */
+.hud-top{
+  display:flex;align-items:stretch;
+  background:linear-gradient(180deg,rgba(0,5,20,0.98) 0%,rgba(0,5,20,0.7) 100%);
+  border-bottom:1px solid var(--border);
+  padding:6px 8px;gap:6px;
+}
+.hud-cell{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(0,229,255,0.04);border:1px solid var(--border);border-radius:8px;
+  padding:4px 10px;min-width:72px;flex:1;
+}
+.hud-cell.jackpot-cell{
+  flex:1.8;border-color:var(--border-gold);background:rgba(255,215,0,0.04);
+}
+.hud-label{font-size:7px;letter-spacing:3px;color:#4a9bc0;text-transform:uppercase;font-family:var(--font-hud);margin-bottom:2px;}
+.hud-val{font-size:14px;font-weight:700;color:#fff;font-family:var(--font-hud);line-height:1;}
+.hud-val.gold{color:var(--c-gold);}
+.hud-val.blue{color:var(--c-blue);}
+.hud-val.green{color:var(--c-green);}
+.jackpot-val{font-size:18px;font-weight:900;color:var(--c-gold);font-family:var(--font-hud);}
+
+/* COMBO / MULTIPLIER INDICATOR */
+#combo-display{
+  position:absolute;top:70px;left:50%;transform:translateX(-50%);
+  font-family:var(--font-hud);font-size:22px;font-weight:900;
+  color:var(--c-gold);text-shadow:0 0 30px rgba(255,215,0,0.8);
+  pointer-events:none;opacity:0;transition:opacity 0.3s;
+  text-align:center;white-space:nowrap;
+}
+#combo-display.show{opacity:1;}
+
+/* SPECIAL WEAPON BAR */
+#sp-bar{
+  position:absolute;left:50%;transform:translateX(-50%);top:68px;
+  width:min(280px,85vw);display:none;flex-direction:column;align-items:center;gap:3px;
+}
+#sp-label{font-size:9px;font-weight:700;letter-spacing:3px;color:#fff;font-family:var(--font-hud);}
+#sp-track{width:100%;height:7px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);}
+#sp-fill{height:100%;border-radius:4px;transition:width 0.12s linear;}
+
+/* STREAK DISPLAY */
+#streak-bar{
+  position:absolute;right:8px;top:68px;
+  display:flex;flex-direction:column;align-items:flex-end;gap:2px;
+  pointer-events:none;
+}
+.streak-pip{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.12);transition:all 0.2s;}
+.streak-pip.lit{background:var(--c-gold);box-shadow:0 0 8px var(--c-gold);}
+#streak-count{font-size:9px;color:var(--c-gold);font-family:var(--font-hud);text-align:right;}
+
+/* WEAPON SLOTS */
+#weapon-row{
+  position:absolute;bottom:calc(var(--hud-bot-h,88px) + 8px);left:50%;transform:translateX(-50%);
+  display:flex;gap:7px;pointer-events:auto;
+}
+.w-slot{
+  width:54px;height:54px;border:1.5px solid var(--border);border-radius:10px;
+  background:rgba(0,10,30,0.9);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;cursor:pointer;
+  transition:all 0.2s;position:relative;overflow:hidden;
+  backdrop-filter:blur(4px);
+}
+.w-slot::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,229,255,0.05),transparent);opacity:0;transition:opacity 0.2s;}
+.w-slot:hover::before,.w-slot.active::before{opacity:1;}
+.w-slot.active{border-color:var(--c-gold);box-shadow:0 0 18px rgba(255,215,0,0.4),inset 0 0 12px rgba(255,215,0,0.08);}
+.w-slot.locked{opacity:0.38;cursor:not-allowed;}
+.w-slot .wico{font-size:20px;line-height:1;}
+.w-slot .wlvl{font-size:7px;color:var(--c-gold);font-family:var(--font-hud);font-weight:700;margin-top:1px;}
+.w-slot .wname{font-size:7px;color:#5ab8d4;letter-spacing:0.5px;text-transform:uppercase;}
+.w-slot .wcd{position:absolute;inset:0;background:rgba(0,5,20,0.75);display:none;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:var(--c-blue);font-family:var(--font-hud);}
+
+/* BOTTOM HUD */
+.hud-bot{
+  pointer-events:auto;
+  background:rgba(0,5,20,0.98);border-top:1px solid var(--border);
+  padding:8px 8px calc(8px + var(--safe-bottom));
+  display:flex;align-items:center;justify-content:space-between;gap:5px;
+  flex-shrink:0;
+}
+.hud-btn{
+  background:rgba(0,200,255,0.06);border:1.5px solid rgba(0,200,255,0.28);
+  color:var(--c-blue);padding:7px 10px;font-size:9px;font-weight:700;
+  letter-spacing:1px;border-radius:7px;cursor:pointer;transition:all 0.18s;
+  font-family:var(--font-hud);white-space:nowrap;display:flex;align-items:center;gap:4px;
+  flex-shrink:0;
+}
+.hud-btn:active{transform:scale(0.94);}
+.hud-btn.on{background:rgba(0,255,136,0.1);border-color:rgba(0,255,136,0.45);color:var(--c-green);}
+.hud-btn.gold{border-color:var(--border-gold);color:var(--c-gold);background:rgba(255,215,0,0.05);}
+.hud-btn.red{border-color:rgba(255,34,102,0.45);color:var(--c-red);background:rgba(255,34,102,0.05);}
+.bet-group{display:flex;flex-direction:column;align-items:center;gap:2px;}
+.bet-ctrl{display:flex;align-items:center;gap:5px;}
+.bet-btn{
+  background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.15);
+  color:#cde;width:26px;height:26px;border-radius:50%;font-size:16px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;flex-shrink:0;
+}
+.bet-btn:active{transform:scale(0.88);background:rgba(255,255,255,0.16);}
+#h-bet{font-family:var(--font-hud);font-size:16px;font-weight:700;color:#fff;min-width:38px;text-align:center;}
+
+/* FLOATERS */
+#floaters{position:fixed;inset:0;pointer-events:none;z-index:50;overflow:hidden;}
+.floater{
+  position:absolute;font-weight:900;pointer-events:none;
+  animation:floatUp 1.4s cubic-bezier(0.22,1,0.36,1) forwards;
+  font-family:var(--font-hud);text-shadow:0 2px 12px rgba(0,0,0,0.8);
+}
+@keyframes floatUp{
+  0%{opacity:0;transform:translateY(0) scale(0.4);}
+  15%{opacity:1;transform:translateY(-14px) scale(1.2);}
+  80%{opacity:1;}
+  100%{opacity:0;transform:translateY(-130px) scale(0.85);}
 }
 
-#gameCanvas{display:block;position:fixed;top:0;left:0;}
+/* ─── MINI-MAP ─── */
+#minimap{
+  position:absolute;bottom:calc(var(--hud-bot-h,88px) + 72px);right:8px;
+  width:80px;height:50px;border:1px solid var(--border);border-radius:6px;
+  background:rgba(0,5,20,0.85);overflow:hidden;pointer-events:none;
+}
+#minimap canvas{display:block;width:100%;height:100%;}
 
-/* ── HUD ── */
-#ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;}
-.hud-top{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 12px;background:linear-gradient(to bottom,rgba(0,5,20,0.95),transparent);}
-.hud-stat{text-align:center;min-width:65px;}
-.hud-label{font-size:8px;letter-spacing:3px;color:#5af;text-transform:uppercase;font-family:'Orbitron',sans-serif;}
-.hud-val{font-size:15px;font-weight:700;color:#fff;font-family:'Orbitron',sans-serif;}
-.hud-val.gold{color:var(--neon-gold);text-shadow:0 0 12px rgba(255,215,0,0.7);}
-.hud-val.blue{color:var(--neon-blue);}
-.jackpot-mid{text-align:center;flex:1;}
-.jackpot-label{font-size:8px;letter-spacing:4px;color:#aaa;text-transform:uppercase;font-family:'Orbitron',sans-serif;}
-.jackpot-val{font-size:20px;font-weight:900;color:var(--neon-gold);text-shadow:0 0 20px rgba(255,215,0,0.8);font-family:'Orbitron',sans-serif;}
+/* ─── SHOP OVERLAY ─── */
+#shop-overlay{
+  position:fixed;inset:0;background:rgba(0,0,15,0.94);
+  display:none;align-items:flex-start;justify-content:center;
+  z-index:300;pointer-events:auto;overflow-y:auto;padding:10px;
+  backdrop-filter:blur(6px);
+}
+#shop-box{
+  background:rgba(0,8,25,0.99);border:1.5px solid rgba(0,229,255,0.25);
+  border-radius:16px;padding:18px;max-width:700px;width:100%;
+  box-shadow:0 0 60px rgba(0,100,200,0.15);margin:auto;
+}
+.shop-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;}
+.shop-title{font-size:17px;font-weight:900;color:var(--c-blue);font-family:var(--font-hud);letter-spacing:3px;}
+.shop-balance{font-size:12px;color:var(--c-gold);font-family:var(--font-hud);white-space:nowrap;}
+.shop-close{background:none;border:1.5px solid rgba(255,255,255,0.18);color:#aaa;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:15px;transition:all 0.2s;flex-shrink:0;}
+.shop-close:hover{border-color:var(--c-red);color:var(--c-red);}
+.shop-tabs{display:flex;gap:5px;margin-bottom:14px;flex-wrap:wrap;}
+.shop-tab{
+  background:rgba(0,229,255,0.05);border:1.5px solid rgba(0,229,255,0.18);
+  color:#5a9bb8;padding:6px 12px;font-size:9px;font-weight:700;letter-spacing:2px;
+  border-radius:6px;cursor:pointer;font-family:var(--font-hud);transition:all 0.18s;
+}
+.shop-tab.active{background:rgba(0,229,255,0.14);border-color:var(--c-blue);color:var(--c-blue);}
+.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:9px;}
+.shop-card{
+  background:rgba(0,12,32,0.9);border:1.5px solid rgba(0,229,255,0.14);
+  border-radius:11px;padding:12px 10px;text-align:center;transition:all 0.2s;cursor:pointer;
+}
+.shop-card:hover{border-color:rgba(0,229,255,0.4);transform:translateY(-2px);}
+.shop-card.owned{border-color:rgba(0,255,170,0.35);background:rgba(0,255,136,0.04);}
+.shop-card.equipped{border-color:var(--c-gold);background:rgba(255,215,0,0.06);}
+.shop-card .card-ico{font-size:26px;margin-bottom:5px;}
+.shop-card .card-name{font-size:10px;font-weight:700;color:#e8f4ff;letter-spacing:0.5px;margin-bottom:2px;font-family:var(--font-hud);}
+.shop-card .card-stat{font-size:8.5px;color:#4a9cc0;margin-bottom:7px;line-height:1.5;}
+.shop-card .card-btn{width:100%;padding:6px;font-size:8px;font-weight:700;letter-spacing:1px;border-radius:5px;cursor:pointer;border:none;font-family:var(--font-hud);transition:all 0.15s;}
+.card-btn.buy{background:linear-gradient(135deg,var(--c-gold),#ff9100);color:#000;}
+.card-btn.buy:hover{filter:brightness(1.1);}
+.card-btn.equip{background:rgba(0,229,255,0.15);color:var(--c-blue);border:1px solid var(--c-blue);}
+.card-btn.equipped-tag{background:rgba(255,215,0,0.12);color:var(--c-gold);border:1px solid var(--c-gold);}
+.card-btn.maxed{background:rgba(0,255,136,0.1);color:var(--c-green);border:1px solid rgba(0,255,136,0.3);}
 
-/* weapon timer bar */
-#sp-bar{position:absolute;left:50%;transform:translateX(-50%);top:60px;width:260px;display:none;flex-direction:column;align-items:center;gap:2px;}
-#sp-label{font-size:10px;font-weight:700;letter-spacing:3px;color:#fff;font-family:'Orbitron',sans-serif;}
-#sp-bg{width:100%;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);}
-#sp-fill{height:100%;border-radius:3px;transition:width 0.1s linear;}
+/* ─── ACHIEVEMENT TOAST ─── */
+#achievement-toast{
+  position:fixed;top:72px;left:50%;transform:translateX(-50%) translateY(-80px);
+  background:linear-gradient(135deg,rgba(0,8,25,0.97),rgba(0,20,50,0.97));
+  border:1.5px solid var(--c-gold);border-radius:12px;padding:12px 20px;
+  min-width:250px;max-width:90vw;z-index:500;pointer-events:none;
+  transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1);text-align:center;
+  box-shadow:0 4px 30px rgba(255,215,0,0.25);
+}
+#achievement-toast.show{transform:translateX(-50%) translateY(0);}
+#ach-icon{font-size:24px;}
+#ach-title{font-size:10px;color:var(--c-gold);font-family:var(--font-hud);letter-spacing:2px;margin:4px 0 2px;}
+#ach-desc{font-size:11px;color:#cde;}
 
-/* weapon selector */
-#weapon-row{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto;}
-.w-slot{width:52px;height:52px;border:1px solid rgba(0,229,255,0.25);border-radius:8px;background:rgba(0,8,28,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
-.w-slot.active{border-color:var(--neon-gold);background:rgba(255,215,0,0.12);box-shadow:0 0 14px rgba(255,215,0,0.4);}
-.w-slot.locked{opacity:0.4;cursor:not-allowed;}
-.w-slot .wico{font-size:20px;}
-.w-slot .wlvl{font-size:8px;color:var(--neon-gold);font-family:'Orbitron',sans-serif;font-weight:700;}
-.w-slot .wname{font-size:7px;color:#7af;letter-spacing:1px;text-transform:uppercase;}
+/* ─── LEADERBOARD PANEL ─── */
+#leaderboard{
+  position:absolute;left:8px;top:calc(var(--hud-top-h,62px) + 8px);
+  width:120px;background:rgba(0,6,20,0.88);border:1px solid var(--border);
+  border-radius:10px;padding:8px;pointer-events:none;
+  display:none;
+}
+.lb-title{font-size:8px;color:var(--c-blue);font-family:var(--font-hud);letter-spacing:2px;margin-bottom:6px;text-align:center;}
+.lb-row{display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.lb-rank{font-size:9px;color:#4a9bc0;font-family:var(--font-hud);width:12px;}
+.lb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lb-name{font-size:9px;color:#cde;flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lb-score{font-size:9px;color:var(--c-gold);font-family:var(--font-hud);}
 
-/* bottom HUD */
-.hud-bot{pointer-events:auto;background:rgba(0,5,20,0.95);border-top:1px solid rgba(0,200,255,0.15);padding:8px 10px 10px;display:flex;align-items:center;justify-content:space-around;gap:6px;flex-wrap:wrap;}
-.hud-btn{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.35);color:var(--neon-blue);padding:6px 10px;font-size:10px;font-weight:700;letter-spacing:1px;border-radius:4px;cursor:pointer;transition:all 0.2s;font-family:'Orbitron',sans-serif;}
-.hud-btn:hover,.hud-btn:active{background:rgba(0,200,255,0.22);}
-.hud-btn.on{background:rgba(0,255,136,0.12);border-color:rgba(0,255,136,0.5);color:var(--neon-green);}
-.hud-btn.gold-btn{border-color:rgba(255,215,0,0.5);color:var(--neon-gold);background:rgba(255,215,0,0.07);}
-.hud-btn.gold-btn:hover{background:rgba(255,215,0,0.18);}
-.hud-btn.red-btn{border-color:rgba(255,23,68,0.5);color:var(--neon-red);background:rgba(255,23,68,0.07);}
-.bet-ctrl{display:flex;align-items:center;gap:6px;}
-.bet-btn{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);color:#fff;width:24px;height:24px;border-radius:50%;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
-.bet-btn:hover{background:rgba(255,255,255,0.18);}
+/* ─── GAME OVER ─── */
+#gameover{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:400;}
+#gameover-box{
+  background:rgba(0,5,20,0.98);border:2px solid rgba(255,215,0,0.4);border-radius:18px;
+  padding:36px 50px;text-align:center;display:none;pointer-events:auto;
+  box-shadow:0 0 60px rgba(255,215,0,0.1);max-width:90vw;
+}
+#go-title{font-size:28px;font-weight:900;color:var(--c-gold);margin-bottom:6px;font-family:var(--font-hud);}
+#go-stats{font-size:12px;color:#7ab;margin-bottom:6px;font-family:var(--font-hud);}
+#go-sub{font-size:11px;color:#558;margin-bottom:22px;}
+#go-btn{background:linear-gradient(135deg,var(--c-gold),#ff9100);color:#000;border:none;padding:13px 32px;font-size:11px;font-weight:900;border-radius:8px;cursor:pointer;letter-spacing:2px;font-family:var(--font-hud);transition:all 0.2s;}
+#go-btn:hover{filter:brightness(1.12);transform:scale(1.04);}
 
-/* floaters */
-#floaters{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;}
-.floater{position:absolute;font-weight:900;pointer-events:none;animation:floatUp 1.3s ease-out forwards;font-family:'Orbitron',sans-serif;}
-@keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(0.5);}15%{opacity:1;transform:translateY(-12px) scale(1.15);}100%{opacity:0;transform:translateY(-110px) scale(0.9);}}
+/* ─── JACKPOT WINNER ─── */
+#jackpot-win{
+  position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:600;
+  background:rgba(0,0,0,0.85);pointer-events:auto;
+}
+.jw-inner{
+  text-align:center;animation:jackpotPop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes jackpotPop{from{transform:scale(0.3);opacity:0;}to{transform:scale(1);opacity:1;}}
+.jw-glow{font-size:80px;animation:jackpotSpin 2s linear infinite;}
+@keyframes jackpotSpin{to{filter:hue-rotate(360deg);}}
+.jw-title{font-size:40px;font-weight:900;color:var(--c-gold);font-family:var(--font-hud);text-shadow:0 0 40px var(--c-gold);margin:10px 0;}
+.jw-amount{font-size:60px;font-weight:900;color:#fff;font-family:var(--font-hud);text-shadow:0 0 30px var(--c-gold);}
+.jw-btn{margin-top:20px;background:var(--c-gold);color:#000;border:none;padding:14px 36px;font-size:13px;font-weight:900;border-radius:10px;cursor:pointer;font-family:var(--font-hud);letter-spacing:2px;}
 
-/* ── SHOP OVERLAY ── */
-#shop-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,10,0.92);display:none;align-items:flex-start;justify-content:center;z-index:300;pointer-events:auto;overflow-y:auto;padding:10px;}
-#shop-box{background:rgba(0,6,22,0.98);border:1px solid rgba(0,229,255,0.3);border-radius:14px;padding:18px;max-width:680px;width:100%;}
-.shop-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
-.shop-title{font-size:18px;font-weight:900;color:var(--neon-blue);font-family:'Orbitron',sans-serif;letter-spacing:3px;}
-.shop-balance{font-size:13px;color:var(--neon-gold);font-family:'Orbitron',sans-serif;}
-.shop-close{background:none;border:1px solid rgba(255,255,255,0.2);color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;}
-.shop-tabs{display:flex;gap:6px;margin-bottom:14px;}
-.shop-tab{background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.2);color:#7af;padding:6px 12px;font-size:10px;font-weight:700;letter-spacing:2px;border-radius:4px;cursor:pointer;font-family:'Orbitron',sans-serif;transition:all 0.2s;}
-.shop-tab.active{background:rgba(0,229,255,0.18);border-color:var(--neon-blue);color:var(--neon-blue);}
-.shop-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px;}
-.shop-card{background:rgba(0,10,30,0.9);border:1px solid rgba(0,229,255,0.18);border-radius:10px;padding:12px;text-align:center;transition:all 0.2s;cursor:pointer;}
-.shop-card:hover{border-color:rgba(0,229,255,0.5);background:rgba(0,229,255,0.06);}
-.shop-card.owned{border-color:rgba(0,255,136,0.4);background:rgba(0,255,136,0.05);}
-.shop-card.equipped{border-color:var(--neon-gold);background:rgba(255,215,0,0.07);}
-.shop-card .card-ico{font-size:28px;margin-bottom:6px;}
-.shop-card .card-name{font-size:11px;font-weight:700;color:#fff;letter-spacing:1px;margin-bottom:3px;font-family:'Orbitron',sans-serif;}
-.shop-card .card-desc{font-size:9px;color:#7af;margin-bottom:6px;line-height:1.4;}
-.shop-card .card-stat{font-size:9px;color:#5af;margin-bottom:8px;}
-.shop-card .card-price{font-size:12px;font-weight:900;color:var(--neon-gold);font-family:'Orbitron',sans-serif;}
-.shop-card .card-price.free{color:var(--neon-green);}
-.shop-card .card-btn{margin-top:6px;width:100%;padding:5px;font-size:9px;font-weight:700;letter-spacing:1px;border-radius:4px;cursor:pointer;border:none;font-family:'Orbitron',sans-serif;}
-.shop-card .card-btn.buy{background:var(--neon-gold);color:#000;}
-.shop-card .card-btn.equip{background:rgba(0,229,255,0.2);color:var(--neon-blue);border:1px solid var(--neon-blue);}
-.shop-card .card-btn.equipped-tag{background:rgba(255,215,0,0.15);color:var(--neon-gold);border:1px solid var(--neon-gold);}
-
-/* game over */
-#gameover{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:100;}
-#gameover-box{background:rgba(0,5,25,0.97);border:2px solid rgba(255,215,0,0.5);border-radius:14px;padding:30px 44px;text-align:center;display:none;pointer-events:auto;}
-#go-title{font-size:26px;font-weight:900;color:var(--neon-gold);margin-bottom:8px;font-family:'Orbitron',sans-serif;}
-#go-sub{font-size:12px;color:#aaa;margin-bottom:18px;}
-#go-btn{background:linear-gradient(135deg,#ffd700,#ff9100);color:#000;border:none;padding:12px 28px;font-size:12px;font-weight:900;border-radius:6px;cursor:pointer;letter-spacing:2px;font-family:'Orbitron',sans-serif;}
-
-/* pin modal */
-#pin-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:450;pointer-events:auto;}
-#pin-box{background:rgba(0,5,25,0.98);border:2px solid rgba(224,64,251,0.5);border-radius:14px;padding:28px;min-width:280px;text-align:center;}
-#pin-title{font-size:16px;font-weight:900;color:var(--neon-purple);margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:3px;}
-#pin-input{width:100%;background:rgba(224,64,251,0.08);border:1px solid rgba(224,64,251,0.3);color:#fff;padding:10px;font-size:20px;border-radius:6px;font-family:'Orbitron',sans-serif;text-align:center;outline:none;letter-spacing:6px;margin-bottom:12px;}
-.pin-row{display:flex;gap:8px;}
-.pin-btn{flex:1;background:rgba(224,64,251,0.12);border:1px solid rgba(224,64,251,0.35);color:var(--neon-purple);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;border-radius:6px;cursor:pointer;font-family:'Orbitron',sans-serif;}
-
+/* ─── MOBILE RESPONSIVE ─── */
 @media(max-width:480px){
-  .w-slot{width:44px;height:44px;}.w-slot .wico{font-size:16px;}
-  .hud-val{font-size:12px;}.jackpot-val{font-size:16px;}
+  .hud-cell{padding:3px 6px;min-width:52px;}
+  .hud-val{font-size:12px;}.jackpot-val{font-size:14px;}
+  .hud-label{font-size:6px;letter-spacing:1.5px;}
+  .w-slot{width:48px;height:48px;}.w-slot .wico{font-size:18px;}
+  .hud-btn{padding:5px 7px;font-size:8px;letter-spacing:0.5px;}
+  #h-bet{font-size:14px;}
+  .bet-btn{width:22px;height:22px;font-size:14px;}
   .shop-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
-  
-  .hud-bot { flex-wrap: nowrap; padding: 6px 4px; gap: 4px; }
-  .hud-btn { padding: 6px; font-size: 8px; letter-spacing: 0; }
-  .bet-btn { width: 20px; height: 20px; font-size: 12px; }
-  #h-bet { font-size: 14px !important; min-width: 26px !important; }
-  #weapon-row { bottom: 75px; }
+  #leaderboard{width:100px;}
+  .lb-name{font-size:8px;}.lb-score{font-size:8px;}
+  #gameover-box{padding:28px 30px;}
+  .jw-title{font-size:28px;}.jw-amount{font-size:40px;}.jw-glow{font-size:60px;}
 }
+@media(max-width:360px){
+  .hud-cell{min-width:44px;padding:2px 4px;}
+  .hud-val{font-size:11px;}.jackpot-val{font-size:12px;}
+  .hud-btn{font-size:7.5px;}
+}
+
+/* ─── SCROLLBAR ─── */
+#shop-overlay::-webkit-scrollbar{width:6px;}
+#shop-overlay::-webkit-scrollbar-track{background:rgba(0,10,30,0.5);}
+#shop-overlay::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.3);border-radius:3px;}
 </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
 <div id="floaters"></div>
 
+<!-- ACHIEVEMENT TOAST -->
+<div id="achievement-toast">
+  <div id="ach-icon">🏆</div>
+  <div id="ach-title">ACHIEVEMENT UNLOCKED</div>
+  <div id="ach-desc">First Kill!</div>
+</div>
+
+<!-- COMBO DISPLAY -->
+<div id="combo-display"></div>
+
+<!-- UI -->
 <div id="ui">
-  <div class="hud-top">
-    <div class="hud-stat"><div class="hud-label">Saldo (You)</div><div class="hud-val gold" id="h-bal">10,000</div></div>
-    <div class="jackpot-mid"><div class="jackpot-label">Grand Jackpot</div><div class="jackpot-val" id="h-jack">9,999,999</div></div>
-    <div class="hud-stat"><div class="hud-label">Total Win</div><div class="hud-val blue" id="h-win">0</div></div>
+  <div class="hud-top" id="hud-top-bar">
+    <div class="hud-cell">
+      <div class="hud-label">SALDO</div>
+      <div class="hud-val gold" id="h-bal">10,000</div>
+    </div>
+    <div class="hud-cell" style="border-color:rgba(0,255,170,0.2);background:rgba(0,255,136,0.03);">
+      <div class="hud-label">WIN</div>
+      <div class="hud-val green" id="h-win">0</div>
+    </div>
+    <div class="hud-cell jackpot-cell">
+      <div class="hud-label">🏆 JACKPOT</div>
+      <div class="jackpot-val" id="h-jack">9,999,999</div>
+    </div>
+    <div class="hud-cell">
+      <div class="hud-label">LEVEL</div>
+      <div class="hud-val blue" id="h-lvl">1</div>
+    </div>
+    <div class="hud-cell" style="cursor:pointer;pointer-events:auto;" onclick="openShop()">
+      <div class="hud-label">SHOP</div>
+      <div class="hud-val" style="font-size:18px;">🏪</div>
+    </div>
   </div>
-  <div id="sp-bar"><div id="sp-label">DRILL</div><div id="sp-bg"><div id="sp-fill"></div></div></div>
+
+  <div id="sp-bar"><div id="sp-label">DRILL</div><div id="sp-track"><div id="sp-fill"></div></div></div>
+
+  <div id="streak-bar">
+    <div id="streak-count"></div>
+    <div style="display:flex;gap:3px;" id="streak-pips"></div>
+  </div>
+
+  <!-- MINI MAP -->
+  <div id="minimap"><canvas id="minimap-canvas" width="80" height="50"></canvas></div>
+
+  <!-- LEADERBOARD -->
+  <div id="leaderboard">
+    <div class="lb-title">RANKING</div>
+    <div id="lb-rows"></div>
+  </div>
+
   <div id="weapon-row"></div>
-  <div class="hud-bot">
-    <div class="hud-stat"><div class="hud-label">Level</div><div class="hud-val" id="h-lvl">1</div></div>
-    <button class="hud-btn" id="btn-auto" onclick="toggleAuto()">AUTO</button>
-    <div>
-      <div class="hud-label" style="text-align:center;margin-bottom:2px;">BET</div>
+
+  <div style="flex:1;"></div>
+
+  <div class="hud-bot" id="hud-bot-bar">
+    <button class="hud-btn" id="btn-auto" onclick="toggleAuto()">⚡AUTO</button>
+    <div class="bet-group">
+      <div class="hud-label" style="font-size:6px;">BET</div>
       <div class="bet-ctrl">
         <div class="bet-btn" onclick="changeBet(-10)">−</div>
-        <span class="hud-val" id="h-bet" style="min-width:36px;text-align:center;font-size:16px;">10</span>
+        <span id="h-bet">10</span>
         <div class="bet-btn" onclick="changeBet(10)">+</div>
       </div>
     </div>
-    <button class="hud-btn gold-btn" onclick="changeBet(0,'max')">MAX</button>
-    <button class="hud-btn gold-btn" onclick="openShop()">🏪 SHOP</button>
+    <button class="hud-btn gold" onclick="changeBet(0,'max')">MAX</button>
+    <button class="hud-btn" id="btn-lb" onclick="toggleLeaderboard()">🏅LB</button>
+    <button class="hud-btn" style="border-color:rgba(192,64,255,0.5);color:var(--c-purple);background:rgba(192,64,255,0.06);" onclick="openShop()">🏪 SHOP</button>
   </div>
 </div>
 
+<!-- SHOP -->
 <div id="shop-overlay">
   <div id="shop-box">
     <div class="shop-header">
@@ -160,637 +360,932 @@ html, body {
       <button class="shop-close" onclick="closeShop()">✕</button>
     </div>
     <div class="shop-tabs">
-      <div class="shop-tab active" onclick="shopTab('weapons')">SENJATA</div>
-      <div class="shop-tab" onclick="shopTab('upgrades')">UPGRADE</div>
-      <div class="shop-tab" onclick="shopTab('buffs')">BUFF</div>
+      <div class="shop-tab active" onclick="shopTab('weapons')">⚔️ SENJATA</div>
+      <div class="shop-tab" onclick="shopTab('upgrades')">⬆️ UPGRADE</div>
+      <div class="shop-tab" onclick="shopTab('buffs')">✨ BUFF</div>
+      <div class="shop-tab" onclick="shopTab('missions')">📋 MISI</div>
     </div>
     <div id="shop-content" class="shop-grid"></div>
   </div>
 </div>
 
+<!-- GAME OVER -->
 <div id="gameover">
   <div id="gameover-box">
     <div id="go-title">GAME OVER</div>
-    <div id="go-sub">Saldo habis! Kunjungi toko untuk persiapan.</div>
-    <button id="go-btn" onclick="restartGame()">MAIN LAGI</button>
+    <div id="go-stats"></div>
+    <div id="go-sub">Saldo habis. Kunjungi Armory untuk persiapan!</div>
+    <button id="go-btn" onclick="restartGame()">🎮 MAIN LAGI</button>
+  </div>
+</div>
+
+<!-- JACKPOT WIN -->
+<div id="jackpot-win">
+  <div class="jw-inner">
+    <div class="jw-glow">🌟</div>
+    <div class="jw-title">JACKPOT!!!</div>
+    <div class="jw-amount" id="jw-amount">+999,999</div>
+    <button class="jw-btn" onclick="closeJackpot()">KLAIM HADIAH</button>
   </div>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════════
-//  OCEAN EMPEROR v4 — 6 Players Arcade Edition
-// ═══════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════
+//  OCEAN EMPEROR V5 — Full Upgrade Edition
+//  New: Combo System, Achievements, Missions, Leaderboard,
+//       Mini-map, Neon Particles, Screen Effects, Bug fixes
+// ════════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('gameCanvas');
-const ctx    = canvas.getContext('2d');
-let W, H;
+const ctx = canvas.getContext('2d');
+const mmCanvas = document.getElementById('minimap-canvas');
+const mmCtx = mmCanvas.getContext('2d');
+let W, H, hudTopH = 62, hudBotH = 88;
 
-// Player System (0 is Real Player, 1-5 are Bots)
-const players = [
-  { id: 0, isBot: false, name: "YOU",   bal: 10000, bet: 10, color: '#00e5ff', x:0, y:0, ang: 0 },
-  { id: 1, isBot: true,  name: "BOT 1", bal: 5000,  bet: 10, color: '#ff1744', x:0, y:0, ang: 0 },
-  { id: 2, isBot: true,  name: "BOT 2", bal: 5000,  bet: 10, color: '#00ff88', x:0, y:0, ang: 0 },
-  { id: 3, isBot: true,  name: "BOT 3", bal: 5000,  bet: 10, color: '#ffd700', x:0, y:0, ang: 0 },
-  { id: 4, isBot: true,  name: "BOT 4", bal: 5000,  bet: 10, color: '#e040fb', x:0, y:0, ang: 0 },
-  { id: 5, isBot: true,  name: "BOT 5", bal: 5000,  bet: 10, color: '#ff9100', x:0, y:0, ang: 0 }
-];
+// ── PLAYER DATA ──────────────────────────────────────────
+const PLAYER_COLORS = ['#00e5ff','#ff2266','#00ffaa','#ffd700','#c040ff','#ff7700'];
+const PLAYER_NAMES  = ['YOU','BOT-R','BOT-G','BOT-Y','BOT-P','BOT-O'];
 
-function resize(){ 
-  W = canvas.width = window.innerWidth; 
-  H = canvas.height = window.innerHeight; 
-  
-  // Posisi 6 Pemain (Bawah, Atas, 2 Kiri, 2 Kanan)
-  players[0].x = W/2;   players[0].y = H - 65;    // Player (Bawah Tengah)
-  players[1].x = W/2;   players[1].y = 40;        // Top (Atas Tengah)
-  players[2].x = 40;    players[2].y = H/3;       // Kiri 1
-  players[3].x = 40;    players[3].y = 2*H/3;     // Kiri 2
-  players[4].x = W-40;  players[4].y = H/3;       // Kanan 1
-  players[5].x = W-40;  players[5].y = 2*H/3;     // Kanan 2
+const players = PLAYER_COLORS.map((color, i) => ({
+  id: i, isBot: i > 0, name: PLAYER_NAMES[i], color,
+  bal: i === 0 ? 10000 : 3000 + Math.random()*4000,
+  bet: 10, x: 0, y: 0, ang: 0,
+  totalKills: 0, totalWin: 0, fireCount: 0,
+}));
+
+function resize(){
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  const topBar = document.getElementById('hud-top-bar');
+  const botBar = document.getElementById('hud-bot-bar');
+  if(topBar) hudTopH = topBar.offsetHeight || 62;
+  if(botBar) hudBotH = botBar.offsetHeight || 88;
+  document.documentElement.style.setProperty('--hud-bot-h', hudBotH+'px');
+  document.documentElement.style.setProperty('--hud-top-h', hudTopH+'px');
+
+  // 6-player positions (bottom center + top + left×2 + right×2)
+  const cx = W/2, cy = H/2;
+  players[0].x = cx;         players[0].y = H - hudBotH - 80;
+  players[1].x = cx;         players[1].y = hudTopH + 45;
+  players[2].x = 48;         players[2].y = cy - H*0.16;
+  players[3].x = 48;         players[3].y = cy + H*0.16;
+  players[4].x = W - 48;     players[4].y = cy - H*0.16;
+  players[5].x = W - 48;     players[5].y = cy + H*0.16;
 }
-window.addEventListener('resize', resize); resize();
+window.addEventListener('resize', ()=>{ resize(); });
+resize();
 
-// ── STATE ──────────────────────────────────────────────────
-let autoFire    = false;
-let totalWin    = 0;
-let level       = 1;
+// ── GAME STATE ──────────────────────────────────────────
+let autoFire = false;
+let totalWin = 0;
+let level = 1;
 let jackpotPool = 9999999;
-let frameCount  = 0;
-let shakeAmt    = 0;
-let gameOver    = false;
-let mouse       = { x: W/2, y: H/2 };
+let frameCount = 0;
+let shakeAmt = 0;
+let shakeX = 0, shakeY = 0;
+let gameOver = false;
+let mouse = { x: W/2, y: H/2 };
+let comboKills = 0;
+let comboTimer = 0;
+let lastFire = 0;
+let showLB = false;
 
-// special weapon runtime
-let activeSpecials = [];  
-let spTimer = 0, spMax = 0, spType = '';
-
-// ── WEAPON DEFINITIONS ────────────────────────────────────
+// ── WEAPON DEFINITIONS ──────────────────────────────────
 const WEAPON_DEFS = {
-  single: { id:'single', name:'Single Shot', ico:'🔫', dmg:1, multi:1, winMod:1.0, price:0, color:'#00e5ff' },
-  double: { id:'double', name:'Double Shot',  ico:'🔫🔫', dmg:1, multi:2, winMod:1.15, price:500, color:'#ffd700' },
-  triple: { id:'triple', name:'Triple Shot',  ico:'💥', dmg:1, multi:3, winMod:1.25, price:1200, color:'#ff9100' },
-  laser:  { id:'laser',  name:'Laser Beam',   ico:'⚡', dmg:2, multi:1, winMod:1.35, piercing:true, price:2500, color:'#e040fb' },
-  missile:{ id:'missile',name:'Missile',      ico:'🚀', dmg:3, multi:1, winMod:1.4, explosive:true, price:3500, color:'#ff1744' },
-  shotgun:{ id:'shotgun',name:'Shotgun',      ico:'💢', dmg:1, multi:5, winMod:1.3, price:2000, color:'#ff8a65' },
-  sniper: { id:'sniper', name:'Sniper',       ico:'🎯', dmg:5, multi:1, winMod:1.5, price:4000, color:'#00ff88' },
-  plasma: { id:'plasma', name:'Plasma Burst', ico:'🌀', dmg:4, multi:1, winMod:1.55, plasma:true, price:5000, color:'#e040fb' },
-  minigun:{ id:'minigun',name:'Minigun',      ico:'🔥', dmg:1, multi:1, winMod:1.2, minigun:true, price:3000, color:'#ff5722' },
-  nuke:   { id:'nuke',   name:'Nuke Cannon',  ico:'☢',  dmg:10, multi:1, winMod:2.0, nuke:true, price:8000, color:'#00ff88' },
+  single:  { id:'single',  name:'Single Shot',  ico:'🔫', dmg:1,  multi:1, winMod:1.0,  price:0,    color:'#00e5ff', desc:'Tembakan standar cepat' },
+  double:  { id:'double',  name:'Double Shot',  ico:'🎯', dmg:1,  multi:2, winMod:1.15, price:600,  color:'#ffd700', desc:'2 peluru simultan' },
+  triple:  { id:'triple',  name:'Triple Shot',  ico:'💥', dmg:1,  multi:3, winMod:1.25, price:1400, color:'#ff9100', desc:'3 peluru menyebar' },
+  laser:   { id:'laser',   name:'Laser Beam',   ico:'⚡', dmg:3,  multi:1, winMod:1.38, price:2800, color:'#e040fb', piercing:true, desc:'Tembus semua ikan' },
+  missile: { id:'missile', name:'Missile',      ico:'🚀', dmg:4,  multi:1, winMod:1.45, price:4000, color:'#ff2266', explosive:true, desc:'Ledakan area besar' },
+  shotgun: { id:'shotgun', name:'Shotgun',      ico:'💢', dmg:1,  multi:6, winMod:1.32, price:2200, color:'#ff8a65', desc:'6 peluru tersebar lebar' },
+  sniper:  { id:'sniper',  name:'Sniper',       ico:'🎯', dmg:6,  multi:1, winMod:1.55, price:4500, color:'#00ff88', desc:'Damage tinggi, presisi' },
+  plasma:  { id:'plasma',  name:'Plasma Burst', ico:'🌀', dmg:5,  multi:1, winMod:1.6,  price:5500, color:'#e040fb', plasma:true, desc:'Ledakan plasma AoE' },
+  minigun: { id:'minigun', name:'Minigun',      ico:'🔥', dmg:1,  multi:1, winMod:1.22, price:3200, color:'#ff5722', minigun:true, desc:'Rate of fire ekstrem' },
+  nuke:    { id:'nuke',    name:'Nuke Cannon',  ico:'☢',  dmg:12, multi:1, winMod:2.2,  price:9000, color:'#00ff88', nuke:true, desc:'Ledakan massif seluruh layar' },
+  frost:   { id:'frost',   name:'Frost Ray',    ico:'❄️', dmg:2,  multi:1, winMod:1.35, price:3500, color:'#80d8ff', frost:true, desc:'Memperlambat ikan' },
+  thunder: { id:'thunder', name:'Thunder',      ico:'⚡', dmg:4,  multi:1, winMod:1.5,  price:5000, color:'#ffd740', chain:true, desc:'Kilat berantai' },
 };
 
 const MAX_SLOTS = 3;
-let equippedSlots = ['single', null, null]; 
-let activeSlot = 0; 
-let inventory  = { single: true };             
-let upgrades   = { dmg:0, rate:0, winrate:0 }; 
-let buffs      = { autoReload:false, goldFish:false, shieldX2:false };
+let equippedSlots = ['single', null, null];
+let activeSlot = 0;
+let inventory = { single: true };
+let upgrades = { dmg:0, rate:0, winrate:0, radius:0 };
+let buffs = { autoReload:false, goldFish:false, shieldX2:false, comboMaster:false };
 
 const UPGRADE_DEFS = [
-  { id:'dmg',     name:'Damage Boost',   ico:'⚔', desc:'Damage semua senjata +20% per level', max:5, prices:[400,800,1500,3000,6000] },
-  { id:'rate',    name:'Fire Rate',      ico:'⚡', desc:'Kecepatan tembak +15% per level', max:5, prices:[300,600,1200,2400,4800] },
-  { id:'winrate', name:'Win Rate',       ico:'🍀', desc:'Bonus win rate +5% per level', max:5, prices:[500,1000,2000,4000,8000] },
+  { id:'dmg',     name:'Damage Boost',  ico:'⚔', desc:'+20% damage per level', max:5, prices:[400,900,1800,3500,7000] },
+  { id:'rate',    name:'Fire Rate',     ico:'⚡', desc:'+15% rate per level',   max:5, prices:[300,700,1400,2800,5600] },
+  { id:'winrate', name:'Win Rate',      ico:'🍀', desc:'+5% win rate per level',max:5, prices:[500,1100,2200,4400,8800] },
+  { id:'radius',  name:'Blast Radius',  ico:'💣', desc:'+15% AoE per level',   max:5, prices:[350,800,1600,3200,6400] },
 ];
 
 const BUFF_DEFS = [
-  { id:'autoReload', name:'Auto Reload',  ico:'🔄', desc:'Auto-fire tidak habiskan saldo saat balance < 200', price:2000 },
-  { id:'goldFish',   name:'Gold Magnet',  ico:'🪙', desc:'Semua ikan koin +50% reward', price:3000 },
-  { id:'shieldX2',   name:'Shield ×2',   ico:'🛡', desc:'Saldo tidak bisa turun di bawah 100', price:5000 },
+  { id:'autoReload',  name:'Auto Reload',  ico:'🔄', desc:'Auto-fire tidak habiskan saldo saat balance < 300', price:2000 },
+  { id:'goldFish',    name:'Gold Magnet',  ico:'🪙', desc:'Semua ikan +50% reward', price:3200 },
+  { id:'shieldX2',    name:'Shield ×2',   ico:'🛡', desc:'Saldo tidak bisa turun di bawah 150', price:5500 },
+  { id:'comboMaster', name:'Combo Master',ico:'🔥', desc:'Combo berlangsung 2× lebih lama', price:4000 },
 ];
 
-// ── FISH TYPES ────────────────────────────────────────────
+// ── ACHIEVEMENT SYSTEM ─────────────────────────────────
+const ACHIEVEMENTS = {
+  first_kill:   { name:'First Blood',      desc:'Bunuh ikan pertama!',          icon:'🩸', done:false },
+  kill_50:      { name:'Sharpshooter',     desc:'50 ikan ditembak jatuh',        icon:'🎯', done:false },
+  kill_200:     { name:'Ocean Destroyer',  desc:'200 ikan ditembak jatuh',       icon:'💀', done:false },
+  jackpot_hit:  { name:'Lucky Emperor',    desc:'Menangkan Jackpot!',            icon:'🎰', done:false },
+  combo_x5:     { name:'Combo Fever',      desc:'Capai 5× Combo!',              icon:'🔥', done:false },
+  combo_x10:    { name:'Insane Combo',     desc:'Capai 10× Combo!',             icon:'⚡', done:false },
+  win_10k:      { name:'Millionaire Jr.',  desc:'Kumpulkan 10.000 kemenangan',   icon:'💰', done:false },
+  win_100k:     { name:'Ocean Emperor',    desc:'Kumpulkan 100.000 kemenangan',  icon:'👑', done:false },
+  level_10:     { name:'Veteran',          desc:'Capai Level 10',                icon:'⭐', done:false },
+  all_weapons:  { name:'Arsenal Complete', desc:'Miliki semua senjata',          icon:'🔫', done:false },
+};
+let totalKills = 0;
+
+// ── MISSION SYSTEM ─────────────────────────────────────
+const MISSIONS = [
+  { id:'m1', desc:'Bunuh 20 ikan kecil',   target:'small',  goal:20, prog:0, reward:500,  done:false },
+  { id:'m2', desc:'Bunuh 5 boss',          target:'boss',   goal:5,  prog:0, reward:2000, done:false },
+  { id:'m3', desc:'Raih combo ×5',         target:'combo',  goal:5,  prog:0, reward:800,  done:false },
+  { id:'m4', desc:'Menangkan 3000 coins',  target:'win',    goal:3000,prog:0,reward:600,  done:false },
+  { id:'m5', desc:'Bunuh 3 ikan jackpot',  target:'jackpot',goal:3,  prog:0, reward:3000, done:false },
+];
+
+// ── FISH TYPES ─────────────────────────────────────────
 const FISH_TYPES = [
-  { id:'small',    hp:3,  val:8,   speed:2.2, size:18, color:'#4fc3f7', glow:'#00bcd4', prob:0.30 },
-  { id:'med',      hp:8,  val:25,  speed:1.5, size:26, color:'#81c784', glow:'#4caf50', prob:0.22 },
-  { id:'large',    hp:18, val:60,  speed:1.0, size:36, color:'#ff8a65', glow:'#f4511e', prob:0.14 },
-  { id:'boss',     hp:90, val:400, speed:0.45,size:58, color:'#ff6f00', glow:'#ff9800', prob:0.05 },
-  { id:'drill',    hp:30, val:0,   speed:1.3, size:38, color:'#00e5ff', glow:'#00bcd4', prob:0.06 },
-  { id:'bomb',     hp:30, val:0,   speed:1.3, size:38, color:'#ff1744', glow:'#ff5722', prob:0.06 },
-  { id:'roulette', hp:40, val:0,   speed:1.0, size:42, color:'#e040fb', glow:'#9c27b0', prob:0.05 },
-  { id:'random',   hp:25, val:0,   speed:1.8, size:34, color:'#ffd700', glow:'#ffb300', prob:0.05 },
-  { id:'jackpot',  hp:60, val:0,   speed:0.7, size:52, color:'#ffd700', glow:'#ff6f00', prob:0.03 },
-  { id:'twin',     hp:20, val:80,  speed:1.6, size:30, color:'#80deea', glow:'#26c6da', prob:0.04 }, 
+  { id:'small',    hp:3,   val:8,   speed:2.4, size:17, color:'#4fc3f7', glow:'#00bcd4', prob:0.28 },
+  { id:'med',      hp:8,   val:28,  speed:1.6, size:25, color:'#81c784', glow:'#4caf50', prob:0.20 },
+  { id:'large',    hp:20,  val:70,  speed:1.0, size:35, color:'#ff8a65', glow:'#f4511e', prob:0.13 },
+  { id:'boss',     hp:100, val:450, speed:0.4, size:58, color:'#ff6f00', glow:'#ff9800', prob:0.05 },
+  { id:'drill',    hp:32,  val:0,   speed:1.4, size:37, color:'#00e5ff', glow:'#00bcd4', prob:0.055 },
+  { id:'bomb',     hp:32,  val:0,   speed:1.2, size:37, color:'#ff2266', glow:'#ff5722', prob:0.055 },
+  { id:'roulette', hp:45,  val:0,   speed:1.0, size:42, color:'#c040ff', glow:'#9c27b0', prob:0.05 },
+  { id:'random',   hp:28,  val:0,   speed:1.8, size:33, color:'#ffd700', glow:'#ffb300', prob:0.05 },
+  { id:'jackpot',  hp:70,  val:0,   speed:0.65,size:52, color:'#ffd700', glow:'#ff6f00', prob:0.03 },
+  { id:'twin',     hp:22,  val:85,  speed:1.6, size:29, color:'#80deea', glow:'#26c6da', prob:0.04 },
+  { id:'ghost',    hp:15,  val:45,  speed:2.8, size:28, color:'rgba(200,220,255,0.6)', glow:'#b0c4ff', prob:0.03 },
+  { id:'electric', hp:50,  val:200, speed:0.9, size:45, color:'#ffd740', glow:'#ffcc00', prob:0.03 },
 ];
+function pickFishType(){ let r=Math.random(),c=0; for(let t of FISH_TYPES){c+=t.prob;if(r<c)return t;} return FISH_TYPES[0]; }
 
-function pickFishType(){
-  let r=Math.random(), c=0;
-  for(let t of FISH_TYPES){ c+=t.prob; if(r<c) return t; }
-  return FISH_TYPES[0];
-}
-
-// ── ENTITY ARRAYS ─────────────────────────────────────────
-const fishes    = [];
-const bullets   = [];
+// ── ENTITY ARRAYS ──────────────────────────────────────
+const fishes = [];
+const bullets = [];
 const particles = [];
-const lasers    = [];
-const inWorldRoulettes = []; // Array untuk roulette animasi di layar
+const lasers = [];
+const inWorldRoulettes = [];
+const frozenFish = new Set();
+const chainLightnings = [];
 
-// ── FISH CLASS ────────────────────────────────────────────
+// ── FISH CLASS ─────────────────────────────────────────
 class Fish {
   constructor(){ this.init(); }
   init(overType){
     const t = overType ? FISH_TYPES.find(x=>x.id===overType)||pickFishType() : pickFishType();
-    this.id      = t.id;
-    this.hp      = t.hp;
-    this.maxHp   = t.hp;
-    this.val     = t.val;
-    this.speed   = t.speed;
-    this.size    = t.size;
-    this.color   = t.color;
-    this.glow    = t.glow;
-    this.dir     = Math.random()>0.5?1:-1;
-    this.x       = this.dir===1?-80:W+80;
-    this.baseY   = 80 + Math.random()*(H-220);
-    this.y       = this.baseY;
-    this.wave    = Math.random()*Math.PI*2;
-    this.waveAmp = 8+Math.random()*14;
-    this.waveFreq= 0.018+Math.random()*0.02;
-    this.tailPh  = Math.random()*Math.PI*2;
-    this.alive   = true;
-    this.flash   = 0;
-    if(this.id==='jackpot') this.countUp = 100+Math.floor(Math.random()*300);
+    Object.assign(this, {
+      id:t.id, hp:t.hp, maxHp:t.hp, val:t.val,
+      baseSpeed:t.speed, size:t.size, color:t.color, glow:t.glow,
+      dir:Math.random()>0.5?1:-1, wave:Math.random()*Math.PI*2,
+      waveAmp:8+Math.random()*14, waveFreq:0.018+Math.random()*0.02,
+      tailPh:Math.random()*Math.PI*2, alive:true, flash:0, frozen:0,
+    });
+    this.x = this.dir===1 ? -90 : W+90;
+    this.baseY = (hudTopH+40) + Math.random()*(H - hudTopH - hudBotH - 130);
+    this.y = this.baseY;
+    if(this.id==='jackpot') this.countUp = 100+Math.floor(Math.random()*400);
   }
+  get speed(){ return frozenFish.has(this) ? this.baseSpeed*0.2 : this.baseSpeed; }
   update(){
-    this.x += this.speed * this.dir;
-    this.y  = this.baseY + Math.sin(frameCount*this.waveFreq+this.wave)*this.waveAmp;
-    this.tailPh += 0.14;
-    if(this.id==='jackpot' && frameCount%25===0) this.countUp += Math.floor(8+Math.random()*12);
+    this.x += this.speed*this.dir;
+    this.y = this.baseY + Math.sin(frameCount*this.waveFreq+this.wave)*this.waveAmp;
+    this.tailPh += 0.15;
+    if(this.id==='jackpot' && frameCount%20===0) this.countUp += Math.floor(10+Math.random()*15);
     if(this.flash>0) this.flash--;
-    if((this.dir===1&&this.x>W+110)||(this.dir===-1&&this.x<-110)) this.init();
+    if(this.frozen>0) this.frozen--;
+    if(this.frozen===0) frozenFish.delete(this);
+    const marginX = this.size+90, marginY = this.size+90;
+    if((this.dir===1&&this.x>W+marginX)||(this.dir===-1&&this.x<-marginX)) this.init();
   }
   draw(){
     ctx.save();
     ctx.translate(this.x, this.y);
     const fl = this.dir===-1?-1:1;
     ctx.scale(fl, 1);
-    if(this.flash>0) ctx.globalAlpha = 0.45+0.55*Math.sin(this.flash*0.9);
-    ctx.shadowBlur=18+Math.sin(frameCount*0.06)*6; ctx.shadowColor=this.glow;
+    if(this.flash>0) ctx.globalAlpha = 0.4+0.6*Math.sin(this.flash*1.0);
+    ctx.shadowBlur = 20+Math.sin(frameCount*0.05)*7;
+    ctx.shadowColor = this.frozen>0 ? '#80d8ff' : this.glow;
 
+    // Body
     ctx.beginPath(); ctx.ellipse(0,0,this.size,this.size*0.54,0,0,Math.PI*2);
-    ctx.fillStyle=this.color; ctx.fill();
-    const tw=Math.sin(this.tailPh)*11;
+    ctx.fillStyle = this.frozen>0 ? '#b3e5fc' : this.color; ctx.fill();
+
+    // Tail
+    const tw = Math.sin(this.tailPh)*11;
     ctx.beginPath(); ctx.moveTo(-this.size+4,0);
-    ctx.lineTo(-this.size-18,-12+tw); ctx.lineTo(-this.size-18,12+tw);
-    ctx.closePath(); ctx.fillStyle=this.color; ctx.fill();
+    ctx.lineTo(-this.size-20,-13+tw); ctx.lineTo(-this.size-20,13+tw);
+    ctx.closePath(); ctx.fillStyle = this.frozen>0 ? '#b3e5fc' : this.color; ctx.fill();
+
+    // Fin
     ctx.beginPath();
-    ctx.moveTo(-this.size*0.2,-this.size*0.54); ctx.lineTo(this.size*0.1,-this.size*0.88);
-    ctx.lineTo(this.size*0.4,-this.size*0.54); ctx.fillStyle=this.color; ctx.fill();
-    ctx.shadowBlur=0;
-    ctx.beginPath(); ctx.arc(this.size*0.44,-this.size*0.1,this.size*0.13,0,Math.PI*2);
+    ctx.moveTo(-this.size*0.2,-this.size*0.54); ctx.lineTo(this.size*0.1,-this.size*0.9);
+    ctx.lineTo(this.size*0.4,-this.size*0.54); ctx.fillStyle = this.frozen>0 ? '#b3e5fc' : this.color; ctx.fill();
+
+    ctx.shadowBlur = 0;
+
+    // Eye
+    ctx.beginPath(); ctx.arc(this.size*0.44,-this.size*0.1,this.size*0.14,0,Math.PI*2);
     ctx.fillStyle='#fff'; ctx.fill();
-    ctx.beginPath(); ctx.arc(this.size*0.46,-this.size*0.1,this.size*0.07,0,Math.PI*2);
+    ctx.beginPath(); ctx.arc(this.size*0.46,-this.size*0.1,this.size*0.075,0,Math.PI*2);
     ctx.fillStyle='#111'; ctx.fill();
-    
-    const ICONS = {drill:'⚡',bomb:'💣',roulette:'🎰',random:'🎁',boss:'👑',twin:'✦'};
+
+    // Icons
+    const ICONS = {drill:'⚡',bomb:'💣',roulette:'🎰',random:'🎁',boss:'👑',twin:'✦',ghost:'👻',electric:'⚡'};
     if(ICONS[this.id]){
-      ctx.fillStyle='rgba(0,0,0,0.25)';
-      ctx.beginPath(); ctx.ellipse(0,0,this.size*0.6,this.size*0.35,0,0,Math.PI*2); ctx.fill();
-      ctx.save(); ctx.scale(fl,1); ctx.font=`${Math.floor(this.size*0.42)}px Arial`;
+      ctx.fillStyle='rgba(0,0,0,0.2)';
+      ctx.beginPath(); ctx.ellipse(0,0,this.size*0.65,this.size*0.38,0,0,Math.PI*2); ctx.fill();
+      ctx.save(); ctx.scale(fl,1); ctx.font=`${Math.floor(this.size*0.44)}px Arial`;
       ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ICONS[this.id],0,2); ctx.restore();
     }
     if(this.id==='jackpot'){
       ctx.scale(fl,1); ctx.shadowBlur=0;
       ctx.fillStyle='#ffd700'; ctx.font='bold 12px Orbitron,Arial';
-      ctx.textAlign='center'; ctx.fillText('+'+this.countUp,0,-this.size-10);
+      ctx.textAlign='center'; ctx.fillText('+'+this.countUp,0,-this.size-12);
+    }
+    // Frost effect
+    if(this.frozen>0){
+      ctx.globalAlpha=0.3; ctx.strokeStyle='#80d8ff'; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.arc(0,0,this.size+5,0,Math.PI*2); ctx.stroke();
     }
     ctx.restore();
-    
+
+    // HP bar
     if(this.maxHp>5){
-      const bw=this.size*1.6, bh=4, bx=this.x-bw/2, by=this.y-this.size-22;
+      const bw=this.size*1.7, bh=5, bx=this.x-bw/2, by=this.y-this.size-24;
       const pct=this.hp/this.maxHp;
-      ctx.fillStyle='rgba(0,0,0,0.45)'; ctx.fillRect(bx,by,bw,bh);
+      ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(bx,by,bw,bh);
       ctx.fillStyle=pct>0.5?'#4caf50':pct>0.25?'#ffc107':'#f44336';
       ctx.fillRect(bx,by,bw*pct,bh);
-      ctx.strokeStyle='rgba(255,255,255,0.15)'; ctx.lineWidth=0.5; ctx.strokeRect(bx,by,bw,bh);
     }
   }
 }
 
-// ── BULLET CLASS ──────────────────────────────────────────
+// ── BULLET CLASS ───────────────────────────────────────
 class Bullet {
   constructor(ox,oy,ang,wDef,ownerId){
     this.x=ox; this.y=oy;
-    this.vx=Math.cos(ang)*16; this.vy=Math.sin(ang)*16;
-    this.wDef=wDef;
-    this.ownerId=ownerId; // Player tracking
-    this.alive=true; this.trail=[];
-    this.piercing=!!wDef.piercing;
-    this.explosive=!!wDef.explosive;
-    this.plasma=!!wDef.plasma;
-    if(this.plasma){ this.vx*=0.55; this.vy*=0.55; }
+    const spd = wDef.plasma ? 8 : wDef.minigun ? 18 : 15;
+    this.vx=Math.cos(ang)*spd; this.vy=Math.sin(ang)*spd;
+    this.wDef=wDef; this.ownerId=ownerId; this.alive=true;
+    this.trail=[]; this.piercedFish=new Set();
+    this.piercing=!!wDef.piercing; this.explosive=!!wDef.explosive;
+    this.plasma=!!wDef.plasma; this.nuke=!!wDef.nuke;
+    this.frost=!!wDef.frost; this.chain=!!wDef.chain;
   }
-  dmg(){ return this.wDef.dmg * (this.ownerId===0 ? 1+upgrades.dmg*0.2 : 1); }
+  dmg(){
+    let base = this.wDef.dmg;
+    if(this.ownerId===0) base *= (1 + upgrades.dmg*0.2);
+    return base;
+  }
   update(){
     this.trail.push({x:this.x,y:this.y});
-    if(this.trail.length>10) this.trail.shift();
+    if(this.trail.length>12) this.trail.shift();
     this.x+=this.vx; this.y+=this.vy;
-    if(this.x<-10||this.x>W+10||this.y<-10||this.y>H+10){ this.alive=false; return; }
+    if(this.x<-20||this.x>W+20||this.y<-20||this.y>H+20){ this.alive=false; return; }
     for(let f of fishes){
-      if(!f.alive) continue;
-      if(Math.hypot(this.x-f.x,this.y-f.y)<f.size+8){
-        f.hp -= this.dmg(); f.flash=8;
-        spawnHit(this.x,this.y);
-        if(this.explosive) explodeAt(this.x,this.y,80,this.dmg()*2, this.ownerId);
-        if(this.plasma)    explodeAt(this.x,this.y,120,this.dmg()*3, this.ownerId);
+      if(!f.alive||this.piercedFish.has(f)) continue;
+      if(Math.hypot(this.x-f.x,this.y-f.y)<f.size+9){
+        const dmgVal = this.dmg();
+        f.hp-=dmgVal; f.flash=9;
+        if(this.frost){ f.frozen=120; frozenFish.add(f); spawnIceParticles(this.x,this.y); }
+        spawnHitSpark(this.x,this.y, players[this.ownerId].color);
+        if(this.explosive) explodeAt(this.x,this.y, 90*(1+upgrades.radius*0.15), dmgVal*2, this.ownerId);
+        if(this.plasma)    explodeAt(this.x,this.y, 130*(1+upgrades.radius*0.15), dmgVal*3, this.ownerId);
+        if(this.nuke)      nukeAll(this.ownerId);
+        if(this.chain)     chainLightning(f, this.ownerId, dmgVal);
         if(f.hp<=0) killFish(f, this.ownerId);
-        if(!this.piercing){ this.alive=false; return; }
+        if(this.piercing){ this.piercedFish.add(f); }
+        else { this.alive=false; return; }
       }
     }
   }
   draw(){
-    const owner = players[this.ownerId];
-    const wc = owner.color; // Warna peluru mengikuti warna player
+    const oc = players[this.ownerId].color;
+    // Trail
     for(let i=0;i<this.trail.length;i++){
-      const a=(i/this.trail.length)*0.6;
-      const sz=4*(i/this.trail.length);
+      const a=(i/this.trail.length)*0.55;
+      const sz=3*(i/this.trail.length);
+      ctx.save(); ctx.globalAlpha=a; ctx.shadowBlur=8; ctx.shadowColor=oc;
       ctx.beginPath(); ctx.arc(this.trail[i].x,this.trail[i].y,sz,0,Math.PI*2);
-      ctx.fillStyle=wc.replace('#','rgba(').replace(/^rgba\((..)(..)(..)$/,(m,r,g,b)=>`rgba(${parseInt(r,16)},${parseInt(g,16)},${parseInt(b,16)},${a})`)||`rgba(255,215,0,${a})`;
-      ctx.fillStyle=`rgba(255,255,255,${a*0.5})`; ctx.fill();
+      ctx.fillStyle=oc; ctx.fill(); ctx.restore();
     }
+    // Bullet
     ctx.save();
-    const sz = this.plasma?9:this.explosive?8:this.piercing?6:5;
-    ctx.shadowBlur=18; ctx.shadowColor=wc;
+    const sz=this.plasma?10:this.explosive?9:this.piercing?7:this.nuke?13:5;
+    ctx.shadowBlur=22; ctx.shadowColor=oc;
     ctx.beginPath(); ctx.arc(this.x,this.y,sz,0,Math.PI*2);
-    ctx.fillStyle=wc; ctx.fill();
-    if(this.plasma){
-      ctx.beginPath(); ctx.arc(this.x,this.y,sz*1.6,0,Math.PI*2);
-      ctx.strokeStyle=wc; ctx.lineWidth=1.5; ctx.globalAlpha=0.4; ctx.stroke();
+    ctx.fillStyle=oc; ctx.fill();
+    if(this.plasma||this.nuke){
+      ctx.beginPath(); ctx.arc(this.x,this.y,sz*1.7,0,Math.PI*2);
+      ctx.strokeStyle=oc; ctx.lineWidth=1.5; ctx.globalAlpha=0.35; ctx.stroke();
     }
     ctx.restore();
   }
 }
 
+// ── LASER CLASS ───────────────────────────────────────
 class Laser {
   constructor(ox,oy,ang,ownerId){
-    this.ox=ox; this.oy=oy;
-    this.ang=ang;
-    this.ownerId=ownerId;
-    this.life=18;
-    this.len=Math.max(W,H)*1.5;
+    this.ox=ox; this.oy=oy; this.ang=ang; this.ownerId=ownerId; this.life=20;
+    const len=Math.max(W,H)*1.6;
     const dx=Math.cos(ang), dy=Math.sin(ang);
     for(let f of fishes){
       if(!f.alive) continue;
       const fx=f.x-ox, fy=f.y-oy;
       const proj=fx*dx+fy*dy;
       if(proj<0) continue;
-      const perp=Math.abs(fx*dy - fy*dx);
-      if(perp<f.size+10){
-        const dmgVal = 2 * (ownerId===0 ? 1+upgrades.dmg*0.2 : 1);
-        f.hp -= dmgVal; f.flash=10; spawnHit(f.x,f.y);
-        if(f.hp<=0) killFish(f, this.ownerId);
+      const perp=Math.abs(fx*dy-fy*dx);
+      if(perp<f.size+12){
+        const d=3*(ownerId===0?1+upgrades.dmg*0.2:1);
+        f.hp-=d; f.flash=10; spawnHitSpark(f.x,f.y,players[ownerId].color);
+        if(f.hp<=0) killFish(f,ownerId);
       }
     }
   }
   update(){ this.life--; }
   draw(){
-    const a=this.life/18;
-    const owner = players[this.ownerId];
+    if(this.life<=0) return;
+    const a=this.life/20;
+    const oc=players[this.ownerId].color;
     ctx.save(); ctx.globalAlpha=a;
-    ctx.shadowBlur=30; ctx.shadowColor=owner.color;
-    ctx.strokeStyle=owner.color; ctx.lineWidth=3+a*4;
+    ctx.shadowBlur=35; ctx.shadowColor=oc;
+    ctx.strokeStyle=oc; ctx.lineWidth=4+a*5;
     ctx.beginPath();
     ctx.moveTo(this.ox,this.oy);
-    ctx.lineTo(this.ox+Math.cos(this.ang)*this.len, this.oy+Math.sin(this.ang)*this.len);
+    ctx.lineTo(this.ox+Math.cos(this.ang)*Math.max(W,H)*1.6,
+               this.oy+Math.sin(this.ang)*Math.max(W,H)*1.6);
     ctx.stroke();
-    ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=1.5;
-    ctx.stroke();
+    ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=1.5; ctx.stroke();
     ctx.restore();
   }
 }
 
-// ── IN-WORLD ROULETTE CLASS ───────────────────────────────
+// ── CHAIN LIGHTNING ───────────────────────────────────
+function chainLightning(originFish, ownerId, dmg, depth=0){
+  if(depth>3) return;
+  const nearby = fishes.filter(f=>f.alive&&f!==originFish&&Math.hypot(f.x-originFish.x,f.y-originFish.y)<160);
+  if(!nearby.length) return;
+  const target = nearby[Math.floor(Math.random()*nearby.length)];
+  chainLightnings.push({x1:originFish.x,y1:originFish.y,x2:target.x,y2:target.y,life:12});
+  target.hp -= dmg*0.6; target.flash=8;
+  spawnHitSpark(target.x,target.y,'#ffd740');
+  if(target.hp<=0) killFish(target,ownerId);
+  else chainLightning(target,ownerId,dmg*0.6,depth+1);
+}
+
+// ── ROULETTE ──────────────────────────────────────────
 const ROULETTE_PRIZES=[
   {label:'2×',mult:2,color:'#4caf50'},{label:'5×',mult:5,color:'#8bc34a'},
   {label:'10×',mult:10,color:'#ffd700'},{label:'20×',mult:20,color:'#ff9800'},
   {label:'50×',mult:50,color:'#ff5722'},{label:'JACKPOT',mult:200,color:'#e91e63'},
-  {label:'3×',mult:3,color:'#009688'},{label:'ZONK',mult:0,color:'#607d8b'},
+  {label:'3×',mult:3,color:'#009688'},{label:'MISS',mult:0,color:'#607d8b'},
 ];
-
 class InWorldRoulette {
-  constructor(x, y, ownerId, isRandomBox){
-    this.x = x; this.y = y;
-    this.ownerId = ownerId;
-    this.isRandomBox = isRandomBox;
-    this.timer = 150; // Waktu putaran
-    this.angle = 0;
-    this.speed = 0.4;
-    this.result = null;
-    this.prizes = ROULETTE_PRIZES;
+  constructor(x,y,ownerId,isRandom){
+    this.x=x; this.y=y; this.ownerId=ownerId; this.isRandom=isRandom;
+    this.angle=0; this.speed=0.5; this.done=false; this.result=null;
+    this.doneTimer=-1; this.prizes=ROULETTE_PRIZES;
+    this.spins = 120 + Math.floor(Math.random()*80);
   }
-  update() {
-    if (this.timer > 0) {
-      this.angle += this.speed;
-      this.speed *= 0.985; // Melambat
-      this.timer--;
-      if (this.timer === 0) {
-        // Tentukan hasil dan berikan ke pemilik
-        this.result = this.prizes[Math.floor(Math.random() * this.prizes.length)];
-        const owner = players[this.ownerId];
-        const win = this.result.mult * owner.bet;
-        if(win > 0) {
-          owner.bal += win;
-          if(this.ownerId === 0){ totalWin += win; updateUI(); }
-          floatText('+'+win, this.x, this.y-40, owner.color, 24);
-          spawnCoins(this.x, this.y, 8, owner);
-        } else {
-          floatText('MISS!', this.x, this.y-40, '#fff', 20);
-        }
-        this.timer = -60; // Delay tampil hasil sebelum hilang
-      }
+  update(){
+    if(!this.done){
+      this.angle+=this.speed; this.speed*=0.988; this.spins--;
+      if(this.spins<=0||this.speed<0.02){ this.done=true; this._giveResult(); }
     } else {
-      this.timer++;
+      this.doneTimer++;
     }
   }
-  draw() {
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    const R = 45; // Ukuran mini rolet
-    const seg = (Math.PI*2)/this.prizes.length;
-    
-    // Draw wheel
+  _giveResult(){
+    this.result=this.prizes[Math.floor(Math.random()*this.prizes.length)];
+    const owner=players[this.ownerId];
+    const win=this.result.mult*owner.bet;
+    if(win>0){
+      owner.bal+=win;
+      if(this.ownerId===0){ totalWin+=win; updateMissionProgress('win',win); updateUI(); }
+      floatText('+'+win,this.x,this.y-55,owner.color,22);
+      spawnCoins(this.x,this.y,10,owner);
+    } else { floatText('MISS!',this.x,this.y-50,'#aaa',18); }
+  }
+  draw(){
+    ctx.save(); ctx.translate(this.x,this.y);
+    const R=44;
+    const seg=(Math.PI*2)/this.prizes.length;
     for(let i=0;i<this.prizes.length;i++){
-      const a = this.angle + i*seg;
+      const a=this.angle+i*seg;
       ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,R,a,a+seg); ctx.closePath();
-      ctx.fillStyle = this.prizes[i].color; ctx.fill();
-      ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=1; ctx.stroke();
+      ctx.fillStyle=this.prizes[i].color; ctx.fill();
+      ctx.strokeStyle='rgba(0,0,0,0.4)'; ctx.lineWidth=1; ctx.stroke();
     }
-    // Draw text
     for(let i=0;i<this.prizes.length;i++){
-      const a = this.angle + i*seg + seg/2;
-      ctx.save(); ctx.translate(Math.cos(a)*R*0.65, Math.sin(a)*R*0.65);
-      ctx.rotate(a+Math.PI/2); ctx.fillStyle='#fff'; ctx.font='bold 9px Orbitron,Arial';
-      ctx.textAlign='center'; ctx.textBaseline='middle';
-      ctx.fillText(this.prizes[i].label,0,0); ctx.restore();
+      const a=this.angle+i*seg+seg/2;
+      ctx.save(); ctx.translate(Math.cos(a)*R*0.65,Math.sin(a)*R*0.65);
+      ctx.rotate(a+Math.PI/2); ctx.fillStyle='#fff'; ctx.font='bold 8px Orbitron,Arial';
+      ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(this.prizes[i].label,0,0); ctx.restore();
     }
-    // Center & Pointer
-    ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2);
-    ctx.fillStyle='#111'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0,-R-2); ctx.lineTo(-6,-R+8); ctx.lineTo(6,-R+8);
-    ctx.closePath(); ctx.fillStyle='#fff'; ctx.fill();
-
-    // Teks di atasnya
-    if (this.timer > 0) {
-      ctx.fillStyle='#fff'; ctx.font='bold 12px Orbitron'; ctx.textAlign='center';
-      ctx.fillText(this.isRandomBox?'LUCKY BOX':'ROULETTE', 0, -R-12);
-    } else if (this.result) {
-      ctx.fillStyle='#ffd700'; ctx.font='bold 16px Orbitron'; ctx.textAlign='center'; ctx.shadowBlur=10; ctx.shadowColor='#000';
-      ctx.fillText(this.result.label, 0, -R-12);
+    ctx.beginPath(); ctx.arc(0,0,9,0,Math.PI*2); ctx.fillStyle='#111'; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.moveTo(0,-R-3); ctx.lineTo(-7,-R+9); ctx.lineTo(7,-R+9); ctx.closePath(); ctx.fill();
+    if(this.done&&this.result){
+      ctx.shadowBlur=12; ctx.shadowColor=this.result.color;
+      ctx.fillStyle=this.result.color; ctx.font='bold 15px Orbitron'; ctx.textAlign='center';
+      ctx.fillText(this.result.label,0,-R-16);
+    } else {
+      ctx.fillStyle='#fff'; ctx.font='bold 11px Orbitron'; ctx.textAlign='center';
+      ctx.fillText(this.isRandom?'LUCKY BOX':'ROULETTE',0,-R-14);
     }
     ctx.restore();
   }
 }
 
-// ── PARTICLE SYSTEM ───────────────────────────────────────
+// ── PARTICLE SYSTEM ──────────────────────────────────
+const _particles=[];
 function spawnParticle(x,y,color,size,life){
-  particles.push({x,y,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6-1,color,size:size||4,life:life||1,maxLife:life||1,isCoin:false});
+  _particles.push({x,y,vx:(Math.random()-0.5)*7,vy:(Math.random()-0.5)*7-1,color,size:size||4,life:life||1,maxLife:life||1,isCoin:false,ownerId:-1});
 }
-function spawnHit(x,y){ for(let i=0;i<5;i++) spawnParticle(x,y,'#fff',2.5,0.6); }
+function spawnHitSpark(x,y,color){
+  for(let i=0;i<7;i++){
+    const a=Math.random()*Math.PI*2;
+    _particles.push({x,y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,color,size:2.5,life:0.5,maxLife:0.5,isCoin:false,ownerId:-1});
+  }
+}
 function spawnExplosion(x,y,color){
-  for(let i=0;i<22;i++) particles.push({x,y,vx:(Math.random()-0.5)*14,vy:(Math.random()-0.5)*14-2,color,size:3+Math.random()*7,life:1,maxLife:1,isCoin:false});
-  for(let i=0;i<10;i++) particles.push({x,y,vx:(Math.random()-0.5)*20,vy:(Math.random()-0.5)*20,color:'#fff',size:2,life:0.7,maxLife:0.7,isCoin:false});
+  for(let i=0;i<25;i++) _particles.push({x,y,vx:(Math.random()-0.5)*16,vy:(Math.random()-0.5)*16-2,color,size:2+Math.random()*8,life:1,maxLife:1,isCoin:false,ownerId:-1});
+  for(let i=0;i<12;i++) _particles.push({x,y,vx:(Math.random()-0.5)*22,vy:(Math.random()-0.5)*22,color:'#fff',size:1.5,life:0.65,maxLife:0.65,isCoin:false,ownerId:-1});
 }
-function spawnCoins(x,y,count, owner){
+function spawnIceParticles(x,y){
+  for(let i=0;i<8;i++) _particles.push({x,y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4-0.5,color:'#80d8ff',size:3,life:0.8,maxLife:0.8,isCoin:false,ownerId:-1});
+}
+function spawnCoins(x,y,count,owner){
   for(let i=0;i<count;i++){
-    const a=Math.random()*Math.PI*2, s=2+Math.random()*5;
-    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-3,color:'#ffd700',size:5,life:1.3,maxLife:1.3,isCoin:true,rotate:Math.random()*Math.PI*2, ownerId: owner.id});
+    const a=Math.random()*Math.PI*2, s=2+Math.random()*6;
+    _particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-4,color:'#ffd700',size:5.5,life:1.5,maxLife:1.5,isCoin:true,rotate:Math.random()*Math.PI*2,ownerId:owner.id});
+  }
+}
+function spawnNukeParticles(){
+  for(let i=0;i<60;i++){
+    const a=Math.random()*Math.PI*2, s=3+Math.random()*12;
+    _particles.push({x:W/2,y:H/2,vx:Math.cos(a)*s,vy:Math.sin(a)*s,color:i%2?'#ff9100':'#ffd700',size:4+Math.random()*10,life:1.5,maxLife:1.5,isCoin:false,ownerId:-1});
   }
 }
 
+// ── FLOAT TEXT ───────────────────────────────────────
 function floatText(str,x,y,color,sz){
   const el=document.createElement('div');
   el.className='floater'; el.textContent=str;
-  el.style.cssText=`left:${x}px;top:${y}px;color:${color||'#ffd700'};font-size:${sz||18}px;`;
+  el.style.cssText=`left:${Math.round(x)}px;top:${Math.round(y)}px;color:${color||'#ffd700'};font-size:${sz||18}px;`;
   document.getElementById('floaters').appendChild(el);
-  setTimeout(()=>el.remove(),1300);
+  setTimeout(()=>el.remove(),1400);
 }
 
-function explodeAt(x,y,radius,dmg, ownerId){
-  spawnExplosion(x,y,'#ff9100'); spawnExplosion(x,y,'#ff1744');
-  if(ownerId === 0) shakeScreen();
+// ── SCREEN SHAKE ─────────────────────────────────────
+function shakeScreen(amt=12){ shakeAmt=Math.max(shakeAmt,amt); }
+
+// ── EXPLODE ───────────────────────────────────────────
+function explodeAt(x,y,radius,dmg,ownerId){
+  spawnExplosion(x,y,'#ff9100'); spawnExplosion(x,y,'#ff2266');
+  if(ownerId===0) shakeScreen(10);
   for(let f of fishes){
     if(!f.alive) continue;
     const d=Math.hypot(f.x-x,f.y-y);
-    if(d<radius+f.size){ f.hp-=dmg*(1-d/(radius+f.size)*0.5); f.flash=12; if(f.hp<=0) killFish(f, ownerId); }
+    if(d<radius+f.size){ f.hp-=dmg*(1-d/(radius+f.size)*0.4); f.flash=14; if(f.hp<=0) killFish(f,ownerId); }
   }
 }
+function nukeAll(ownerId){
+  shakeScreen(20); spawnNukeParticles();
+  // Flash white
+  nukeFlash = 30;
+  for(let f of fishes){
+    if(!f.alive) continue;
+    f.hp=0; killFish(f,ownerId);
+  }
+  floatText('☢ NUKE!',W/2,H/2,'#00ff88',36);
+}
+let nukeFlash=0;
 
-// ── KILL FISH (MENGGUNAKAN OWNER) ─────────────────────────
-function killFish(f, ownerId){
+// ── KILL FISH ─────────────────────────────────────────
+function killFish(f,ownerId){
   if(!f.alive) return; f.alive=false;
-  const owner = players[ownerId];
-  
+  const owner=players[ownerId];
+
   spawnExplosion(f.x,f.y,f.glow);
-  spawnCoins(f.x,f.y,f.id==='boss'?12:f.id==='jackpot'?8:4, owner);
-  
-  if(f.id==='drill' || f.id==='bomb') { floatText('💥 BOOM!', f.x, f.y, '#ff1744', 22); explodeAt(f.x, f.y, 250, 10, ownerId); f.init(); return; }
-  
-  // ROULETTE & RANDOM MUNCUL DI LOKASI IKAN MATI
-  if(f.id==='roulette') { inWorldRoulettes.push(new InWorldRoulette(f.x, f.y, ownerId, false)); f.init(); return; }
-  if(f.id==='random')   { inWorldRoulettes.push(new InWorldRoulette(f.x, f.y, ownerId, true)); f.init(); return; }
-  
-  if(f.id==='twin') {
-    for(let i=0;i<2;i++){const nf=new Fish(); nf.init('small'); nf.x=f.x+(i-0.5)*30; nf.y=f.y; fishes.push(nf);}
+  spawnCoins(f.x,f.y,f.id==='boss'?14:f.id==='jackpot'?10:5,owner);
+  owner.totalKills++;
+  if(ownerId===0){ totalKills++; checkAchievements(); }
+
+  // Drill/Bomb
+  if(f.id==='drill'||f.id==='bomb'){
+    floatText('💥 BOOM!',f.x,f.y,'#ff2266',22);
+    explodeAt(f.x,f.y,270*(1+upgrades.radius*0.15),12,ownerId);
+    f.init(); return;
+  }
+  // Roulette / Random
+  if(f.id==='roulette'){ inWorldRoulettes.push(new InWorldRoulette(f.x,f.y,ownerId,false)); f.init(); return; }
+  if(f.id==='random'){   inWorldRoulettes.push(new InWorldRoulette(f.x,f.y,ownerId,true)); f.init(); return; }
+  // Twin
+  if(f.id==='twin'){
+    for(let i=0;i<2;i++){const nf=new Fish();nf.init('small');nf.x=f.x+(i-0.5)*36;nf.y=f.y;fishes.push(nf);}
   }
 
+  // Combo system (player only)
+  if(ownerId===0){
+    comboKills++;
+    const comboTime = buffs.comboMaster ? 200 : 120;
+    comboTimer = comboTime;
+    if(comboKills>=2) showCombo(comboKills);
+    if(comboKills>=5) updateMissionProgress('combo', comboKills);
+    if(comboKills>=5 && !ACHIEVEMENTS.combo_x5.done) unlockAchievement('combo_x5');
+    if(comboKills>=10 && !ACHIEVEMENTS.combo_x10.done) unlockAchievement('combo_x10');
+  }
+
+  // Jackpot fish
   let win=0;
-  const goldMod = (ownerId===0 && buffs.goldFish) ? 1.5 : 1.0;
-  const winMod  = ownerId===0 ? getCurrentWinMod() : 1.0; // Bot winmod default 1
-
   if(f.id==='jackpot'){
-    win=f.countUp; jackpotPool=Math.max(0,jackpotPool-win); updateJackpot();
-    floatText('JACKPOT! +'+win,f.x,f.y-30,'#ffd700',22);
+    win=f.countUp;
+    jackpotPool=Math.max(0,jackpotPool-win);
+    updateJackpot();
+    if(ownerId===0){
+      showJackpotWin(win);
+      if(!ACHIEVEMENTS.jackpot_hit.done) unlockAchievement('jackpot_hit');
+      updateMissionProgress('jackpot',1);
+    } else {
+      floatText('JACKPOT! +'+win,f.x,f.y-30,'#ffd700',22);
+    }
   } else {
-    const winrateBonus = ownerId===0 ? (1 + upgrades.winrate*0.05) : 1;
-    win = Math.floor(f.val * (owner.bet/10) * winMod * goldMod * winrateBonus);
+    const goldMod=(ownerId===0&&buffs.goldFish)?1.5:1.0;
+    const wid=equippedSlots.find(s=>s!==null)||'single';
+    const winMod=ownerId===0?(WEAPON_DEFS[wid]?.winMod||1.0):1.0;
+    const wrBonus=ownerId===0?(1+upgrades.winrate*0.05):1;
+    const comboMod=ownerId===0?Math.max(1,(comboKills*0.08)+1):1;
+    win=Math.floor(f.val*(owner.bet/10)*winMod*goldMod*wrBonus*comboMod);
   }
-  
-  owner.bal += win;
-  if(ownerId === 0) { totalWin+=win; updateUI(); }
-  
-  if(win>0) floatText('+'+win,f.x,f.y-18, owner.color, 16);
+
+  owner.bal+=win; owner.totalWin+=win;
+  if(ownerId===0){
+    totalWin+=win;
+    updateMissionProgress('win',win);
+    updateMissionProgress(f.id,1);
+    checkAchievements();
+    updateUI();
+  }
+  if(win>0) floatText('+'+win,f.x,f.y-20,owner.color,16);
   f.init();
 }
 
-function getCurrentWinMod(){
-  const wid = equippedSlots.find(s=>s!==null)||'single';
-  return WEAPON_DEFS[wid]?.winMod || 1.0;
+// ── COMBO DISPLAY ─────────────────────────────────────
+function showCombo(n){
+  const cd=document.getElementById('combo-display');
+  const colors=['','','#ffd700','#ff9100','#ff2266','#c040ff','#00ffaa'];
+  const c=colors[Math.min(n,colors.length-1)]||'#fff';
+  cd.textContent=`${n}× COMBO!`;
+  cd.style.color=c;
+  cd.style.textShadow=`0 0 30px ${c}`;
+  cd.classList.add('show');
+}
+function hideCombo(){ document.getElementById('combo-display').classList.remove('show'); }
+
+// ── ACHIEVEMENTS ──────────────────────────────────────
+function unlockAchievement(id){
+  if(ACHIEVEMENTS[id].done) return;
+  ACHIEVEMENTS[id].done=true;
+  const a=ACHIEVEMENTS[id];
+  const toast=document.getElementById('achievement-toast');
+  document.getElementById('ach-icon').textContent=a.icon;
+  document.getElementById('ach-title').textContent='ACHIEVEMENT UNLOCKED';
+  document.getElementById('ach-desc').textContent=a.name+' — '+a.desc;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),3500);
+}
+function checkAchievements(){
+  if(totalKills>=1&&!ACHIEVEMENTS.first_kill.done) unlockAchievement('first_kill');
+  if(totalKills>=50&&!ACHIEVEMENTS.kill_50.done) unlockAchievement('kill_50');
+  if(totalKills>=200&&!ACHIEVEMENTS.kill_200.done) unlockAchievement('kill_200');
+  if(totalWin>=10000&&!ACHIEVEMENTS.win_10k.done) unlockAchievement('win_10k');
+  if(totalWin>=100000&&!ACHIEVEMENTS.win_100k.done) unlockAchievement('win_100k');
+  if(level>=10&&!ACHIEVEMENTS.level_10.done) unlockAchievement('level_10');
+  const ownedCount=Object.keys(WEAPON_DEFS).filter(w=>inventory[w]).length;
+  if(ownedCount>=Object.keys(WEAPON_DEFS).length&&!ACHIEVEMENTS.all_weapons.done) unlockAchievement('all_weapons');
 }
 
-function shakeScreen(){ shakeAmt=12; }
-
-// ── SHOOT (BERLAKU UNTUK PLAYER & BOTS) ───────────────────
-function performShoot(player, targetAngle){
-  let wDef = WEAPON_DEFS['single'];
-  if(!player.isBot) {
-    const slot = equippedSlots[activeSlot] || 'single';
-    wDef = WEAPON_DEFS[slot] || WEAPON_DEFS['single'];
+// ── MISSIONS ──────────────────────────────────────────
+function updateMissionProgress(type, amt){
+  for(let m of MISSIONS){
+    if(m.done) continue;
+    if(m.target===type){ m.prog+=amt; if(m.prog>=m.goal){ m.done=true; players[0].bal+=m.reward; floatText('📋 MISI SELESAI +'+m.reward,W/2,H*0.4,'#00ffaa',20); updateUI(); } }
   }
+}
 
-  const cost = (player.id===0 && buffs.autoReload && player.bal < 200) ? 0 : player.bet;
-  if(player.bal < cost) return;
-  player.bal -= cost;
-  
+// ── JACKPOT WIN OVERLAY ───────────────────────────────
+function showJackpotWin(amount){
+  document.getElementById('jw-amount').textContent='+'+amount.toLocaleString();
+  document.getElementById('jackpot-win').style.display='flex';
+}
+function closeJackpot(){ document.getElementById('jackpot-win').style.display='none'; }
+
+// ── SHOOT ─────────────────────────────────────────────
+function performShoot(player, ang){
+  let wDef=WEAPON_DEFS['single'];
+  if(!player.isBot){
+    const slot=equippedSlots[activeSlot]||'single';
+    wDef=WEAPON_DEFS[slot]||WEAPON_DEFS['single'];
+  }
+  const cost=(player.id===0&&buffs.autoReload&&player.bal<300)?0:player.bet;
+  if(player.bal<cost) return;
+  player.bal-=cost;
+  player.ang=ang; player.fireCount++;
   if(player.id===0) updateUI();
-  player.ang = targetAngle; // Set visual angle
 
-  if(wDef.id === 'laser'){
-    lasers.push(new Laser(player.x, player.y, targetAngle, player.id));
-    spawnParticle(player.x, player.y, player.color, 4, 0.8);
-    return;
+  if(wDef.id==='laser'){
+    lasers.push(new Laser(player.x,player.y,ang,player.id));
+    spawnHitSpark(player.x,player.y,player.color); return;
   }
-  
-  const multi = wDef.multi || 1;
-  const spread = wDef.id==='shotgun' ? 0.22 : wDef.id==='triple' ? 0.22 : wDef.id==='double' ? 0.12 : 0;
+  const multi=wDef.multi||1;
+  const spread=wDef.id==='shotgun'?0.26:wDef.id==='triple'?0.24:wDef.id==='double'?0.12:0;
   for(let i=0;i<multi;i++){
-    const offset = multi>1 ? spread*(i - (multi-1)/2) : 0;
-    bullets.push(new Bullet(player.x, player.y, targetAngle+offset, wDef, player.id));
+    const off=multi>1?spread*(i-(multi-1)/2):0;
+    bullets.push(new Bullet(player.x,player.y,ang+off,wDef,player.id));
   }
-  spawnParticle(player.x, player.y, player.color, 3, 0.5);
+  spawnParticle(player.x,player.y,player.color,2,0.4);
 }
 
-// Interaksi Real Player (Player 0)
-let lastFire = 0;
 function shootMainPlayer(){
   if(gameOver) return;
-  const rateBonus = 1 + upgrades.rate*0.15;
-  const fireDelay = Math.max(50, 140/rateBonus);
-  const now = performance.now();
-  if(now - lastFire < fireDelay) return;
-  lastFire = now;
-  
-  const ang = Math.atan2(mouse.y - players[0].y, mouse.x - players[0].x);
-  performShoot(players[0], ang);
+  const rateBonus=1+upgrades.rate*0.15;
+  const fireDelay=Math.max(40,130/rateBonus);
+  const now=performance.now();
+  if(now-lastFire<fireDelay) return;
+  lastFire=now;
+  const ang=Math.atan2(mouse.y-players[0].y,mouse.x-players[0].x);
+  performShoot(players[0],ang);
 }
 
-// ── DRAW ALL CANNONS ──────────────────────────────────────
-function drawCannons(){
-  players.forEach(p => {
-    ctx.save(); ctx.translate(p.x, p.y);
-    ctx.shadowBlur=15; ctx.shadowColor=p.color;
-    
-    // Base meriam
-    ctx.fillStyle='#0d1f2d';
-    ctx.beginPath(); ctx.ellipse(0,0,40,20,0,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle=p.color; ctx.lineWidth=1.5; ctx.stroke();
+// ── BOT AI ────────────────────────────────────────────
+const botCooldowns=[0,0,0,0,0,0];
+function updateBots(){
+  players.forEach((p,idx)=>{
+    if(!p.isBot||gameOver) return;
+    botCooldowns[idx]--;
+    if(botCooldowns[idx]>0) return;
+    botCooldowns[idx] = 40+idx*8+Math.floor(Math.random()*20);
+    const liveFish=fishes.filter(f=>f.alive&&f.x>80&&f.x<W-80);
+    if(!liveFish.length) return;
+    // Bots prefer high-value targets
+    const target=liveFish.sort((a,b)=>b.val-a.val)[Math.floor(Math.random()*Math.min(3,liveFish.length))];
+    let ang=Math.atan2(target.y-p.y,target.x-p.x);
+    ang+=(Math.random()-0.5)*0.18;
+    if(p.bal<p.bet) p.bal+=200;
+    performShoot(p,ang);
+  });
+}
 
-    ctx.rotate(p.ang); // Rotasi mengikuti tembakan terakhir
-    
-    // Laras
-    const barrelCount = (p.id===0) ? equippedSlots.filter(s=>s!==null).length : 1;
-    for(let i=0;i<barrelCount;i++){
-      const offset = barrelCount>1 ? (i-(barrelCount-1)/2)*10 : 0;
-      ctx.fillStyle='#1c3042'; ctx.beginPath(); ctx.rect(0,offset-7,50,14); ctx.fill();
+// ── DRAW CANNONS ─────────────────────────────────────
+function drawCannons(){
+  players.forEach(p=>{
+    ctx.save(); ctx.translate(p.x,p.y);
+    ctx.shadowBlur=20; ctx.shadowColor=p.color;
+    // Base
+    ctx.fillStyle='#071828';
+    ctx.beginPath(); ctx.ellipse(0,0,42,21,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=p.color; ctx.lineWidth=2; ctx.stroke();
+    // Barrel(s)
+    ctx.rotate(p.ang);
+    const bCount=p.id===0?equippedSlots.filter(s=>s!==null).length:1;
+    for(let i=0;i<bCount;i++){
+      const off=bCount>1?(i-(bCount-1)/2)*10:0;
+      ctx.fillStyle='#1a3b50';
+      ctx.beginPath(); ctx.rect(0,off-7,52,14); ctx.fill();
       ctx.strokeStyle=p.color; ctx.lineWidth=1; ctx.stroke();
-      ctx.fillStyle=p.color; ctx.beginPath(); ctx.rect(40,offset-9,16,18); ctx.fill();
+      ctx.fillStyle=p.color;
+      ctx.beginPath(); ctx.rect(42,off-9,16,18); ctx.fill();
     }
     ctx.restore();
-    
-    // Core meriam & Teks Balance (hanya untuk bot)
-    ctx.save(); ctx.translate(p.x, p.y);
-    ctx.shadowBlur=20; ctx.shadowColor=p.color;
-    ctx.fillStyle='#0d2a36';
-    ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle=p.color; ctx.lineWidth=2; ctx.stroke();
-    
-    // Cetak nama dan saldo bot di dekat meriam
-    if(p.isBot) {
-      ctx.shadowBlur=0;
-      ctx.fillStyle='#fff'; ctx.font='bold 10px Rajdhani'; ctx.textAlign='center';
-      const ty = p.y < H/2 ? -28 : 28; // Teks di atas jika meriam di atas
-      ctx.fillText(`💰 ${Math.floor(p.bal)}`, 0, ty);
+    // Core
+    ctx.save(); ctx.translate(p.x,p.y);
+    ctx.shadowBlur=25; ctx.shadowColor=p.color;
+    ctx.fillStyle='#0d2a3c';
+    ctx.beginPath(); ctx.arc(0,0,18,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=p.color; ctx.lineWidth=2.5; ctx.stroke();
+    // Inner glow
+    const rg=ctx.createRadialGradient(0,0,2,0,0,18);
+    rg.addColorStop(0,p.color+'55'); rg.addColorStop(1,'transparent');
+    ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(0,0,18,0,Math.PI*2); ctx.fill();
+    ctx.shadowBlur=0;
+    // Bot label
+    if(p.isBot){
+      ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.font='bold 9px Exo 2';
+      ctx.textAlign='center';
+      const ty=p.y<H/2?-30:30;
+      ctx.fillText('💰'+Math.floor(p.bal),0,ty);
     }
     ctx.restore();
   });
 }
 
-// ── BACKGROUND ────────────────────────────────────────────
+// ── BACKGROUND ────────────────────────────────────────
 const bubbles=[];
-for(let i=0;i<35;i++) bubbles.push({x:Math.random()*2000,y:Math.random()*800,r:1+Math.random()*4,s:0.3+Math.random()*0.7});
+for(let i=0;i<40;i++) bubbles.push({x:Math.random()*3000,y:Math.random()*1000,r:1+Math.random()*3.5,s:0.25+Math.random()*0.6,phase:Math.random()*Math.PI*2});
+const seaWeed=[];
+for(let i=0;i<12;i++) seaWeed.push({x:Math.random()*0.9+0.05,h:30+Math.random()*50,phase:Math.random()*Math.PI*2,color:`hsl(${140+Math.random()*30},60%,${25+Math.random()*15}%)`});
+
 function drawBG(){
   const g=ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0,'#000c1f'); g.addColorStop(0.5,'#001632'); g.addColorStop(1,'#000811');
+  g.addColorStop(0,'#000d22'); g.addColorStop(0.4,'#001530'); g.addColorStop(0.8,'#000f25'); g.addColorStop(1,'#00080f');
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  ctx.save(); ctx.globalAlpha=0.035;
-  for(let i=0;i<8;i++){
-    const rx=W*0.5+Math.cos(i*0.8+frameCount*0.002)*W*0.3;
-    const rg=ctx.createLinearGradient(rx,0,rx+60,H);
-    rg.addColorStop(0,'rgba(0,140,255,0.8)'); rg.addColorStop(1,'transparent');
-    ctx.fillStyle=rg; ctx.beginPath(); ctx.moveTo(rx-30,0); ctx.lineTo(rx+110,H); ctx.lineTo(rx-80,H); ctx.closePath(); ctx.fill();
+
+  // Light shafts
+  ctx.save(); ctx.globalAlpha=0.04;
+  for(let i=0;i<7;i++){
+    const rx=W*0.5+Math.cos(i*1.1+frameCount*0.0018)*W*0.38;
+    const shG=ctx.createLinearGradient(rx,0,rx+70,H);
+    shG.addColorStop(0,'rgba(0,180,255,0.9)'); shG.addColorStop(1,'transparent');
+    ctx.fillStyle=shG;
+    ctx.beginPath(); ctx.moveTo(rx-20,0); ctx.lineTo(rx+110,H); ctx.lineTo(rx-80,H); ctx.closePath(); ctx.fill();
   }
   ctx.restore();
+
+  // Seaweed at bottom
+  for(let sw of seaWeed){
+    const bx=sw.x*W, by=H-hudBotH+2;
+    ctx.save(); ctx.strokeStyle=sw.color; ctx.lineWidth=4; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(bx,by);
+    for(let j=1;j<=6;j++){
+      const sway=Math.sin(frameCount*0.025+sw.phase+j*0.5)*12;
+      ctx.quadraticCurveTo(bx+sway,by-j*(sw.h/6)+sw.h*0.05,bx+sway*0.5,by-j*(sw.h/6));
+    }
+    ctx.stroke(); ctx.restore();
+  }
+
+  // Bubbles
   ctx.save();
   for(let b of bubbles){
-    b.y-=b.s; b.x+=Math.sin(frameCount*0.01+b.r)*0.3;
+    b.y-=b.s; b.x+=Math.sin(frameCount*0.012+b.phase)*0.4;
     if(b.y<-10){b.y=H+10;b.x=Math.random()*W;}
-    ctx.globalAlpha=0.13; ctx.strokeStyle='#4fc3f7'; ctx.lineWidth=0.8;
+    ctx.globalAlpha=0.1+Math.sin(frameCount*0.03+b.phase)*0.04;
+    ctx.strokeStyle='#4fc3f7'; ctx.lineWidth=0.8;
     ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.stroke();
+    // Glint
+    ctx.globalAlpha=0.18; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(b.x-b.r*0.3,b.y-b.r*0.3,b.r*0.25,0,Math.PI*2); ctx.fill();
   }
   ctx.restore();
-  // Border bawah player 0
-  ctx.fillStyle='rgba(0,25,55,0.55)'; ctx.fillRect(0,H-40,W,40);
+
+  // Underwater scan line effect (subtle)
+  ctx.save(); ctx.globalAlpha=0.015;
+  const scanY=(frameCount*0.7)%(H);
+  ctx.strokeStyle='#00e5ff'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,scanY); ctx.lineTo(W,scanY); ctx.stroke();
+  ctx.restore();
 }
 
-// ── WEAPON UI ──
+// ── DRAW CHAIN LIGHTNINGS ────────────────────────────
+function drawChainLightnings(){
+  for(let i=chainLightnings.length-1;i>=0;i--){
+    const cl=chainLightnings[i];
+    ctx.save(); ctx.globalAlpha=cl.life/12;
+    ctx.shadowBlur=15; ctx.shadowColor='#ffd740';
+    ctx.strokeStyle='#ffd740'; ctx.lineWidth=2;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(cl.x1,cl.y1); ctx.lineTo(cl.x2,cl.y2); ctx.stroke();
+    ctx.restore();
+    cl.life--;
+    if(cl.life<=0) chainLightnings.splice(i,1);
+  }
+}
+
+// ── MINI MAP ─────────────────────────────────────────
+function drawMiniMap(){
+  const mc=mmCtx, mw=80, mh=50;
+  mc.clearRect(0,0,mw,mh);
+  mc.fillStyle='rgba(0,5,15,0.8)'; mc.fillRect(0,0,mw,mh);
+  // Fishes
+  for(let f of fishes){
+    if(!f.alive) continue;
+    const mx=(f.x/W)*mw, my=(f.y/H)*mh;
+    mc.fillStyle=f.glow; mc.globalAlpha=0.7;
+    mc.beginPath(); mc.arc(mx,my,2,0,Math.PI*2); mc.fill();
+  }
+  // Players
+  mc.globalAlpha=1;
+  for(let p of players){
+    const mx=(p.x/W)*mw, my=(p.y/H)*mh;
+    mc.fillStyle=p.color;
+    mc.beginPath(); mc.arc(mx,my,3,0,Math.PI*2); mc.fill();
+  }
+}
+
+// ── LEADERBOARD ───────────────────────────────────────
+function updateLeaderboard(){
+  const sorted=[...players].sort((a,b)=>b.totalWin-a.totalWin);
+  const rows=document.getElementById('lb-rows');
+  rows.innerHTML='';
+  sorted.forEach((p,i)=>{
+    const row=document.createElement('div'); row.className='lb-row';
+    row.innerHTML=`<span class="lb-rank">${i+1}</span><div class="lb-dot" style="background:${p.color};box-shadow:0 0 6px ${p.color};"></div><span class="lb-name">${p.name}</span><span class="lb-score">${Math.floor(p.totalWin/100)}k</span>`;
+    rows.appendChild(row);
+  });
+}
+function toggleLeaderboard(){
+  showLB=!showLB;
+  document.getElementById('leaderboard').style.display=showLB?'block':'none';
+  document.getElementById('btn-lb').classList.toggle('on',showLB);
+}
+
+// ── STREAK UI ─────────────────────────────────────────
+const MAX_STREAK=10;
+function updateStreakUI(){
+  const pips=document.getElementById('streak-pips');
+  pips.innerHTML='';
+  for(let i=0;i<MAX_STREAK;i++){
+    const d=document.createElement('div');
+    d.className='streak-pip'+(i<comboKills?' lit':'');
+    pips.appendChild(d);
+  }
+  const sc=document.getElementById('streak-count');
+  sc.textContent=comboKills>0?`×${comboKills} COMBO`:'';
+}
+
+// ── WEAPON UI ─────────────────────────────────────────
 function renderWeaponRow(){
   const row=document.getElementById('weapon-row');
   row.innerHTML='';
   for(let i=0;i<MAX_SLOTS;i++){
-    const wid=equippedSlots[i];
-    const wDef=wid?WEAPON_DEFS[wid]:null;
+    const wid=equippedSlots[i]; const wDef=wid?WEAPON_DEFS[wid]:null;
     const div=document.createElement('div');
     div.className='w-slot'+(i===activeSlot?' active':'')+(wDef?'':' locked');
     div.innerHTML=wDef
       ?`<div class="wico">${wDef.ico}</div><div class="wlvl">SLOT ${i+1}</div><div class="wname">${wDef.name.split(' ')[0]}</div>`
-      :`<div class="wico">🔒</div><div class="wname">KOSONG</div>`;
+      :`<div class="wico">🔒</div><div class="wname">EMPTY</div>`;
     if(wDef) div.onclick=()=>{ activeSlot=i; renderWeaponRow(); };
     row.appendChild(div);
   }
 }
 
-// ── SHOP SYSTEM ──
-let shopTabActive = 'weapons';
+// ── SHOP ─────────────────────────────────────────────
+let shopTabActive='weapons';
 function openShop(){ document.getElementById('shop-overlay').style.display='flex'; renderShop(); }
 function closeShop(){ document.getElementById('shop-overlay').style.display='none'; }
-function shopTab(t){ shopTabActive=t; document.querySelectorAll('.shop-tab').forEach((el,i)=>{ el.classList.toggle('active',['weapons','upgrades','buffs'][i]===t); }); renderShop(); }
-
+function shopTab(t){
+  shopTabActive=t;
+  document.querySelectorAll('.shop-tab').forEach((el,i)=>{
+    el.classList.toggle('active',['weapons','upgrades','buffs','missions'][i]===t);
+  });
+  renderShop();
+}
 function renderShop(){
   const c=document.getElementById('shop-content');
   c.innerHTML='';
   document.getElementById('sh-bal').textContent=Math.floor(players[0].bal).toLocaleString();
-
   if(shopTabActive==='weapons'){
+    c.style.gridTemplateColumns='repeat(auto-fill,minmax(145px,1fr))';
     for(let wid in WEAPON_DEFS){
-      const w=WEAPON_DEFS[wid];
-      const owned=!!inventory[wid];
-      const equipped=equippedSlots.includes(wid);
+      const w=WEAPON_DEFS[wid]; const owned=!!inventory[wid]; const equipped=equippedSlots.includes(wid);
       const card=document.createElement('div');
       card.className='shop-card'+(equipped?' equipped':owned?' owned':'');
-      let btnHtml='';
-      if(equipped) btnHtml=`<button class="card-btn equipped-tag" onclick="unequipWeapon('${wid}')">✓ EQUIPPED</button>`;
-      else if(owned) btnHtml=`<button class="card-btn equip" onclick="equipWeapon('${wid}')">EQUIP</button>`;
-      else btnHtml=`<button class="card-btn buy" onclick="buyWeapon('${wid}')">BELI 💰${w.price.toLocaleString()}</button>`;
-      
-      card.innerHTML=`<div class="card-ico">${w.ico}</div><div class="card-name">${w.name}</div><div class="card-stat">DMG: ${w.dmg} | MULTI: ${w.multi||1}</div>${btnHtml}`;
+      let btn='';
+      if(equipped) btn=`<button class="card-btn equipped-tag" onclick="unequipWeapon('${wid}')">✓ EQUIPPED</button>`;
+      else if(owned) btn=`<button class="card-btn equip" onclick="equipWeapon('${wid}')">EQUIP</button>`;
+      else btn=`<button class="card-btn buy" onclick="buyWeapon('${wid}')">💰 ${w.price.toLocaleString()}</button>`;
+      card.innerHTML=`<div class="card-ico">${w.ico}</div><div class="card-name">${w.name}</div><div class="card-stat">DMG: ${w.dmg} | MULTI: ${w.multi||1}<br><span style="color:#3a7a9a;font-size:7.5px;">${w.desc}</span></div>${btn}`;
       c.appendChild(card);
     }
   } else if(shopTabActive==='upgrades'){
+    c.style.gridTemplateColumns='repeat(auto-fill,minmax(145px,1fr))';
     for(let upg of UPGRADE_DEFS){
-      const cur=upgrades[upg.id]||0; const maxed=cur>=upg.max; const price=maxed?0:upg.prices[cur];
+      const cur=upgrades[upg.id]||0, maxed=cur>=upg.max, price=maxed?0:upg.prices[cur];
       const card=document.createElement('div'); card.className='shop-card'+(maxed?' owned':'');
-      card.innerHTML=`<div class="card-ico">${upg.ico}</div><div class="card-name">${upg.name}</div><div class="card-stat">Level: ${cur}/${upg.max}</div><button class="card-btn ${maxed?'maxed':'buy'}" onclick="${maxed?'':'buyUpgrade(\''+upg.id+'\')'}">${maxed?'MAX LEVEL':'UPGRADE 💰'+price.toLocaleString()}</button>`;
+      card.innerHTML=`<div class="card-ico">${upg.ico}</div><div class="card-name">${upg.name}</div><div class="card-stat">${upg.desc}<br>Level: ${cur}/${upg.max}</div><button class="card-btn ${maxed?'maxed':'buy'}" onclick="${maxed?'':(`buyUpgrade('${upg.id}')`)}">  ${maxed?'MAX LEVEL':'💰 '+price.toLocaleString()}</button>`;
       c.appendChild(card);
     }
   } else if(shopTabActive==='buffs'){
+    c.style.gridTemplateColumns='repeat(auto-fill,minmax(145px,1fr))';
     for(let buf of BUFF_DEFS){
       const owned=!!buffs[buf.id];
       const card=document.createElement('div'); card.className='shop-card'+(owned?' owned':'');
-      card.innerHTML=`<div class="card-ico">${buf.ico}</div><div class="card-name">${buf.name}</div><button class="card-btn ${owned?'equipped-tag':'buy'}" onclick="${owned?'':'buyBuff(\''+buf.id+'\')'}">${owned?'✓ AKTIF':'BELI 💰'+buf.price.toLocaleString()}</button>`;
+      card.innerHTML=`<div class="card-ico">${buf.ico}</div><div class="card-name">${buf.name}</div><div class="card-stat">${buf.desc}</div><button class="card-btn ${owned?'equipped-tag':'buy'}" onclick="${owned?'':(`buyBuff('${buf.id}')`)}">  ${owned?'✓ AKTIF':'💰 '+buf.price.toLocaleString()}</button>`;
       c.appendChild(card);
     }
+  } else if(shopTabActive==='missions'){
+    c.style.gridTemplateColumns='1fr';
+    MISSIONS.forEach(m=>{
+      const card=document.createElement('div'); card.className='shop-card'+(m.done?' owned':'');
+      const pct=Math.min(1,m.prog/m.goal);
+      const bar=`<div style="width:100%;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;margin:6px 0 4px;overflow:hidden;"><div style="width:${(pct*100).toFixed(0)}%;height:100%;background:${m.done?'#00ffaa':'#00e5ff'};border-radius:3px;transition:width 0.3s;"></div></div>`;
+      card.innerHTML=`<div style="display:flex;align-items:center;gap:10px;text-align:left;"><div style="font-size:22px;">${m.done?'✅':'📋'}</div><div style="flex:1;"><div class="card-name" style="text-align:left;">${m.desc}</div><div class="card-stat" style="text-align:left;">${m.done?'SELESAI':`${Math.min(m.prog,m.goal)}/${m.goal}`} — Reward: 💰${m.reward}</div>${bar}</div></div>`;
+      c.appendChild(card);
+    });
   }
 }
 
 function buyWeapon(wid){
-  if(players[0].bal<WEAPON_DEFS[wid].price){ floatText('Saldo kurang!',W/2,H/2,'#ff1744',18); return; }
-  players[0].bal-=WEAPON_DEFS[wid].price; inventory[wid]=true; updateUI(); renderShop();
+  if(players[0].bal<WEAPON_DEFS[wid].price){floatText('Saldo kurang!',W/2,H/2,'#ff2266',18);return;}
+  players[0].bal-=WEAPON_DEFS[wid].price; inventory[wid]=true; updateUI(); renderShop(); checkAchievements();
 }
 function equipWeapon(wid){
   const idx=equippedSlots.indexOf(null);
@@ -805,148 +1300,199 @@ function unequipWeapon(wid){
 }
 function buyUpgrade(id){
   const upg=UPGRADE_DEFS.find(u=>u.id===id); const cur=upgrades[id]||0;
-  if(cur>=upg.max) return; const price=upg.prices[cur];
-  if(players[0].bal<price) return;
+  if(cur>=upg.max) return;
+  const price=upg.prices[cur];
+  if(players[0].bal<price){floatText('Saldo kurang!',W/2,H/2,'#ff2266',18);return;}
   players[0].bal-=price; upgrades[id]++; updateUI(); renderShop();
 }
 function buyBuff(id){
-  if(players[0].bal<BUFF_DEFS.find(b=>b.id===id).price) return;
-  players[0].bal-=BUFF_DEFS.find(b=>b.id===id).price; buffs[id]=true; updateUI(); renderShop();
+  const buf=BUFF_DEFS.find(b=>b.id===id);
+  if(!buf||players[0].bal<buf.price){floatText('Saldo kurang!',W/2,H/2,'#ff2266',18);return;}
+  players[0].bal-=buf.price; buffs[id]=true; updateUI(); renderShop();
 }
 
-function showGameOver(){ if(gameOver)return; gameOver=true; document.getElementById('gameover-box').style.display='block'; }
-function restartGame(){
-  players[0].bal=10000; totalWin=0; level=1; players[0].bet=10; gameOver=false; autoFire=false;
-  bullets.length=0; particles.length=0; lasers.length=0; inWorldRoulettes.length=0;
-  document.getElementById('btn-auto').textContent='AUTO'; document.getElementById('btn-auto').classList.remove('on');
-  document.getElementById('gameover-box').style.display='none';
-  for(let f of fishes) f.init();
-  updateUI();
-}
-
-function toggleAuto(){ autoFire=!autoFire; const b=document.getElementById('btn-auto'); b.textContent=autoFire?'AUTO ON':'AUTO'; b.classList.toggle('on',autoFire); }
-function changeBet(d,type){ 
-  if(type==='max') players[0].bet=Math.min(players[0].bal, 500); 
-  else players[0].bet=Math.max(10, Math.min(500, players[0].bet+d)); 
-  document.getElementById('h-bet').textContent=players[0].bet; 
-}
-
+// ── UI UPDATES ────────────────────────────────────────
 function updateUI(){
   document.getElementById('h-bal').textContent=Math.floor(players[0].bal).toLocaleString();
   document.getElementById('h-win').textContent=Math.floor(totalWin).toLocaleString();
   document.getElementById('h-lvl').textContent=level;
-  if(buffs.shieldX2 && players[0].bal < 100) players[0].bal = 100;
+  document.getElementById('h-bet').textContent=players[0].bet;
+  if(buffs.shieldX2&&players[0].bal<150) players[0].bal=150;
 }
 function updateJackpot(){ document.getElementById('h-jack').textContent=jackpotPool.toLocaleString(); }
 
-// ── MAIN LOOP ─────────────────────────────────────────────
-let afId = 0;
-let lastLoopTime = 0;
+// ── GAME OVER ─────────────────────────────────────────
+function showGameOver(){
+  if(gameOver) return; gameOver=true;
+  document.getElementById('go-stats').textContent=`Ikan: ${totalKills} | Win: ${totalWin.toLocaleString()} | Level: ${level}`;
+  document.getElementById('gameover-box').style.display='block';
+}
+function restartGame(){
+  players[0].bal=10000; totalWin=0; level=1; players[0].bet=10; gameOver=false; autoFire=false;
+  comboKills=0; comboTimer=0; totalKills=0; nukeFlash=0;
+  bullets.length=0; _particles.length=0; lasers.length=0; inWorldRoulettes.length=0; chainLightnings.length=0;
+  frozenFish.clear();
+  document.getElementById('btn-auto').textContent='⚡AUTO'; document.getElementById('btn-auto').classList.remove('on');
+  document.getElementById('gameover-box').style.display='none';
+  // Reset missions partially
+  MISSIONS.forEach(m=>{ if(!m.done){ m.prog=0; } });
+  for(let f of fishes) f.init();
+  updateUI(); updateJackpot();
+}
+function toggleAuto(){
+  autoFire=!autoFire;
+  const b=document.getElementById('btn-auto');
+  b.textContent=autoFire?'⚡AUTO ON':'⚡AUTO';
+  b.classList.toggle('on',autoFire);
+}
+function changeBet(d,type){
+  if(type==='max') players[0].bet=Math.min(players[0].bal,500);
+  else players[0].bet=Math.max(10,Math.min(500,players[0].bet+d));
+  document.getElementById('h-bet').textContent=players[0].bet;
+}
 
-function loop(timestamp){
-  if (!timestamp) timestamp = performance.now();
-  if (timestamp - lastLoopTime < 16) { afId = requestAnimationFrame(loop); return; }
-  lastLoopTime = timestamp;
+// ── MAIN GAME LOOP ────────────────────────────────────
+let lastLoopTime=0;
+function loop(ts){
+  if(!ts) ts=performance.now();
+  const dt=ts-lastLoopTime;
+  if(dt<14){ requestAnimationFrame(loop); return; }
+  lastLoopTime=ts;
   frameCount++;
 
-  if(shakeAmt>0){
-    ctx.save(); ctx.translate((Math.random()-0.5)*shakeAmt,(Math.random()-0.5)*shakeAmt);
-    shakeAmt*=0.8; if(shakeAmt<0.5)shakeAmt=0;
-  }
+  // Screen shake
+  if(shakeAmt>0.5){
+    shakeX=(Math.random()-0.5)*shakeAmt; shakeY=(Math.random()-0.5)*shakeAmt;
+    shakeAmt*=0.78;
+  } else { shakeX=0; shakeY=0; shakeAmt=0; }
 
-  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(shakeX||shakeY) ctx.translate(shakeX,shakeY);
+
+  ctx.clearRect(-shakeAmt-2,-shakeAmt-2,W+shakeAmt*2+4,H+shakeAmt*2+4);
   drawBG();
+
+  // Nuke flash
+  if(nukeFlash>0){
+    ctx.save(); ctx.globalAlpha=nukeFlash/30*0.6; ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,W,H); ctx.restore();
+    nukeFlash--;
+  }
 
   // Fishes
   for(let f of fishes){ if(f.alive){f.update();f.draw();} }
 
-  // In-World Roulettes
-  for(let i=inWorldRoulettes.length-1; i>=0; i--){
-    let r = inWorldRoulettes[i];
-    r.update(); r.draw();
-    if(r.timer < -60) inWorldRoulettes.splice(i,1); // Remove after delay
+  // Roulettes
+  for(let i=inWorldRoulettes.length-1;i>=0;i--){
+    const r=inWorldRoulettes[i]; r.update(); r.draw();
+    if(r.done&&r.doneTimer>80) inWorldRoulettes.splice(i,1);
   }
 
-  // Bullets & Lasers & Particles
-  for(let i=bullets.length-1;i>=0;i--){ bullets[i].update(); bullets[i].draw(); if(!bullets[i].alive)bullets.splice(i,1); }
-  for(let i=lasers.length-1;i>=0;i--){ lasers[i].update(); lasers[i].draw(); if(lasers[i].life<=0)lasers.splice(i,1); }
-  
-  for(let i=particles.length-1;i>=0;i--){
-    const p=particles[i];
-    p.x+=p.vx; p.y+=p.vy; p.vy+=0.14; p.life-=0.024;
-    const a=Math.max(0,p.life/p.maxLife);
-    
-    // Tarik koin ke pemilik (Magnet effect)
-    if(p.isCoin && p.life < 0.6 && players[p.ownerId]) {
-       const owner = players[p.ownerId];
-       p.x += (owner.x - p.x) * 0.15;
-       p.y += (owner.y - p.y) * 0.15;
-    }
+  // Bullets
+  for(let i=bullets.length-1;i>=0;i--){ bullets[i].update(); bullets[i].draw(); if(!bullets[i].alive) bullets.splice(i,1); }
 
-    ctx.save(); ctx.globalAlpha=a; ctx.shadowBlur=7; ctx.shadowColor=p.color;
+  // Lasers
+  for(let i=lasers.length-1;i>=0;i--){ lasers[i].update(); lasers[i].draw(); if(lasers[i].life<=0) lasers.splice(i,1); }
+
+  // Chain lightnings
+  drawChainLightnings();
+
+  // Particles
+  for(let i=_particles.length-1;i>=0;i--){
+    const p=_particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.vy+=0.12; p.life-=0.022;
+    const a=Math.max(0,p.life/p.maxLife);
+    if(p.isCoin&&p.life<0.5&&players[p.ownerId]){
+      const op=players[p.ownerId]; p.x+=(op.x-p.x)*0.18; p.y+=(op.y-p.y)*0.18;
+    }
+    ctx.save(); ctx.globalAlpha=a; ctx.shadowBlur=6; ctx.shadowColor=p.color;
     if(p.isCoin){
       ctx.fillStyle=p.color; ctx.beginPath();
-      ctx.ellipse(p.x,p.y,p.size,p.size*0.5,p.rotate+frameCount*0.1,0,Math.PI*2); ctx.fill();
+      ctx.ellipse(p.x,p.y,p.size,p.size*0.5,p.rotate+frameCount*0.12,0,Math.PI*2); ctx.fill();
     } else {
       ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
     }
     ctx.restore();
-    if(p.life<=0)particles.splice(i,1);
+    if(p.life<=0) _particles.splice(i,1);
   }
 
   drawCannons();
-  if(shakeAmt>0) ctx.restore();
+  ctx.restore();
 
-  // BOT AI LOGIC
-  players.forEach((p, idx) => {
-    if(p.isBot && !gameOver) {
-      // Bot menembak dengan ritme berbeda (idx) agar tidak bersamaan persis
-      if (frameCount % 45 === idx * 7) {
-        // Cari target ikan di layar
-        let target = fishes.find(f => f.alive && f.x > 50 && f.x < W-50);
-        if (target) {
-          let ang = Math.atan2(target.y - p.y, target.x - p.x);
-          // Tambah sedikit eror/miss pada tembakan bot agar terlihat natural
-          ang += (Math.random()-0.5) * 0.15;
-          
-          if(p.bal < p.bet) p.bal += 100; // Auto-topup bot miskin
-          performShoot(p, ang);
-        }
-      }
-    }
-  });
+  // Combo timer
+  if(comboTimer>0){
+    comboTimer--;
+    if(comboTimer===0){ comboKills=0; hideCombo(); }
+  }
 
-  // REAL PLAYER AUTO-FIRE
-  if(autoFire && !gameOver){
+  // Mini-map & leaderboard (every 3 frames)
+  if(frameCount%3===0){
+    drawMiniMap();
+    if(showLB) updateLeaderboard();
+  }
+
+  // Streak UI (every 5 frames)
+  if(frameCount%5===0) updateStreakUI();
+
+  // Bot AI
+  updateBots();
+
+  // Player auto-fire
+  if(autoFire&&!gameOver){
     const slot=equippedSlots[activeSlot]||'single';
     const wDef=WEAPON_DEFS[slot];
     if(wDef?.minigun){ shootMainPlayer(); }
-    else if(frameCount%10===0){ shootMainPlayer(); }
+    else if(frameCount%9===0){ shootMainPlayer(); }
   }
 
-  if(frameCount%160===0 && jackpotPool<9999999){ jackpotPool+=Math.floor(Math.random()*60+15); updateJackpot(); }
-  if(totalWin > level*600){ level++; floatText('⬆ LEVEL '+level,W/2,H/3,'#00e5ff',26); updateUI(); }
-  if(!gameOver && players[0].bal<players[0].bet && !autoFire) showGameOver();
+  // Jackpot growth
+  if(frameCount%120===0&&jackpotPool<9999999){ jackpotPool+=Math.floor(Math.random()*80+30); updateJackpot(); }
 
-  afId=requestAnimationFrame(loop);
+  // Level up
+  if(totalWin>level*800){ level++; floatText(`⭐ LEVEL ${level} !`,W/2,H*0.35,'#00e5ff',28); updateUI(); checkAchievements(); }
+
+  // Check game over
+  if(!gameOver&&players[0].bal<players[0].bet&&!autoFire) showGameOver();
+
+  requestAnimationFrame(loop);
 }
 
-// ── INPUT ─────────────────────────────────────────────────
+// ── INPUT ─────────────────────────────────────────────
 window.addEventListener('mousemove', e=>{ mouse.x=e.clientX; mouse.y=e.clientY; });
 window.addEventListener('mousedown', e=>{
-  if(e.target.closest('.hud-bot')||e.target.closest('#weapon-row')||e.target.closest('#shop-overlay')||e.target.closest('#gameover')) return;
+  if(e.target.closest('.hud-bot')||e.target.closest('#weapon-row')||e.target.closest('#shop-overlay')||e.target.closest('#gameover')||e.target.closest('.hud-top')||e.target.closest('#jackpot-win')) return;
   shootMainPlayer();
 });
 window.addEventListener('touchstart', e=>{
-  if(e.target.closest('.hud-bot')||e.target.closest('#weapon-row')||e.target.closest('#shop-overlay')||e.target.closest('#gameover')) return;
+  if(e.target.closest('.hud-bot')||e.target.closest('#weapon-row')||e.target.closest('#shop-overlay')||e.target.closest('#gameover')||e.target.closest('.hud-top')||e.target.closest('#jackpot-win')||e.target.closest('#achievement-toast')) return;
   const t=e.touches[0]; mouse.x=t.clientX; mouse.y=t.clientY; shootMainPlayer(); e.preventDefault();
 },{passive:false});
 window.addEventListener('touchmove', e=>{ const t=e.touches[0]; mouse.x=t.clientX; mouse.y=t.clientY; },{passive:true});
+// Prevent double-tap zoom
+let lastTap=0;
+window.addEventListener('touchend', e=>{ const now=Date.now(); if(now-lastTap<300) e.preventDefault(); lastTap=now; },{passive:false});
 
-// ── INIT ──────────────────────────────────────────────────
-for(let i=0;i<18;i++) fishes.push(new Fish());
+// Keyboard shortcuts
+window.addEventListener('keydown', e=>{
+  if(e.key==='1') { activeSlot=0; renderWeaponRow(); }
+  if(e.key==='2') { activeSlot=1; renderWeaponRow(); }
+  if(e.key==='3') { activeSlot=2; renderWeaponRow(); }
+  if(e.key==='a'||e.key==='A') toggleAuto();
+  if(e.key==='+') changeBet(10);
+  if(e.key==='-') changeBet(-10);
+  if(e.key==='Escape') closeShop();
+});
+
+// ── INIT ─────────────────────────────────────────────
+for(let i=0;i<20;i++) fishes.push(new Fish());
+// Stagger initial fish positions
+fishes.forEach((f,i)=>{ f.x=Math.random()*W; });
+
 renderWeaponRow();
 updateUI(); updateJackpot();
+
+// Measure HUD heights after render
+setTimeout(()=>{ resize(); renderWeaponRow(); }, 100);
+
 requestAnimationFrame(loop);
 </script>
 </body>
