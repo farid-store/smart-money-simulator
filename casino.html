@@ -14,7 +14,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 
-/* REVISI: Lock layar agar tidak bergeser oleh browser/keyboard */
+/* Lock layar agar tidak bergeser oleh browser/keyboard */
 html, body {
   background:var(--bg-deep);
   font-family:'Rajdhani',sans-serif;
@@ -26,10 +26,10 @@ html, body {
   cursor:crosshair;
 }
 
-canvas{display:block;position:fixed;top:0;left:0;}
+/* REVISI: Hanya kanvas game yang di-set absolute ke pojok kiri atas */
+#gameCanvas{display:block;position:fixed;top:0;left:0;}
 
 /* ── HUD ── */
-/* REVISI: position absolute menjadi fixed */
 #ui{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;}
 .hud-top{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 12px;background:linear-gradient(to bottom,rgba(0,5,20,0.95),transparent);}
 .hud-stat{text-align:center;min-width:65px;}
@@ -69,13 +69,11 @@ canvas{display:block;position:fixed;top:0;left:0;}
 .bet-btn:hover{background:rgba(255,255,255,0.18);}
 
 /* floaters */
-/* REVISI: position fixed */
 #floaters{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden;}
 .floater{position:absolute;font-weight:900;pointer-events:none;animation:floatUp 1.3s ease-out forwards;font-family:'Orbitron',sans-serif;}
 @keyframes floatUp{0%{opacity:0;transform:translateY(0) scale(0.5);}15%{opacity:1;transform:translateY(-12px) scale(1.15);}100%{opacity:0;transform:translateY(-110px) scale(0.9);}}
 
 /* ── SHOP OVERLAY ── */
-/* REVISI: position fixed */
 #shop-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,10,0.92);display:none;align-items:flex-start;justify-content:center;z-index:300;pointer-events:auto;overflow-y:auto;padding:10px;}
 #shop-box{background:rgba(0,6,22,0.98);border:1px solid rgba(0,229,255,0.3);border-radius:14px;padding:18px;max-width:680px;width:100%;}
 .shop-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
@@ -103,19 +101,18 @@ canvas{display:block;position:fixed;top:0;left:0;}
 .shop-card .card-btn.maxed{background:rgba(255,255,255,0.08);color:#888;cursor:default;}
 
 /* bonus wheel */
-/* REVISI: position fixed */
 #bonus-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:200;pointer-events:auto;}
 #bonus-box{background:radial-gradient(circle at 50% 30%,#0a1a40,#000);border:2px solid rgba(255,215,0,0.6);border-radius:16px;padding:24px 20px;min-width:300px;max-width:90vw;text-align:center;position:relative;}
 #bonus-title{font-size:18px;font-weight:900;color:var(--neon-gold);margin-bottom:4px;letter-spacing:2px;font-family:'Orbitron',sans-serif;}
 #bonus-sub{font-size:11px;color:#aaa;margin-bottom:16px;letter-spacing:1px;}
 #bonus-wrap{width:260px;height:260px;margin:0 auto 16px;position:relative;}
-#bonusCanvas{border-radius:50%;border:2px solid rgba(255,215,0,0.4);}
+/* REVISI: Pastikan roulette center */
+#bonusCanvas{border-radius:50%;border:2px solid rgba(255,215,0,0.4); display:block; margin:0 auto;}
 #bonus-cd{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:rgba(255,255,255,0.15);pointer-events:none;font-family:'Orbitron',sans-serif;}
 #bonus-result{font-size:26px;font-weight:900;color:#fff;min-height:36px;font-family:'Orbitron',sans-serif;}
 #bonus-close{margin-top:14px;background:rgba(0,200,255,0.15);border:1px solid rgba(0,200,255,0.4);color:var(--neon-blue);padding:9px 26px;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;display:none;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
 
 /* game over */
-/* REVISI: position fixed */
 #gameover{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:100;}
 #gameover-box{background:rgba(0,5,25,0.97);border:2px solid rgba(255,215,0,0.5);border-radius:14px;padding:30px 44px;text-align:center;display:none;pointer-events:auto;}
 #go-title{font-size:26px;font-weight:900;color:var(--neon-gold);margin-bottom:8px;font-family:'Orbitron',sans-serif;}
@@ -123,7 +120,6 @@ canvas{display:block;position:fixed;top:0;left:0;}
 #go-btn{background:linear-gradient(135deg,#ffd700,#ff9100);color:#000;border:none;padding:12px 28px;font-size:12px;font-weight:900;border-radius:6px;cursor:pointer;letter-spacing:2px;font-family:'Orbitron',sans-serif;}
 
 /* god mode */
-/* REVISI: position fixed */
 #god-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:400;pointer-events:auto;}
 #god-box{background:linear-gradient(135deg,#0a0020,#200020);border:2px solid rgba(224,64,251,0.6);border-radius:16px;padding:30px;min-width:300px;max-width:92vw;text-align:center;box-shadow:0 0 60px rgba(224,64,251,0.3);}
 #god-title{font-size:20px;font-weight:900;color:var(--neon-purple);margin-bottom:6px;letter-spacing:3px;font-family:'Orbitron',sans-serif;}
@@ -139,7 +135,6 @@ canvas{display:block;position:fixed;top:0;left:0;}
 #god-close{margin-top:14px;background:none;border:1px solid rgba(255,255,255,0.2);color:#777;padding:8px 24px;font-size:10px;border-radius:6px;cursor:pointer;letter-spacing:2px;font-family:'Orbitron',sans-serif;}
 
 /* pin modal */
-/* REVISI: position fixed */
 #pin-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:450;pointer-events:auto;}
 #pin-box{background:rgba(0,5,25,0.98);border:2px solid rgba(224,64,251,0.5);border-radius:14px;padding:28px;min-width:280px;text-align:center;}
 #pin-title{font-size:16px;font-weight:900;color:var(--neon-purple);margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:3px;}
@@ -378,7 +373,6 @@ class Fish {
     this.hp      = t.hp;
     this.maxHp   = t.hp;
     this.val     = t.val;
-    // REVISI: Kecepatan ikan konstan, tidak ditambah lagi dengan modifier level
     this.speed   = t.speed;
     this.size    = t.size;
     this.color   = t.color;
@@ -1186,7 +1180,7 @@ window.addEventListener('touchstart', e=>{
 },{passive:false});
 window.addEventListener('touchmove', e=>{ const t=e.touches[0]; mouse.x=t.clientX; mouse.y=t.clientY; },{passive:true});
 
-// REVISI: Memaksa scroll kembali ke atas saat keyboard ditutup
+// Memaksa scroll kembali ke atas saat keyboard ditutup
 document.querySelectorAll('input').forEach(input => {
   input.addEventListener('blur', () => {
     window.scrollTo(0, 0);
