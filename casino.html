@@ -3,18 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Ocean Emperor — Ultimate Weapon Edition</title>
+<title>Ocean Emperor — 6 Players Arcade</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --neon-blue:#00e5ff; --neon-gold:#ffd700; --neon-red:#ff1744;
   --neon-green:#00ff88; --neon-purple:#e040fb; --neon-orange:#ff9100;
   --bg-deep:#000811; --bg-panel:rgba(0,8,28,0.96);
-  --border-glow:rgba(0,229,255,0.3);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 
-/* Lock layar agar tidak bergeser oleh browser/keyboard */
 html, body {
   background:var(--bg-deep);
   font-family:'Rajdhani',sans-serif;
@@ -26,7 +24,6 @@ html, body {
   cursor:crosshair;
 }
 
-/* REVISI: Hanya kanvas game yang di-set absolute ke pojok kiri atas */
 #gameCanvas{display:block;position:fixed;top:0;left:0;}
 
 /* ── HUD ── */
@@ -98,19 +95,6 @@ html, body {
 .shop-card .card-btn.buy{background:var(--neon-gold);color:#000;}
 .shop-card .card-btn.equip{background:rgba(0,229,255,0.2);color:var(--neon-blue);border:1px solid var(--neon-blue);}
 .shop-card .card-btn.equipped-tag{background:rgba(255,215,0,0.15);color:var(--neon-gold);border:1px solid var(--neon-gold);}
-.shop-card .card-btn.maxed{background:rgba(255,255,255,0.08);color:#888;cursor:default;}
-
-/* bonus wheel */
-#bonus-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;z-index:200;pointer-events:auto;}
-#bonus-box{background:radial-gradient(circle at 50% 30%,#0a1a40,#000);border:2px solid rgba(255,215,0,0.6);border-radius:16px;padding:24px 20px;min-width:300px;max-width:90vw;text-align:center;position:relative;}
-#bonus-title{font-size:18px;font-weight:900;color:var(--neon-gold);margin-bottom:4px;letter-spacing:2px;font-family:'Orbitron',sans-serif;}
-#bonus-sub{font-size:11px;color:#aaa;margin-bottom:16px;letter-spacing:1px;}
-#bonus-wrap{width:260px;height:260px;margin:0 auto 16px;position:relative;}
-/* REVISI: Pastikan roulette center */
-#bonusCanvas{border-radius:50%;border:2px solid rgba(255,215,0,0.4); display:block; margin:0 auto;}
-#bonus-cd{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;font-size:64px;font-weight:900;color:rgba(255,255,255,0.15);pointer-events:none;font-family:'Orbitron',sans-serif;}
-#bonus-result{font-size:26px;font-weight:900;color:#fff;min-height:36px;font-family:'Orbitron',sans-serif;}
-#bonus-close{margin-top:14px;background:rgba(0,200,255,0.15);border:1px solid rgba(0,200,255,0.4);color:var(--neon-blue);padding:9px 26px;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;display:none;font-family:'Orbitron',sans-serif;letter-spacing:2px;}
 
 /* game over */
 #gameover{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:100;}
@@ -119,26 +103,10 @@ html, body {
 #go-sub{font-size:12px;color:#aaa;margin-bottom:18px;}
 #go-btn{background:linear-gradient(135deg,#ffd700,#ff9100);color:#000;border:none;padding:12px 28px;font-size:12px;font-weight:900;border-radius:6px;cursor:pointer;letter-spacing:2px;font-family:'Orbitron',sans-serif;}
 
-/* god mode */
-#god-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:400;pointer-events:auto;}
-#god-box{background:linear-gradient(135deg,#0a0020,#200020);border:2px solid rgba(224,64,251,0.6);border-radius:16px;padding:30px;min-width:300px;max-width:92vw;text-align:center;box-shadow:0 0 60px rgba(224,64,251,0.3);}
-#god-title{font-size:20px;font-weight:900;color:var(--neon-purple);margin-bottom:6px;letter-spacing:3px;font-family:'Orbitron',sans-serif;}
-#god-sub{font-size:11px;color:#aaa;margin-bottom:20px;}
-.god-input{width:100%;background:rgba(224,64,251,0.08);border:1px solid rgba(224,64,251,0.4);color:#fff;padding:10px 14px;font-size:14px;border-radius:6px;font-family:'Orbitron',sans-serif;text-align:center;outline:none;margin-bottom:10px;}
-.god-input::placeholder{color:rgba(255,255,255,0.3);}
-.god-row{display:flex;gap:8px;margin-bottom:10px;}
-.god-btn{flex:1;background:rgba(224,64,251,0.15);border:1px solid rgba(224,64,251,0.5);color:var(--neon-purple);padding:9px;font-size:10px;font-weight:700;letter-spacing:2px;border-radius:6px;cursor:pointer;font-family:'Orbitron',sans-serif;transition:all 0.2s;}
-.god-btn:hover{background:rgba(224,64,251,0.3);}
-.god-btn.danger{background:rgba(255,23,68,0.12);border-color:rgba(255,23,68,0.4);color:var(--neon-red);}
-.god-btn.safe{background:rgba(0,255,136,0.12);border-color:rgba(0,255,136,0.4);color:var(--neon-green);}
-#god-status{font-size:11px;color:#7af;margin-top:8px;min-height:18px;font-family:'Orbitron',sans-serif;}
-#god-close{margin-top:14px;background:none;border:1px solid rgba(255,255,255,0.2);color:#777;padding:8px 24px;font-size:10px;border-radius:6px;cursor:pointer;letter-spacing:2px;font-family:'Orbitron',sans-serif;}
-
 /* pin modal */
 #pin-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:450;pointer-events:auto;}
 #pin-box{background:rgba(0,5,25,0.98);border:2px solid rgba(224,64,251,0.5);border-radius:14px;padding:28px;min-width:280px;text-align:center;}
 #pin-title{font-size:16px;font-weight:900;color:var(--neon-purple);margin-bottom:6px;font-family:'Orbitron',sans-serif;letter-spacing:3px;}
-#pin-err{font-size:10px;color:var(--neon-red);min-height:16px;margin-bottom:8px;}
 #pin-input{width:100%;background:rgba(224,64,251,0.08);border:1px solid rgba(224,64,251,0.3);color:#fff;padding:10px;font-size:20px;border-radius:6px;font-family:'Orbitron',sans-serif;text-align:center;outline:none;letter-spacing:6px;margin-bottom:12px;}
 .pin-row{display:flex;gap:8px;}
 .pin-btn{flex:1;background:rgba(224,64,251,0.12);border:1px solid rgba(224,64,251,0.35);color:var(--neon-purple);padding:8px;font-size:10px;font-weight:700;letter-spacing:1px;border-radius:6px;cursor:pointer;font-family:'Orbitron',sans-serif;}
@@ -146,29 +114,13 @@ html, body {
 @media(max-width:480px){
   .w-slot{width:44px;height:44px;}.w-slot .wico{font-size:16px;}
   .hud-val{font-size:12px;}.jackpot-val{font-size:16px;}
-  #bonus-wrap{width:220px;height:220px;}#bonusCanvas{width:220px;height:220px;}
   .shop-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
   
-  /* REVISI TATA LETAK TOMBOL */
-  .hud-bot {
-    flex-wrap: nowrap;
-    padding: 6px 4px;
-    gap: 4px;
-  }
-  .hud-btn {
-    padding: 6px;
-    font-size: 8px;
-    letter-spacing: 0;
-  }
-  .bet-btn {
-    width: 20px; height: 20px; font-size: 12px;
-  }
-  #h-bet {
-    font-size: 14px !important; min-width: 26px !important;
-  }
-  #weapon-row {
-    bottom: 75px;
-  }
+  .hud-bot { flex-wrap: nowrap; padding: 6px 4px; gap: 4px; }
+  .hud-btn { padding: 6px; font-size: 8px; letter-spacing: 0; }
+  .bet-btn { width: 20px; height: 20px; font-size: 12px; }
+  #h-bet { font-size: 14px !important; min-width: 26px !important; }
+  #weapon-row { bottom: 75px; }
 }
 </style>
 </head>
@@ -178,14 +130,12 @@ html, body {
 
 <div id="ui">
   <div class="hud-top">
-    <div class="hud-stat"><div class="hud-label">Saldo</div><div class="hud-val gold" id="h-bal">10,000</div></div>
+    <div class="hud-stat"><div class="hud-label">Saldo (You)</div><div class="hud-val gold" id="h-bal">10,000</div></div>
     <div class="jackpot-mid"><div class="jackpot-label">Grand Jackpot</div><div class="jackpot-val" id="h-jack">9,999,999</div></div>
     <div class="hud-stat"><div class="hud-label">Total Win</div><div class="hud-val blue" id="h-win">0</div></div>
   </div>
   <div id="sp-bar"><div id="sp-label">DRILL</div><div id="sp-bg"><div id="sp-fill"></div></div></div>
-
   <div id="weapon-row"></div>
-
   <div class="hud-bot">
     <div class="hud-stat"><div class="hud-label">Level</div><div class="hud-val" id="h-lvl">1</div></div>
     <button class="hud-btn" id="btn-auto" onclick="toggleAuto()">AUTO</button>
@@ -199,7 +149,6 @@ html, body {
     </div>
     <button class="hud-btn gold-btn" onclick="changeBet(0,'max')">MAX</button>
     <button class="hud-btn gold-btn" onclick="openShop()">🏪 SHOP</button>
-    <button class="hud-btn red-btn" onclick="openPin()">⚙ ADMIN</button>
   </div>
 </div>
 
@@ -219,16 +168,6 @@ html, body {
   </div>
 </div>
 
-<div id="bonus-overlay">
-  <div id="bonus-box">
-    <div id="bonus-title">🎰 BONUS!</div>
-    <div id="bonus-sub">Berputar...</div>
-    <div id="bonus-wrap"><canvas id="bonusCanvas" width="260" height="260"></canvas><div id="bonus-cd"></div></div>
-    <div id="bonus-result"></div>
-    <button id="bonus-close" onclick="closeBonus()">KLAIM REWARD</button>
-  </div>
-</div>
-
 <div id="gameover">
   <div id="gameover-box">
     <div id="go-title">GAME OVER</div>
@@ -237,53 +176,40 @@ html, body {
   </div>
 </div>
 
-<div id="pin-overlay">
-  <div id="pin-box">
-    <div id="pin-title">🔐 ADMIN ACCESS</div>
-    <div id="pin-err"></div>
-    <input id="pin-input" type="password" maxlength="4" placeholder="••••" oninput="tryPin(this.value)">
-    <div class="pin-row">
-      <button class="pin-btn" onclick="closePinModal()">BATAL</button>
-    </div>
-  </div>
-</div>
-
-<div id="god-overlay">
-  <div id="god-box">
-    <div id="god-title">☢ GOD MODE</div>
-    <div id="god-sub">Admin Panel — Akses Penuh</div>
-    <input id="god-amount" class="god-input" type="number" placeholder="Jumlah saldo..." min="0">
-    <div class="god-row">
-      <button class="god-btn safe" onclick="godAddBalance()">+ ISI SALDO</button>
-      <button class="god-btn safe" onclick="godSetBalance()">= SET SALDO</button>
-    </div>
-    <div class="god-row">
-      <button class="god-btn" onclick="godUnlockAll()">🔓 UNLOCK SEMUA</button>
-      <button class="god-btn" onclick="godMaxUpgrade()">⬆ MAX UPGRADE</button>
-    </div>
-    <div class="god-row">
-      <button class="god-btn danger" onclick="godClearBalance()">🗑 RESET SALDO</button>
-      <button class="god-btn danger" onclick="godKillAll()">💀 KILL ALL FISH</button>
-    </div>
-    <div id="god-status"></div>
-    <button id="god-close" onclick="closeGod()">TUTUP</button>
-  </div>
-</div>
-
 <script>
 // ═══════════════════════════════════════════════════════════
-//  OCEAN EMPEROR v3 — Ultimate Weapon Edition
+//  OCEAN EMPEROR v4 — 6 Players Arcade Edition
 // ═══════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('gameCanvas');
 const ctx    = canvas.getContext('2d');
 let W, H;
-function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+
+// Player System (0 is Real Player, 1-5 are Bots)
+const players = [
+  { id: 0, isBot: false, name: "YOU",   bal: 10000, bet: 10, color: '#00e5ff', x:0, y:0, ang: 0 },
+  { id: 1, isBot: true,  name: "BOT 1", bal: 5000,  bet: 10, color: '#ff1744', x:0, y:0, ang: 0 },
+  { id: 2, isBot: true,  name: "BOT 2", bal: 5000,  bet: 10, color: '#00ff88', x:0, y:0, ang: 0 },
+  { id: 3, isBot: true,  name: "BOT 3", bal: 5000,  bet: 10, color: '#ffd700', x:0, y:0, ang: 0 },
+  { id: 4, isBot: true,  name: "BOT 4", bal: 5000,  bet: 10, color: '#e040fb', x:0, y:0, ang: 0 },
+  { id: 5, isBot: true,  name: "BOT 5", bal: 5000,  bet: 10, color: '#ff9100', x:0, y:0, ang: 0 }
+];
+
+function resize(){ 
+  W = canvas.width = window.innerWidth; 
+  H = canvas.height = window.innerHeight; 
+  
+  // Posisi 6 Pemain (Bawah, Atas, 2 Kiri, 2 Kanan)
+  players[0].x = W/2;   players[0].y = H - 65;    // Player (Bawah Tengah)
+  players[1].x = W/2;   players[1].y = 40;        // Top (Atas Tengah)
+  players[2].x = 40;    players[2].y = H/3;       // Kiri 1
+  players[3].x = 40;    players[3].y = 2*H/3;     // Kiri 2
+  players[4].x = W-40;  players[4].y = H/3;       // Kanan 1
+  players[5].x = W-40;  players[5].y = 2*H/3;     // Kanan 2
+}
 window.addEventListener('resize', resize); resize();
 
 // ── STATE ──────────────────────────────────────────────────
-let balance     = 10000;
-let bet         = 10;
 let autoFire    = false;
 let totalWin    = 0;
 let level       = 1;
@@ -292,51 +218,43 @@ let frameCount  = 0;
 let shakeAmt    = 0;
 let gameOver    = false;
 let mouse       = { x: W/2, y: H/2 };
-let cannonX     = 0, cannonY = 0;
 
 // special weapon runtime
-let activeSpecials = [];  // array of running SpecialWeapon instances
+let activeSpecials = [];  
 let spTimer = 0, spMax = 0, spType = '';
 
 // ── WEAPON DEFINITIONS ────────────────────────────────────
 const WEAPON_DEFS = {
-  single: { id:'single', name:'Single Shot', ico:'🔫', desc:'Satu peluru, cepat & akurat', dmg:1, multi:1, winMod:1.0, price:0, color:'#00e5ff' },
-  double: { id:'double', name:'Double Shot',  ico:'🔫🔫', desc:'2 peluru menyebar setiap tembak', dmg:1, multi:2, winMod:1.15, price:500, color:'#ffd700' },
-  triple: { id:'triple', name:'Triple Shot',  ico:'💥', desc:'3 peluru kipas sudut 15°', dmg:1, multi:3, winMod:1.25, price:1200, color:'#ff9100' },
-  laser:  { id:'laser',  name:'Laser Beam',   ico:'⚡', desc:'Tembus semua ikan sekaligus', dmg:2, multi:1, winMod:1.35, piercing:true, price:2500, color:'#e040fb' },
-  missile:{ id:'missile',name:'Missile',      ico:'🚀', desc:'Eksplosif radius 80px per hit', dmg:3, multi:1, winMod:1.4, explosive:true, price:3500, color:'#ff1744' },
-  shotgun:{ id:'shotgun',name:'Shotgun',      ico:'💢', desc:'5 peluru menyebar lebar', dmg:1, multi:5, winMod:1.3, price:2000, color:'#ff8a65' },
-  sniper: { id:'sniper', name:'Sniper',       ico:'🎯', desc:'1 tembakan, damage ×5', dmg:5, multi:1, winMod:1.5, price:4000, color:'#00ff88' },
-  plasma: { id:'plasma', name:'Plasma Burst', ico:'🌀', desc:'Slow shot meledak besar di target', dmg:4, multi:1, winMod:1.55, plasma:true, price:5000, color:'#e040fb' },
-  minigun:{ id:'minigun',name:'Minigun',      ico:'🔥', desc:'Tembak super cepat otomatis', dmg:1, multi:1, winMod:1.2, minigun:true, price:3000, color:'#ff5722' },
-  nuke:   { id:'nuke',   name:'Nuke Cannon',  ico:'☢',  desc:'Bom nuklir sekali layar', dmg:10, multi:1, winMod:2.0, nuke:true, price:8000, color:'#00ff88' },
+  single: { id:'single', name:'Single Shot', ico:'🔫', dmg:1, multi:1, winMod:1.0, price:0, color:'#00e5ff' },
+  double: { id:'double', name:'Double Shot',  ico:'🔫🔫', dmg:1, multi:2, winMod:1.15, price:500, color:'#ffd700' },
+  triple: { id:'triple', name:'Triple Shot',  ico:'💥', dmg:1, multi:3, winMod:1.25, price:1200, color:'#ff9100' },
+  laser:  { id:'laser',  name:'Laser Beam',   ico:'⚡', dmg:2, multi:1, winMod:1.35, piercing:true, price:2500, color:'#e040fb' },
+  missile:{ id:'missile',name:'Missile',      ico:'🚀', dmg:3, multi:1, winMod:1.4, explosive:true, price:3500, color:'#ff1744' },
+  shotgun:{ id:'shotgun',name:'Shotgun',      ico:'💢', dmg:1, multi:5, winMod:1.3, price:2000, color:'#ff8a65' },
+  sniper: { id:'sniper', name:'Sniper',       ico:'🎯', dmg:5, multi:1, winMod:1.5, price:4000, color:'#00ff88' },
+  plasma: { id:'plasma', name:'Plasma Burst', ico:'🌀', dmg:4, multi:1, winMod:1.55, plasma:true, price:5000, color:'#e040fb' },
+  minigun:{ id:'minigun',name:'Minigun',      ico:'🔥', dmg:1, multi:1, winMod:1.2, minigun:true, price:3000, color:'#ff5722' },
+  nuke:   { id:'nuke',   name:'Nuke Cannon',  ico:'☢',  dmg:10, multi:1, winMod:2.0, nuke:true, price:8000, color:'#00ff88' },
 };
 
-// equip slots: up to 3 weapons equipped simultaneously
 const MAX_SLOTS = 3;
-let equippedSlots = ['single', null, null]; // weapon ids
-
-// inventory & upgrades
-let inventory  = { single: true };             // owned weapons
-let upgrades   = { dmg:0, rate:0, winrate:0 }; // upgrade levels (0-5)
+let equippedSlots = ['single', null, null]; 
+let activeSlot = 0; 
+let inventory  = { single: true };             
+let upgrades   = { dmg:0, rate:0, winrate:0 }; 
 let buffs      = { autoReload:false, goldFish:false, shieldX2:false };
 
-// ── UPGRADE DEFS ──────────────────────────────────────────
 const UPGRADE_DEFS = [
   { id:'dmg',     name:'Damage Boost',   ico:'⚔', desc:'Damage semua senjata +20% per level', max:5, prices:[400,800,1500,3000,6000] },
   { id:'rate',    name:'Fire Rate',      ico:'⚡', desc:'Kecepatan tembak +15% per level', max:5, prices:[300,600,1200,2400,4800] },
   { id:'winrate', name:'Win Rate',       ico:'🍀', desc:'Bonus win rate +5% per level', max:5, prices:[500,1000,2000,4000,8000] },
 ];
 
-// ── BUFF DEFS ─────────────────────────────────────────────
 const BUFF_DEFS = [
   { id:'autoReload', name:'Auto Reload',  ico:'🔄', desc:'Auto-fire tidak habiskan saldo saat balance < 200', price:2000 },
   { id:'goldFish',   name:'Gold Magnet',  ico:'🪙', desc:'Semua ikan koin +50% reward', price:3000 },
   { id:'shieldX2',   name:'Shield ×2',   ico:'🛡', desc:'Saldo tidak bisa turun di bawah 100', price:5000 },
 ];
-
-// ── ACTIVE WEAPON (main slot) ──────────────────────────────
-let activeSlot = 0; // which slot is selected for auto-fire
 
 // ── FISH TYPES ────────────────────────────────────────────
 const FISH_TYPES = [
@@ -349,7 +267,7 @@ const FISH_TYPES = [
   { id:'roulette', hp:40, val:0,   speed:1.0, size:42, color:'#e040fb', glow:'#9c27b0', prob:0.05 },
   { id:'random',   hp:25, val:0,   speed:1.8, size:34, color:'#ffd700', glow:'#ffb300', prob:0.05 },
   { id:'jackpot',  hp:60, val:0,   speed:0.7, size:52, color:'#ffd700', glow:'#ff6f00', prob:0.03 },
-  { id:'twin',     hp:20, val:80,  speed:1.6, size:30, color:'#80deea', glow:'#26c6da', prob:0.04 }, // drops 2 mini fish
+  { id:'twin',     hp:20, val:80,  speed:1.6, size:30, color:'#80deea', glow:'#26c6da', prob:0.04 }, 
 ];
 
 function pickFishType(){
@@ -363,6 +281,7 @@ const fishes    = [];
 const bullets   = [];
 const particles = [];
 const lasers    = [];
+const inWorldRoulettes = []; // Array untuk roulette animasi di layar
 
 // ── FISH CLASS ────────────────────────────────────────────
 class Fish {
@@ -405,25 +324,21 @@ class Fish {
     if(this.flash>0) ctx.globalAlpha = 0.45+0.55*Math.sin(this.flash*0.9);
     ctx.shadowBlur=18+Math.sin(frameCount*0.06)*6; ctx.shadowColor=this.glow;
 
-    // body
     ctx.beginPath(); ctx.ellipse(0,0,this.size,this.size*0.54,0,0,Math.PI*2);
     ctx.fillStyle=this.color; ctx.fill();
-    // tail
     const tw=Math.sin(this.tailPh)*11;
     ctx.beginPath(); ctx.moveTo(-this.size+4,0);
     ctx.lineTo(-this.size-18,-12+tw); ctx.lineTo(-this.size-18,12+tw);
     ctx.closePath(); ctx.fillStyle=this.color; ctx.fill();
-    // dorsal fin
     ctx.beginPath();
     ctx.moveTo(-this.size*0.2,-this.size*0.54); ctx.lineTo(this.size*0.1,-this.size*0.88);
     ctx.lineTo(this.size*0.4,-this.size*0.54); ctx.fillStyle=this.color; ctx.fill();
-    // eye
     ctx.shadowBlur=0;
     ctx.beginPath(); ctx.arc(this.size*0.44,-this.size*0.1,this.size*0.13,0,Math.PI*2);
     ctx.fillStyle='#fff'; ctx.fill();
     ctx.beginPath(); ctx.arc(this.size*0.46,-this.size*0.1,this.size*0.07,0,Math.PI*2);
     ctx.fillStyle='#111'; ctx.fill();
-    // special overlay
+    
     const ICONS = {drill:'⚡',bomb:'💣',roulette:'🎰',random:'🎁',boss:'👑',twin:'✦'};
     if(ICONS[this.id]){
       ctx.fillStyle='rgba(0,0,0,0.25)';
@@ -431,14 +346,13 @@ class Fish {
       ctx.save(); ctx.scale(fl,1); ctx.font=`${Math.floor(this.size*0.42)}px Arial`;
       ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(ICONS[this.id],0,2); ctx.restore();
     }
-    // count-up label
     if(this.id==='jackpot'){
       ctx.scale(fl,1); ctx.shadowBlur=0;
       ctx.fillStyle='#ffd700'; ctx.font='bold 12px Orbitron,Arial';
       ctx.textAlign='center'; ctx.fillText('+'+this.countUp,0,-this.size-10);
     }
     ctx.restore();
-    // hp bar
+    
     if(this.maxHp>5){
       const bw=this.size*1.6, bh=4, bx=this.x-bw/2, by=this.y-this.size-22;
       const pct=this.hp/this.maxHp;
@@ -452,21 +366,18 @@ class Fish {
 
 // ── BULLET CLASS ──────────────────────────────────────────
 class Bullet {
-  constructor(ox,oy,ang,wDef){
+  constructor(ox,oy,ang,wDef,ownerId){
     this.x=ox; this.y=oy;
     this.vx=Math.cos(ang)*16; this.vy=Math.sin(ang)*16;
     this.wDef=wDef;
+    this.ownerId=ownerId; // Player tracking
     this.alive=true; this.trail=[];
     this.piercing=!!wDef.piercing;
     this.explosive=!!wDef.explosive;
     this.plasma=!!wDef.plasma;
-    // slow down plasma
     if(this.plasma){ this.vx*=0.55; this.vy*=0.55; }
   }
-  dmg(){
-    let d = this.wDef.dmg * (1 + upgrades.dmg*0.2);
-    return d;
-  }
+  dmg(){ return this.wDef.dmg * (this.ownerId===0 ? 1+upgrades.dmg*0.2 : 1); }
   update(){
     this.trail.push({x:this.x,y:this.y});
     if(this.trail.length>10) this.trail.shift();
@@ -477,15 +388,16 @@ class Bullet {
       if(Math.hypot(this.x-f.x,this.y-f.y)<f.size+8){
         f.hp -= this.dmg(); f.flash=8;
         spawnHit(this.x,this.y);
-        if(this.explosive) explodeAt(this.x,this.y,80,this.dmg()*2);
-        if(this.plasma)    explodeAt(this.x,this.y,120,this.dmg()*3);
-        if(f.hp<=0) killFish(f);
+        if(this.explosive) explodeAt(this.x,this.y,80,this.dmg()*2, this.ownerId);
+        if(this.plasma)    explodeAt(this.x,this.y,120,this.dmg()*3, this.ownerId);
+        if(f.hp<=0) killFish(f, this.ownerId);
         if(!this.piercing){ this.alive=false; return; }
       }
     }
   }
   draw(){
-    const wc = this.wDef.color;
+    const owner = players[this.ownerId];
+    const wc = owner.color; // Warna peluru mengikuti warna player
     for(let i=0;i<this.trail.length;i++){
       const a=(i/this.trail.length)*0.6;
       const sz=4*(i/this.trail.length);
@@ -506,35 +418,34 @@ class Bullet {
   }
 }
 
-// ── LASER CLASS ───────────────────────────────────────────
 class Laser {
-  constructor(ox,oy,ang){
+  constructor(ox,oy,ang,ownerId){
     this.ox=ox; this.oy=oy;
     this.ang=ang;
-    this.life=18; // frames
+    this.ownerId=ownerId;
+    this.life=18;
     this.len=Math.max(W,H)*1.5;
-    // immediate hit all fish along ray
     const dx=Math.cos(ang), dy=Math.sin(ang);
     for(let f of fishes){
       if(!f.alive) continue;
-      // ray-circle intersection
       const fx=f.x-ox, fy=f.y-oy;
       const proj=fx*dx+fy*dy;
       if(proj<0) continue;
       const perp=Math.abs(fx*dy - fy*dx);
       if(perp<f.size+10){
-        const dmgVal = 2*(1+upgrades.dmg*0.2);
+        const dmgVal = 2 * (ownerId===0 ? 1+upgrades.dmg*0.2 : 1);
         f.hp -= dmgVal; f.flash=10; spawnHit(f.x,f.y);
-        if(f.hp<=0) killFish(f);
+        if(f.hp<=0) killFish(f, this.ownerId);
       }
     }
   }
   update(){ this.life--; }
   draw(){
     const a=this.life/18;
+    const owner = players[this.ownerId];
     ctx.save(); ctx.globalAlpha=a;
-    ctx.shadowBlur=30; ctx.shadowColor='#e040fb';
-    ctx.strokeStyle='#e040fb'; ctx.lineWidth=3+a*4;
+    ctx.shadowBlur=30; ctx.shadowColor=owner.color;
+    ctx.strokeStyle=owner.color; ctx.lineWidth=3+a*4;
     ctx.beginPath();
     ctx.moveTo(this.ox,this.oy);
     ctx.lineTo(this.ox+Math.cos(this.ang)*this.len, this.oy+Math.sin(this.ang)*this.len);
@@ -545,63 +456,85 @@ class Laser {
   }
 }
 
-// ── SPECIAL WEAPON CLASSES ────────────────────────────────
-class SpecialDrill {
-  constructor(){
-    this.x=W/2; this.y=H/2;
-    this.vx=(Math.random()-0.5)*13; this.vy=(Math.random()-0.5)*13;
-    this.angle=0;
+// ── IN-WORLD ROULETTE CLASS ───────────────────────────────
+const ROULETTE_PRIZES=[
+  {label:'2×',mult:2,color:'#4caf50'},{label:'5×',mult:5,color:'#8bc34a'},
+  {label:'10×',mult:10,color:'#ffd700'},{label:'20×',mult:20,color:'#ff9800'},
+  {label:'50×',mult:50,color:'#ff5722'},{label:'JACKPOT',mult:200,color:'#e91e63'},
+  {label:'3×',mult:3,color:'#009688'},{label:'ZONK',mult:0,color:'#607d8b'},
+];
+
+class InWorldRoulette {
+  constructor(x, y, ownerId, isRandomBox){
+    this.x = x; this.y = y;
+    this.ownerId = ownerId;
+    this.isRandomBox = isRandomBox;
+    this.timer = 150; // Waktu putaran
+    this.angle = 0;
+    this.speed = 0.4;
+    this.result = null;
+    this.prizes = ROULETTE_PRIZES;
   }
-  update(){
-    this.x+=this.vx; this.y+=this.vy;
-    if(this.x<40||this.x>W-40) this.vx*=-1;
-    if(this.y<40||this.y>H-100) this.vy*=-1;
-    this.angle+=0.16;
-    for(let f of fishes){
-      if(!f.alive) continue;
-      if(Math.hypot(this.x-f.x,this.y-f.y)<f.size+52){ f.hp-=0.45; f.flash=5; if(f.hp<=0) killFish(f); }
+  update() {
+    if (this.timer > 0) {
+      this.angle += this.speed;
+      this.speed *= 0.985; // Melambat
+      this.timer--;
+      if (this.timer === 0) {
+        // Tentukan hasil dan berikan ke pemilik
+        this.result = this.prizes[Math.floor(Math.random() * this.prizes.length)];
+        const owner = players[this.ownerId];
+        const win = this.result.mult * owner.bet;
+        if(win > 0) {
+          owner.bal += win;
+          if(this.ownerId === 0){ totalWin += win; updateUI(); }
+          floatText('+'+win, this.x, this.y-40, owner.color, 24);
+          spawnCoins(this.x, this.y, 8, owner);
+        } else {
+          floatText('MISS!', this.x, this.y-40, '#fff', 20);
+        }
+        this.timer = -60; // Delay tampil hasil sebelum hilang
+      }
+    } else {
+      this.timer++;
     }
   }
-  draw(){
-    ctx.save(); ctx.translate(this.x,this.y); ctx.rotate(this.angle);
-    ctx.shadowBlur=28; ctx.shadowColor='#00e5ff';
-    ctx.strokeStyle='rgba(0,229,255,0.55)'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(0,0,36,0,Math.PI*2); ctx.stroke();
-    ctx.strokeStyle='rgba(0,229,255,0.22)'; ctx.lineWidth=1;
-    ctx.beginPath(); ctx.arc(0,0,50,0,Math.PI*2); ctx.stroke();
-    ctx.fillStyle='#00e5ff';
-    ctx.beginPath(); ctx.moveTo(0,-27); ctx.lineTo(13,0); ctx.lineTo(0,27); ctx.lineTo(-13,0); ctx.closePath(); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.8)';
-    ctx.beginPath(); ctx.moveTo(0,-11); ctx.lineTo(5,0); ctx.lineTo(0,11); ctx.lineTo(-5,0); ctx.closePath(); ctx.fill();
-    ctx.restore();
-    for(let i=0;i<2;i++) spawnParticle(this.x+(Math.random()-0.5)*55,this.y+(Math.random()-0.5)*55,'#00e5ff',2,0.8);
-  }
-}
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    const R = 45; // Ukuran mini rolet
+    const seg = (Math.PI*2)/this.prizes.length;
+    
+    // Draw wheel
+    for(let i=0;i<this.prizes.length;i++){
+      const a = this.angle + i*seg;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,R,a,a+seg); ctx.closePath();
+      ctx.fillStyle = this.prizes[i].color; ctx.fill();
+      ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=1; ctx.stroke();
+    }
+    // Draw text
+    for(let i=0;i<this.prizes.length;i++){
+      const a = this.angle + i*seg + seg/2;
+      ctx.save(); ctx.translate(Math.cos(a)*R*0.65, Math.sin(a)*R*0.65);
+      ctx.rotate(a+Math.PI/2); ctx.fillStyle='#fff'; ctx.font='bold 9px Orbitron,Arial';
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(this.prizes[i].label,0,0); ctx.restore();
+    }
+    // Center & Pointer
+    ctx.beginPath(); ctx.arc(0,0,8,0,Math.PI*2);
+    ctx.fillStyle='#111'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,-R-2); ctx.lineTo(-6,-R+8); ctx.lineTo(6,-R+8);
+    ctx.closePath(); ctx.fillStyle='#fff'; ctx.fill();
 
-class SpecialBomb {
-  constructor(){
-    this.x=W/2; this.y=H/2;
-    this.vx=(Math.random()-0.5)*9; this.vy=(Math.random()-0.5)*9;
-    this.pulse=0;
-  }
-  update(){
-    this.x+=this.vx; this.y+=this.vy;
-    this.vx*=0.99; this.vy*=0.99;
-    if(this.x<40||this.x>W-40) this.vx*=-1;
-    if(this.y<40||this.y>H-100) this.vy*=-1;
-    this.pulse+=0.09;
-  }
-  draw(){
-    const p=Math.sin(this.pulse)*8;
-    ctx.save(); ctx.translate(this.x,this.y);
-    ctx.shadowBlur=38; ctx.shadowColor='#ff1744';
-    ctx.strokeStyle='rgba(255,100,100,0.35)'; ctx.lineWidth=2;
-    ctx.beginPath(); ctx.arc(0,0,38+p,0,Math.PI*2); ctx.stroke();
-    ctx.fillStyle='#b71c1c'; ctx.beginPath(); ctx.arc(0,0,28+p,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#ff1744'; ctx.beginPath(); ctx.arc(0,0,22+p,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.beginPath(); ctx.arc(-6,-6,8,0,Math.PI*2); ctx.fill();
+    // Teks di atasnya
+    if (this.timer > 0) {
+      ctx.fillStyle='#fff'; ctx.font='bold 12px Orbitron'; ctx.textAlign='center';
+      ctx.fillText(this.isRandomBox?'LUCKY BOX':'ROULETTE', 0, -R-12);
+    } else if (this.result) {
+      ctx.fillStyle='#ffd700'; ctx.font='bold 16px Orbitron'; ctx.textAlign='center'; ctx.shadowBlur=10; ctx.shadowColor='#000';
+      ctx.fillText(this.result.label, 0, -R-12);
+    }
     ctx.restore();
-    for(let i=0;i<1;i++) spawnParticle(this.x+(Math.random()-0.5)*38,this.y+(Math.random()-0.5)*38,'#ff5722',3,0.9);
   }
 }
 
@@ -614,14 +547,13 @@ function spawnExplosion(x,y,color){
   for(let i=0;i<22;i++) particles.push({x,y,vx:(Math.random()-0.5)*14,vy:(Math.random()-0.5)*14-2,color,size:3+Math.random()*7,life:1,maxLife:1,isCoin:false});
   for(let i=0;i<10;i++) particles.push({x,y,vx:(Math.random()-0.5)*20,vy:(Math.random()-0.5)*20,color:'#fff',size:2,life:0.7,maxLife:0.7,isCoin:false});
 }
-function spawnCoins(x,y,count){
+function spawnCoins(x,y,count, owner){
   for(let i=0;i<count;i++){
     const a=Math.random()*Math.PI*2, s=2+Math.random()*5;
-    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-3,color:'#ffd700',size:5,life:1.3,maxLife:1.3,isCoin:true,rotate:Math.random()*Math.PI*2});
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-3,color:'#ffd700',size:5,life:1.3,maxLife:1.3,isCoin:true,rotate:Math.random()*Math.PI*2, ownerId: owner.id});
   }
 }
 
-// ── FLOAT TEXT ────────────────────────────────────────────
 function floatText(str,x,y,color,sz){
   const el=document.createElement('div');
   el.className='floater'; el.textContent=str;
@@ -630,42 +562,51 @@ function floatText(str,x,y,color,sz){
   setTimeout(()=>el.remove(),1300);
 }
 
-// ── AREA EXPLOSION (missile/nuke) ─────────────────────────
-function explodeAt(x,y,radius,dmg){
+function explodeAt(x,y,radius,dmg, ownerId){
   spawnExplosion(x,y,'#ff9100'); spawnExplosion(x,y,'#ff1744');
-  shakeScreen();
+  if(ownerId === 0) shakeScreen();
   for(let f of fishes){
     if(!f.alive) continue;
     const d=Math.hypot(f.x-x,f.y-y);
-    if(d<radius+f.size){ f.hp-=dmg*(1-d/(radius+f.size)*0.5); f.flash=12; if(f.hp<=0) killFish(f); }
+    if(d<radius+f.size){ f.hp-=dmg*(1-d/(radius+f.size)*0.5); f.flash=12; if(f.hp<=0) killFish(f, ownerId); }
   }
 }
 
-// ── KILL FISH ─────────────────────────────────────────────
-function killFish(f){
+// ── KILL FISH (MENGGUNAKAN OWNER) ─────────────────────────
+function killFish(f, ownerId){
   if(!f.alive) return; f.alive=false;
+  const owner = players[ownerId];
+  
   spawnExplosion(f.x,f.y,f.glow);
-  spawnCoins(f.x,f.y,f.id==='boss'?12:f.id==='jackpot'?8:4);
-  if(f.id==='drill')    { activateDrill(); f.init(); return; }
-  if(f.id==='bomb')     { activateBombMode(); f.init(); return; }
-  if(f.id==='roulette') { openBonus('roulette',f); return; }
-  if(f.id==='random')   { openBonus('random',f); return; }
-  if(f.id==='twin')     {
-    // spawn two small fish at position
+  spawnCoins(f.x,f.y,f.id==='boss'?12:f.id==='jackpot'?8:4, owner);
+  
+  if(f.id==='drill' || f.id==='bomb') { floatText('💥 BOOM!', f.x, f.y, '#ff1744', 22); explodeAt(f.x, f.y, 250, 10, ownerId); f.init(); return; }
+  
+  // ROULETTE & RANDOM MUNCUL DI LOKASI IKAN MATI
+  if(f.id==='roulette') { inWorldRoulettes.push(new InWorldRoulette(f.x, f.y, ownerId, false)); f.init(); return; }
+  if(f.id==='random')   { inWorldRoulettes.push(new InWorldRoulette(f.x, f.y, ownerId, true)); f.init(); return; }
+  
+  if(f.id==='twin') {
     for(let i=0;i<2;i++){const nf=new Fish(); nf.init('small'); nf.x=f.x+(i-0.5)*30; nf.y=f.y; fishes.push(nf);}
   }
+
   let win=0;
-  const goldMod = buffs.goldFish ? 1.5 : 1.0;
-  const winMod  = getCurrentWinMod();
+  const goldMod = (ownerId===0 && buffs.goldFish) ? 1.5 : 1.0;
+  const winMod  = ownerId===0 ? getCurrentWinMod() : 1.0; // Bot winmod default 1
+
   if(f.id==='jackpot'){
     win=f.countUp; jackpotPool=Math.max(0,jackpotPool-win); updateJackpot();
     floatText('JACKPOT! +'+win,f.x,f.y-30,'#ffd700',22);
   } else {
-    win = Math.floor(f.val * (bet/10) * winMod * goldMod * (1 + upgrades.winrate*0.05));
+    const winrateBonus = ownerId===0 ? (1 + upgrades.winrate*0.05) : 1;
+    win = Math.floor(f.val * (owner.bet/10) * winMod * goldMod * winrateBonus);
   }
-  balance+=win; totalWin+=win;
-  if(win>0) floatText('+'+win,f.x,f.y-18,'#ffd700',16);
-  updateUI(); f.init();
+  
+  owner.bal += win;
+  if(ownerId === 0) { totalWin+=win; updateUI(); }
+  
+  if(win>0) floatText('+'+win,f.x,f.y-18, owner.color, 16);
+  f.init();
 }
 
 function getCurrentWinMod(){
@@ -673,117 +614,91 @@ function getCurrentWinMod(){
   return WEAPON_DEFS[wid]?.winMod || 1.0;
 }
 
-// ── SPECIAL WEAPONS ───────────────────────────────────────
-let specialInst = null;
-function activateDrill(){
-  specialInst=new SpecialDrill(); spMax=15*60; spTimer=spMax; spType='drill';
-  document.getElementById('sp-bar').style.display='flex';
-  document.getElementById('sp-label').textContent='⚡ DRILL ACTIVE';
-  document.getElementById('sp-fill').style.background='#00e5ff';
-  floatText('⚡ DRILL MODE!',W/2,H/2,'#00e5ff',26);
-}
-function activateBombMode(){
-  specialInst=new SpecialBomb(); spMax=10*60; spTimer=spMax; spType='bomb';
-  document.getElementById('sp-bar').style.display='flex';
-  document.getElementById('sp-label').textContent='💣 BOMB ACTIVE';
-  document.getElementById('sp-fill').style.background='#ff1744';
-  floatText('💣 BOMB MODE!',W/2,H/2,'#ff1744',26);
-}
-function activateNuke(){
-  shakeScreen(); shakeScreen();
-  floatText('☢ NUKE!',W/2,H/2,'#00ff88',32);
-  for(let f of [...fishes]){
-    if(f.alive){ spawnExplosion(f.x,f.y,f.glow); f.hp=0; killFish(f); }
-  }
-  spawnExplosion(W/2,H/2,'#00ff88'); spawnExplosion(W/2,H/2,'#ffd700');
-}
-function endSpecial(){
-  if(specialInst instanceof SpecialBomb){
-    const cx=specialInst.x, cy=specialInst.y;
-    spawnExplosion(cx,cy,'#ff5722'); spawnExplosion(cx,cy,'#ffd700');
-    shakeScreen();
-    fishes.forEach(f=>{if(f.alive&&Math.hypot(f.x-cx,f.y-cy)<260){f.hp=0;killFish(f);}});
-  }
-  specialInst=null;
-  document.getElementById('sp-bar').style.display='none';
-}
 function shakeScreen(){ shakeAmt=12; }
 
-// ── FIRE ──────────────────────────────────────────────────
+// ── SHOOT (BERLAKU UNTUK PLAYER & BOTS) ───────────────────
+function performShoot(player, targetAngle){
+  let wDef = WEAPON_DEFS['single'];
+  if(!player.isBot) {
+    const slot = equippedSlots[activeSlot] || 'single';
+    wDef = WEAPON_DEFS[slot] || WEAPON_DEFS['single'];
+  }
+
+  const cost = (player.id===0 && buffs.autoReload && player.bal < 200) ? 0 : player.bet;
+  if(player.bal < cost) return;
+  player.bal -= cost;
+  
+  if(player.id===0) updateUI();
+  player.ang = targetAngle; // Set visual angle
+
+  if(wDef.id === 'laser'){
+    lasers.push(new Laser(player.x, player.y, targetAngle, player.id));
+    spawnParticle(player.x, player.y, player.color, 4, 0.8);
+    return;
+  }
+  
+  const multi = wDef.multi || 1;
+  const spread = wDef.id==='shotgun' ? 0.22 : wDef.id==='triple' ? 0.22 : wDef.id==='double' ? 0.12 : 0;
+  for(let i=0;i<multi;i++){
+    const offset = multi>1 ? spread*(i - (multi-1)/2) : 0;
+    bullets.push(new Bullet(player.x, player.y, targetAngle+offset, wDef, player.id));
+  }
+  spawnParticle(player.x, player.y, player.color, 3, 0.5);
+}
+
+// Interaksi Real Player (Player 0)
 let lastFire = 0;
-function shoot(){
+function shootMainPlayer(){
   if(gameOver) return;
   const rateBonus = 1 + upgrades.rate*0.15;
   const fireDelay = Math.max(50, 140/rateBonus);
   const now = performance.now();
   if(now - lastFire < fireDelay) return;
   lastFire = now;
-
-  const slot = equippedSlots[activeSlot] || 'single';
-  const wDef = WEAPON_DEFS[slot];
-  if(!wDef) return;
-
-  const cost = buffs.autoReload && balance < 200 ? 0 : bet;
-  if(balance < cost && !buffs.autoReload) return;
-  if(balance < bet){
-    // only fire if autoReload
-    if(!buffs.autoReload) return;
-  } else {
-    balance -= bet;
-  }
-
-  updateUI();
-  const ang = Math.atan2(mouse.y - cannonY, mouse.x - cannonX);
-
-  if(wDef.id === 'laser'){
-    lasers.push(new Laser(cannonX, cannonY, ang));
-    spawnParticle(cannonX,cannonY,'#e040fb',4,0.8);
-    return;
-  }
-  if(wDef.nuke){ activateNuke(); return; }
-
-  // multi-bullet weapons
-  const multi = wDef.multi || 1;
-  const spread = wDef.id==='shotgun' ? 0.22 : wDef.id==='triple' ? 0.22 : wDef.id==='double' ? 0.12 : 0;
-  for(let i=0;i<multi;i++){
-    const offset = multi>1 ? spread*(i - (multi-1)/2) : 0;
-    bullets.push(new Bullet(cannonX, cannonY, ang+offset, wDef));
-  }
-  spawnParticle(cannonX,cannonY,wDef.color,3,0.5);
+  
+  const ang = Math.atan2(mouse.y - players[0].y, mouse.x - players[0].x);
+  performShoot(players[0], ang);
 }
 
-// ── CANNON DRAW ───────────────────────────────────────────
-function drawCannon(){
-  cannonX = W/2; cannonY = H-62;
-  const ang = Math.atan2(mouse.y-cannonY, mouse.x-cannonX);
-  const slot = equippedSlots[activeSlot] || 'single';
-  const wDef = WEAPON_DEFS[slot] || WEAPON_DEFS.single;
+// ── DRAW ALL CANNONS ──────────────────────────────────────
+function drawCannons(){
+  players.forEach(p => {
+    ctx.save(); ctx.translate(p.x, p.y);
+    ctx.shadowBlur=15; ctx.shadowColor=p.color;
+    
+    // Base meriam
+    ctx.fillStyle='#0d1f2d';
+    ctx.beginPath(); ctx.ellipse(0,0,40,20,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=p.color; ctx.lineWidth=1.5; ctx.stroke();
 
-  ctx.save(); ctx.translate(cannonX, cannonY);
-  ctx.shadowBlur=22; ctx.shadowColor=wDef.color;
-  ctx.fillStyle='#0d1f2d';
-  ctx.beginPath(); ctx.ellipse(0,0,52,22,0,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle=wDef.color; ctx.lineWidth=1.5; ctx.stroke();
-
-  ctx.rotate(ang);
-  const barrelCount = equippedSlots.filter(s=>s!==null).length;
-  for(let i=0;i<barrelCount;i++){
-    const offset = barrelCount>1 ? (i-(barrelCount-1)/2)*12 : 0;
-    ctx.fillStyle='#1c3042'; ctx.beginPath(); ctx.rect(0,offset-9,62,18); ctx.fill();
-    ctx.strokeStyle=wDef.color; ctx.lineWidth=1; ctx.stroke();
-    ctx.fillStyle=wDef.color; ctx.beginPath(); ctx.rect(55,offset-11,20,22); ctx.fill();
-  }
-  ctx.restore();
-
-  const pulse=Math.sin(frameCount*0.1)*4;
-  ctx.save(); ctx.translate(cannonX, cannonY);
-  ctx.shadowBlur=20+pulse; ctx.shadowColor=wDef.color;
-  ctx.fillStyle='#0d2a36';
-  ctx.beginPath(); ctx.arc(0,0,20,0,Math.PI*2); ctx.fill();
-  ctx.strokeStyle=wDef.color; ctx.lineWidth=2; ctx.stroke();
-  ctx.fillStyle=wDef.color; ctx.globalAlpha=0.5;
-  ctx.beginPath(); ctx.arc(-5,-5,7,0,Math.PI*2); ctx.fill();
-  ctx.restore();
+    ctx.rotate(p.ang); // Rotasi mengikuti tembakan terakhir
+    
+    // Laras
+    const barrelCount = (p.id===0) ? equippedSlots.filter(s=>s!==null).length : 1;
+    for(let i=0;i<barrelCount;i++){
+      const offset = barrelCount>1 ? (i-(barrelCount-1)/2)*10 : 0;
+      ctx.fillStyle='#1c3042'; ctx.beginPath(); ctx.rect(0,offset-7,50,14); ctx.fill();
+      ctx.strokeStyle=p.color; ctx.lineWidth=1; ctx.stroke();
+      ctx.fillStyle=p.color; ctx.beginPath(); ctx.rect(40,offset-9,16,18); ctx.fill();
+    }
+    ctx.restore();
+    
+    // Core meriam & Teks Balance (hanya untuk bot)
+    ctx.save(); ctx.translate(p.x, p.y);
+    ctx.shadowBlur=20; ctx.shadowColor=p.color;
+    ctx.fillStyle='#0d2a36';
+    ctx.beginPath(); ctx.arc(0,0,16,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=p.color; ctx.lineWidth=2; ctx.stroke();
+    
+    // Cetak nama dan saldo bot di dekat meriam
+    if(p.isBot) {
+      ctx.shadowBlur=0;
+      ctx.fillStyle='#fff'; ctx.font='bold 10px Rajdhani'; ctx.textAlign='center';
+      const ty = p.y < H/2 ? -28 : 28; // Teks di atas jika meriam di atas
+      ctx.fillText(`💰 ${Math.floor(p.bal)}`, 0, ty);
+    }
+    ctx.restore();
+  });
 }
 
 // ── BACKGROUND ────────────────────────────────────────────
@@ -809,12 +724,11 @@ function drawBG(){
     ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.stroke();
   }
   ctx.restore();
+  // Border bawah player 0
   ctx.fillStyle='rgba(0,25,55,0.55)'; ctx.fillRect(0,H-40,W,40);
-  ctx.strokeStyle='rgba(0,200,255,0.12)'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,H-40); ctx.lineTo(W,H-40); ctx.stroke();
 }
 
-// ── WEAPON SLOT UI ────────────────────────────────────────
+// ── WEAPON UI ──
 function renderWeaponRow(){
   const row=document.getElementById('weapon-row');
   row.innerHTML='';
@@ -831,26 +745,16 @@ function renderWeaponRow(){
   }
 }
 
-// ── SHOP ──────────────────────────────────────────────────
+// ── SHOP SYSTEM ──
 let shopTabActive = 'weapons';
-function openShop(){
-  document.getElementById('shop-overlay').style.display='flex';
-  document.getElementById('sh-bal').textContent=Math.floor(balance).toLocaleString();
-  renderShop();
-}
+function openShop(){ document.getElementById('shop-overlay').style.display='flex'; renderShop(); }
 function closeShop(){ document.getElementById('shop-overlay').style.display='none'; }
-function shopTab(t){
-  shopTabActive=t;
-  document.querySelectorAll('.shop-tab').forEach((el,i)=>{
-    el.classList.toggle('active',['weapons','upgrades','buffs'][i]===t);
-  });
-  renderShop();
-}
+function shopTab(t){ shopTabActive=t; document.querySelectorAll('.shop-tab').forEach((el,i)=>{ el.classList.toggle('active',['weapons','upgrades','buffs'][i]===t); }); renderShop(); }
 
 function renderShop(){
   const c=document.getElementById('shop-content');
   c.innerHTML='';
-  document.getElementById('sh-bal').textContent=Math.floor(balance).toLocaleString();
+  document.getElementById('sh-bal').textContent=Math.floor(players[0].bal).toLocaleString();
 
   if(shopTabActive==='weapons'){
     for(let wid in WEAPON_DEFS){
@@ -859,65 +763,38 @@ function renderShop(){
       const equipped=equippedSlots.includes(wid);
       const card=document.createElement('div');
       card.className='shop-card'+(equipped?' equipped':owned?' owned':'');
-      let btnHtml='', btnAction='';
-      if(equipped){
-        btnHtml=`<button class="card-btn equipped-tag" onclick="unequipWeapon('${wid}')">✓ EQUIPPED</button>`;
-      } else if(owned){
-        btnHtml=`<button class="card-btn equip" onclick="equipWeapon('${wid}')">EQUIP</button>`;
-      } else {
-        btnHtml=`<button class="card-btn buy" onclick="buyWeapon('${wid}')">BELI 💰${w.price.toLocaleString()}</button>`;
-      }
-      card.innerHTML=`
-        <div class="card-ico">${w.ico}</div>
-        <div class="card-name">${w.name}</div>
-        <div class="card-desc">${w.desc}</div>
-        <div class="card-stat">DMG: ${w.dmg} | MULTI: ${w.multi||1} | WIN: +${Math.round((w.winMod-1)*100)}%</div>
-        ${btnHtml}`;
+      let btnHtml='';
+      if(equipped) btnHtml=`<button class="card-btn equipped-tag" onclick="unequipWeapon('${wid}')">✓ EQUIPPED</button>`;
+      else if(owned) btnHtml=`<button class="card-btn equip" onclick="equipWeapon('${wid}')">EQUIP</button>`;
+      else btnHtml=`<button class="card-btn buy" onclick="buyWeapon('${wid}')">BELI 💰${w.price.toLocaleString()}</button>`;
+      
+      card.innerHTML=`<div class="card-ico">${w.ico}</div><div class="card-name">${w.name}</div><div class="card-stat">DMG: ${w.dmg} | MULTI: ${w.multi||1}</div>${btnHtml}`;
       c.appendChild(card);
     }
   } else if(shopTabActive==='upgrades'){
     for(let upg of UPGRADE_DEFS){
-      const cur=upgrades[upg.id]||0;
-      const maxed=cur>=upg.max;
-      const price=maxed?0:upg.prices[cur];
-      const card=document.createElement('div');
-      card.className='shop-card'+(maxed?' owned':'');
-      const stars='★'.repeat(cur)+'☆'.repeat(upg.max-cur);
-      card.innerHTML=`
-        <div class="card-ico">${upg.ico}</div>
-        <div class="card-name">${upg.name}</div>
-        <div class="card-desc">${upg.desc}</div>
-        <div class="card-stat">Level: ${stars} (${cur}/${upg.max})</div>
-        <button class="card-btn ${maxed?'maxed':'buy'}" onclick="${maxed?'':'buyUpgrade(\''+upg.id+'\')'}">${maxed?'MAX LEVEL':'UPGRADE 💰'+price.toLocaleString()}</button>`;
+      const cur=upgrades[upg.id]||0; const maxed=cur>=upg.max; const price=maxed?0:upg.prices[cur];
+      const card=document.createElement('div'); card.className='shop-card'+(maxed?' owned':'');
+      card.innerHTML=`<div class="card-ico">${upg.ico}</div><div class="card-name">${upg.name}</div><div class="card-stat">Level: ${cur}/${upg.max}</div><button class="card-btn ${maxed?'maxed':'buy'}" onclick="${maxed?'':'buyUpgrade(\''+upg.id+'\')'}">${maxed?'MAX LEVEL':'UPGRADE 💰'+price.toLocaleString()}</button>`;
       c.appendChild(card);
     }
   } else if(shopTabActive==='buffs'){
     for(let buf of BUFF_DEFS){
       const owned=!!buffs[buf.id];
-      const card=document.createElement('div');
-      card.className='shop-card'+(owned?' owned':'');
-      card.innerHTML=`
-        <div class="card-ico">${buf.ico}</div>
-        <div class="card-name">${buf.name}</div>
-        <div class="card-desc">${buf.desc}</div>
-        <div class="card-stat">Harga: 💰${buf.price.toLocaleString()}</div>
-        <button class="card-btn ${owned?'equipped-tag':'buy'}" onclick="${owned?'':'buyBuff(\''+buf.id+'\')'}">${owned?'✓ AKTIF':'BELI 💰'+buf.price.toLocaleString()}</button>`;
+      const card=document.createElement('div'); card.className='shop-card'+(owned?' owned':'');
+      card.innerHTML=`<div class="card-ico">${buf.ico}</div><div class="card-name">${buf.name}</div><button class="card-btn ${owned?'equipped-tag':'buy'}" onclick="${owned?'':'buyBuff(\''+buf.id+'\')'}">${owned?'✓ AKTIF':'BELI 💰'+buf.price.toLocaleString()}</button>`;
       c.appendChild(card);
     }
   }
 }
 
 function buyWeapon(wid){
-  const w=WEAPON_DEFS[wid];
-  if(balance<w.price){ floatText('Saldo kurang!',W/2,H/2,'#ff1744',18); return; }
-  balance-=w.price; inventory[wid]=true;
-  updateUI(); renderShop();
-  floatText('Senjata dibeli!',W/2,H/2,'#00ff88',18);
+  if(players[0].bal<WEAPON_DEFS[wid].price){ floatText('Saldo kurang!',W/2,H/2,'#ff1744',18); return; }
+  players[0].bal-=WEAPON_DEFS[wid].price; inventory[wid]=true; updateUI(); renderShop();
 }
 function equipWeapon(wid){
   const idx=equippedSlots.indexOf(null);
-  if(idx!==-1){ equippedSlots[idx]=wid; }
-  else { equippedSlots[activeSlot]=wid; }
+  if(idx!==-1) equippedSlots[idx]=wid; else equippedSlots[activeSlot]=wid;
   renderWeaponRow(); renderShop();
 }
 function unequipWeapon(wid){
@@ -927,163 +804,38 @@ function unequipWeapon(wid){
   renderWeaponRow(); renderShop();
 }
 function buyUpgrade(id){
-  const upg=UPGRADE_DEFS.find(u=>u.id===id);
-  const cur=upgrades[id]||0;
-  if(cur>=upg.max) return;
-  const price=upg.prices[cur];
-  if(balance<price){ floatText('Saldo kurang!',W/2,H/2,'#ff1744',18); return; }
-  balance-=price; upgrades[id]++;
-  updateUI(); renderShop();
-  floatText('Upgrade berhasil!',W/2,H/2,'#00ff88',18);
+  const upg=UPGRADE_DEFS.find(u=>u.id===id); const cur=upgrades[id]||0;
+  if(cur>=upg.max) return; const price=upg.prices[cur];
+  if(players[0].bal<price) return;
+  players[0].bal-=price; upgrades[id]++; updateUI(); renderShop();
 }
 function buyBuff(id){
-  const buf=BUFF_DEFS.find(b=>b.id===id);
-  if(balance<buf.price){ floatText('Saldo kurang!',W/2,H/2,'#ff1744',18); return; }
-  balance-=buf.price; buffs[id]=true;
-  updateUI(); renderShop();
-  floatText('Buff aktif!',W/2,H/2,'#00ff88',18);
+  if(players[0].bal<BUFF_DEFS.find(b=>b.id===id).price) return;
+  players[0].bal-=BUFF_DEFS.find(b=>b.id===id).price; buffs[id]=true; updateUI(); renderShop();
 }
 
-// ── BONUS WHEEL ───────────────────────────────────────────
-const ROULETTE_PRIZES=[
-  {label:'2× BET',mult:2,color:'#4caf50'},{label:'5× BET',mult:5,color:'#8bc34a'},
-  {label:'10× BET',mult:10,color:'#ffd700'},{label:'20× BET',mult:20,color:'#ff9800'},
-  {label:'50× BET',mult:50,color:'#ff5722'},{label:'JACKPOT!',mult:200,color:'#e91e63'},
-  {label:'3× BET',mult:3,color:'#009688'},{label:'MISS',mult:0,color:'#607d8b'},
-  {label:'8× BET',mult:8,color:'#2196f3'},{label:'15× BET',mult:15,color:'#9c27b0'},
-  {label:'1× BET',mult:1,color:'#795548'},{label:'30× BET',mult:30,color:'#f44336'},
-];
-const RANDOM_BONUSES=[
-  {label:'Free Drill',type:'drill',color:'#00e5ff'},{label:'5× BET',type:'coins',mult:5,color:'#ffd700'},
-  {label:'Free Bomb',type:'bomb',color:'#ff1744'},{label:'10× BET',type:'coins',mult:10,color:'#ff9800'},
-  {label:'20× BET',type:'coins',mult:20,color:'#ff5722'},{label:'50× BET',type:'coins',mult:50,color:'#e91e63'},
-  {label:'2× BET',type:'coins',mult:2,color:'#4caf50'},{label:'Free Roulette',type:'roulette',color:'#e040fb'},
-];
-let bonusAnimId=null, bonusPrizes=[], bonusFish=null, bonusType='';
-
-function openBonus(type,fish){
-  bonusType=type; bonusFish=fish;
-  bonusPrizes=type==='roulette'?ROULETTE_PRIZES:RANDOM_BONUSES;
-  document.getElementById('bonus-overlay').style.display='flex';
-  document.getElementById('bonus-title').textContent=type==='roulette'?'🎰 ROULETTE BONUS!':'🎁 LUCKY BONUS!';
-  document.getElementById('bonus-sub').textContent='Berputar...';
-  document.getElementById('bonus-result').textContent='';
-  document.getElementById('bonus-close').style.display='none';
-  document.getElementById('bonus-cd').textContent='';
-  const cv=document.getElementById('bonusCanvas'), cx=cv.getContext('2d');
-  const seg=Math.floor(Math.random()*bonusPrizes.length);
-  const segAng=(Math.PI*2)/bonusPrizes.length;
-  const targetAng=Math.PI*6+Math.PI*2-(seg*segAng+segAng/2)-Math.PI/2;
-  let elapsed=0; const dur=185;
-  if(bonusAnimId) cancelAnimationFrame(bonusAnimId);
-  function spin(){
-    elapsed++;
-    const t=Math.min(elapsed/dur,1), ease=1-Math.pow(1-t,4);
-    const ang=targetAng*ease;
-    drawWheel(ang,bonusPrizes,cv,cx);
-    if(elapsed<dur){ bonusAnimId=requestAnimationFrame(spin); }
-    else { drawWheel(targetAng,bonusPrizes,cv,cx); showBonusResult(bonusPrizes[seg]); }
-  }
-  spin();
-}
-function drawWheel(angle,prizes,cv,cx){
-  const R=cv.width/2-10, ox=cv.width/2, oy=cv.height/2;
-  const seg=(Math.PI*2)/prizes.length;
-  cx.clearRect(0,0,cv.width,cv.height);
-  for(let i=0;i<prizes.length;i++){
-    const a=angle+i*seg;
-    cx.beginPath(); cx.moveTo(ox,oy); cx.arc(ox,oy,R,a,a+seg); cx.closePath();
-    cx.fillStyle=prizes[i].color; cx.fill();
-    cx.strokeStyle='rgba(0,0,0,0.3)'; cx.lineWidth=1.5; cx.stroke();
-  }
-  for(let i=0;i<prizes.length;i++){
-    const a=angle+i*seg+seg/2;
-    cx.save(); cx.translate(ox+Math.cos(a)*R*0.68, oy+Math.sin(a)*R*0.68);
-    cx.rotate(a+Math.PI/2); cx.fillStyle='#fff'; cx.font='bold 10px Orbitron,Arial';
-    cx.textAlign='center'; cx.textBaseline='middle';
-    cx.shadowBlur=3; cx.shadowColor='rgba(0,0,0,0.9)'; cx.fillText(prizes[i].label,0,0); cx.restore();
-  }
-  cx.beginPath(); cx.arc(ox,oy,18,0,Math.PI*2);
-  cx.fillStyle='#ffd700'; cx.fill(); cx.strokeStyle='#fff'; cx.lineWidth=2; cx.stroke();
-  cx.beginPath(); cx.moveTo(ox,oy-R-4); cx.lineTo(ox-9,oy-R+13); cx.lineTo(ox+9,oy-R+13);
-  cx.closePath(); cx.fillStyle='#fff'; cx.shadowBlur=10; cx.shadowColor='#fff'; cx.fill();
-}
-function showBonusResult(prize){
-  document.getElementById('bonus-sub').textContent='Hasil:';
-  let resultText='';
-  if(prize.type==='drill'){ resultText='⚡ FREE DRILL!'; setTimeout(()=>{closeBonus();activateDrill();},1800); }
-  else if(prize.type==='bomb'){ resultText='💣 FREE BOMB!'; setTimeout(()=>{closeBonus();activateBombMode();},1800); }
-  else if(prize.type==='roulette'){ resultText='🎰 FREE SPIN!'; setTimeout(()=>{closeBonus();openBonus('roulette',bonusFish);},1800); }
-  else {
-    const mult=prize.mult||0, win=mult*bet;
-    resultText=mult===0?'Sayang...':'+'+win+' Koin!';
-    if(win>0){ balance+=win; totalWin+=win; floatText('+'+win,W/2,H/2,'#ffd700',22); updateUI(); }
-  }
-  let cd=3; const cdEl=document.getElementById('bonus-cd');
-  function tick(){
-    cdEl.textContent=cd>0?cd:'';
-    if(cd>0){cd--;setTimeout(tick,400);}
-    else{cdEl.textContent='';document.getElementById('bonus-result').textContent=resultText;document.getElementById('bonus-close').style.display='inline-block';if(bonusFish)bonusFish.init();}
-  }
-  tick();
-}
-function closeBonus(){ document.getElementById('bonus-overlay').style.display='none'; if(bonusAnimId)cancelAnimationFrame(bonusAnimId); }
-
-// ── GAME OVER ─────────────────────────────────────────────
 function showGameOver(){ if(gameOver)return; gameOver=true; document.getElementById('gameover-box').style.display='block'; }
 function restartGame(){
-  balance=10000; totalWin=0; level=1; bet=10; gameOver=false; autoFire=false;
-  jackpotPool=9999999; specialInst=null; shakeAmt=0;
-  bullets.length=0; particles.length=0; lasers.length=0;
+  players[0].bal=10000; totalWin=0; level=1; players[0].bet=10; gameOver=false; autoFire=false;
+  bullets.length=0; particles.length=0; lasers.length=0; inWorldRoulettes.length=0;
   document.getElementById('btn-auto').textContent='AUTO'; document.getElementById('btn-auto').classList.remove('on');
   document.getElementById('gameover-box').style.display='none';
-  document.getElementById('sp-bar').style.display='none';
   for(let f of fishes) f.init();
-  updateUI(); updateJackpot();
+  updateUI();
 }
 
-// ── PIN / GOD MODE ────────────────────────────────────────
-function openPin(){ document.getElementById('pin-overlay').style.display='flex'; document.getElementById('pin-input').value=''; document.getElementById('pin-err').textContent=''; }
-function closePinModal(){ document.getElementById('pin-overlay').style.display='none'; }
-function tryPin(val){
-  if(val.length<4) return;
-  if(val==='1124'){ closePinModal(); openGod(); }
-  else { document.getElementById('pin-err').textContent='PIN SALAH!'; document.getElementById('pin-input').value=''; }
-}
-function openGod(){ document.getElementById('god-overlay').style.display='flex'; document.getElementById('god-status').textContent=''; }
-function closeGod(){ document.getElementById('god-overlay').style.display='none'; }
-function godStatus(msg,c){ const el=document.getElementById('god-status'); el.textContent=msg; el.style.color=c||'#7af'; }
-function godAddBalance(){
-  const v=parseInt(document.getElementById('god-amount').value)||0;
-  if(v<=0){godStatus('Masukkan jumlah valid!','#ff1744');return;}
-  balance+=v; updateUI(); godStatus('+'+v.toLocaleString()+' saldo ditambahkan!','#00ff88');
-  floatText('GOD +'+v,W/2,H/2,'#e040fb',28);
-}
-function godSetBalance(){
-  const v=parseInt(document.getElementById('god-amount').value)||0;
-  if(v<0){godStatus('Masukkan jumlah valid!','#ff1744');return;}
-  balance=v; updateUI(); godStatus('Saldo diset ke '+v.toLocaleString(),'#00ff88');
-}
-function godUnlockAll(){
-  for(let wid in WEAPON_DEFS) inventory[wid]=true;
-  godStatus('Semua senjata di-unlock!','#00ff88'); renderWeaponRow();
-}
-function godMaxUpgrade(){
-  for(let upg of UPGRADE_DEFS) upgrades[upg.id]=upg.max;
-  godStatus('Semua upgrade maxed!','#00ff88');
-}
-function godClearBalance(){ balance=0; updateUI(); godStatus('Saldo direset ke 0','#ff1744'); }
-function godKillAll(){ for(let f of fishes){if(f.alive){spawnExplosion(f.x,f.y,f.glow);f.hp=0;killFish(f);}} godStatus('Semua ikan dibunuh!','#ff9100'); }
-
-// ── UI HELPERS ────────────────────────────────────────────
 function toggleAuto(){ autoFire=!autoFire; const b=document.getElementById('btn-auto'); b.textContent=autoFire?'AUTO ON':'AUTO'; b.classList.toggle('on',autoFire); }
-function changeBet(d,type){ if(type==='max'){bet=Math.min(balance,500);}else{bet=Math.max(10,Math.min(500,bet+d));} document.getElementById('h-bet').textContent=bet; }
+function changeBet(d,type){ 
+  if(type==='max') players[0].bet=Math.min(players[0].bal, 500); 
+  else players[0].bet=Math.max(10, Math.min(500, players[0].bet+d)); 
+  document.getElementById('h-bet').textContent=players[0].bet; 
+}
+
 function updateUI(){
-  document.getElementById('h-bal').textContent=Math.floor(balance).toLocaleString();
+  document.getElementById('h-bal').textContent=Math.floor(players[0].bal).toLocaleString();
   document.getElementById('h-win').textContent=Math.floor(totalWin).toLocaleString();
   document.getElementById('h-lvl').textContent=level;
-  // shield buff
-  if(buffs.shieldX2 && balance < 100) balance = 100;
+  if(buffs.shieldX2 && players[0].bal < 100) players[0].bal = 100;
 }
 function updateJackpot(){ document.getElementById('h-jack').textContent=jackpotPool.toLocaleString(); }
 
@@ -1092,16 +844,9 @@ let afId = 0;
 let lastLoopTime = 0;
 
 function loop(timestamp){
-  // Pastikan variabel timestamp tidak error pada eksekusi pertama
   if (!timestamp) timestamp = performance.now();
-  
-  // Limiter frame rate ke maksimal ~60 FPS
-  if (timestamp - lastLoopTime < 16) {
-    afId = requestAnimationFrame(loop);
-    return;
-  }
+  if (timestamp - lastLoopTime < 16) { afId = requestAnimationFrame(loop); return; }
   lastLoopTime = timestamp;
-
   frameCount++;
 
   if(shakeAmt>0){
@@ -1112,28 +857,32 @@ function loop(timestamp){
   ctx.clearRect(0,0,W,H);
   drawBG();
 
-  // fishes
+  // Fishes
   for(let f of fishes){ if(f.alive){f.update();f.draw();} }
 
-  // special
-  if(specialInst){
-    specialInst.update(); specialInst.draw();
-    spTimer--;
-    document.getElementById('sp-fill').style.width=((spTimer/spMax)*100)+'%';
-    if(spTimer<=0) endSpecial();
+  // In-World Roulettes
+  for(let i=inWorldRoulettes.length-1; i>=0; i--){
+    let r = inWorldRoulettes[i];
+    r.update(); r.draw();
+    if(r.timer < -60) inWorldRoulettes.splice(i,1); // Remove after delay
   }
 
-  // bullets
+  // Bullets & Lasers & Particles
   for(let i=bullets.length-1;i>=0;i--){ bullets[i].update(); bullets[i].draw(); if(!bullets[i].alive)bullets.splice(i,1); }
-
-  // lasers
   for(let i=lasers.length-1;i>=0;i--){ lasers[i].update(); lasers[i].draw(); if(lasers[i].life<=0)lasers.splice(i,1); }
-
-  // particles
+  
   for(let i=particles.length-1;i>=0;i--){
     const p=particles[i];
     p.x+=p.vx; p.y+=p.vy; p.vy+=0.14; p.life-=0.024;
     const a=Math.max(0,p.life/p.maxLife);
+    
+    // Tarik koin ke pemilik (Magnet effect)
+    if(p.isCoin && p.life < 0.6 && players[p.ownerId]) {
+       const owner = players[p.ownerId];
+       p.x += (owner.x - p.x) * 0.15;
+       p.y += (owner.y - p.y) * 0.15;
+    }
+
     ctx.save(); ctx.globalAlpha=a; ctx.shadowBlur=7; ctx.shadowColor=p.color;
     if(p.isCoin){
       ctx.fillStyle=p.color; ctx.beginPath();
@@ -1145,25 +894,39 @@ function loop(timestamp){
     if(p.life<=0)particles.splice(i,1);
   }
 
-  drawCannon();
+  drawCannons();
   if(shakeAmt>0) ctx.restore();
 
-  // auto fire — minigun fires every frame, others rate-limited
+  // BOT AI LOGIC
+  players.forEach((p, idx) => {
+    if(p.isBot && !gameOver) {
+      // Bot menembak dengan ritme berbeda (idx) agar tidak bersamaan persis
+      if (frameCount % 45 === idx * 7) {
+        // Cari target ikan di layar
+        let target = fishes.find(f => f.alive && f.x > 50 && f.x < W-50);
+        if (target) {
+          let ang = Math.atan2(target.y - p.y, target.x - p.x);
+          // Tambah sedikit eror/miss pada tembakan bot agar terlihat natural
+          ang += (Math.random()-0.5) * 0.15;
+          
+          if(p.bal < p.bet) p.bal += 100; // Auto-topup bot miskin
+          performShoot(p, ang);
+        }
+      }
+    }
+  });
+
+  // REAL PLAYER AUTO-FIRE
   if(autoFire && !gameOver){
     const slot=equippedSlots[activeSlot]||'single';
     const wDef=WEAPON_DEFS[slot];
-    if(wDef?.minigun){ shoot(); }
-    else if(frameCount%10===0){ shoot(); }
+    if(wDef?.minigun){ shootMainPlayer(); }
+    else if(frameCount%10===0){ shootMainPlayer(); }
   }
 
-  // jackpot pool drift
   if(frameCount%160===0 && jackpotPool<9999999){ jackpotPool+=Math.floor(Math.random()*60+15); updateJackpot(); }
-
-  // level up
   if(totalWin > level*600){ level++; floatText('⬆ LEVEL '+level,W/2,H/3,'#00e5ff',26); updateUI(); }
-
-  // game over check
-  if(!gameOver && balance<bet && !specialInst && !autoFire) showGameOver();
+  if(!gameOver && players[0].bal<players[0].bet && !autoFire) showGameOver();
 
   afId=requestAnimationFrame(loop);
 }
@@ -1171,28 +934,19 @@ function loop(timestamp){
 // ── INPUT ─────────────────────────────────────────────────
 window.addEventListener('mousemove', e=>{ mouse.x=e.clientX; mouse.y=e.clientY; });
 window.addEventListener('mousedown', e=>{
-  if(e.target.closest('.hud-bot')||e.target.closest('#shop-overlay')||e.target.closest('#bonus-overlay')||e.target.closest('#gameover')||e.target.closest('#god-overlay')||e.target.closest('#pin-overlay')) return;
-  shoot();
+  if(e.target.closest('.hud-bot')||e.target.closest('#weapon-row')||e.target.closest('#shop-overlay')||e.target.closest('#gameover')) return;
+  shootMainPlayer();
 });
 window.addEventListener('touchstart', e=>{
-  if(e.target.closest('.hud-bot')||e.target.closest('#shop-overlay')||e.target.closest('#bonus-overlay')||e.target.closest('#gameover')||e.target.closest('#god-overlay')||e.target.closest('#pin-overlay')) return;
-  const t=e.touches[0]; mouse.x=t.clientX; mouse.y=t.clientY; shoot(); e.preventDefault();
+  if(e.target.closest('.hud-bot')||e.target.closest('#weapon-row')||e.target.closest('#shop-overlay')||e.target.closest('#gameover')) return;
+  const t=e.touches[0]; mouse.x=t.clientX; mouse.y=t.clientY; shootMainPlayer(); e.preventDefault();
 },{passive:false});
 window.addEventListener('touchmove', e=>{ const t=e.touches[0]; mouse.x=t.clientX; mouse.y=t.clientY; },{passive:true});
-
-// Memaksa scroll kembali ke atas saat keyboard ditutup
-document.querySelectorAll('input').forEach(input => {
-  input.addEventListener('blur', () => {
-    window.scrollTo(0, 0);
-  });
-});
 
 // ── INIT ──────────────────────────────────────────────────
 for(let i=0;i<18;i++) fishes.push(new Fish());
 renderWeaponRow();
 updateUI(); updateJackpot();
-
-// Memulai fungsi loop
 requestAnimationFrame(loop);
 </script>
 </body>
