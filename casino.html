@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Ocean Emperor V6 — Animated Bonus Edition</title>
+<title>Ocean Emperor V6 — Crazy Bots & Bouncing Bosses</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -131,10 +131,6 @@ html,body{width:100%;height:100%;overflow:hidden;position:fixed;background:var(-
 .jw-amount{font-size:56px;font-weight:900;color:#fff;font-family:var(--font-hud);text-shadow:0 0 30px var(--c-gold);}
 .jw-btn{margin-top:22px;background:var(--c-gold);color:#000;border:none;padding:14px 36px;font-size:12px;font-weight:900;border-radius:10px;cursor:pointer;font-family:var(--font-hud);letter-spacing:2px;}
 
-/* BONUS FISH AURA ANIMATIONS */
-@keyframes bossAura{0%,100%{box-shadow:0 0 30px #ff9800;}50%{box-shadow:0 0 60px #ff9800;}}
-@keyframes jackpotPulse{0%,100%{filter:brightness(1);}50%{filter:brightness(1.6) hue-rotate(20deg);}}
-
 /* MOBILE */
 @media(max-width:480px){
   .hud-val{font-size:11px;}.jp-val{font-size:14px;}.hud-label{font-size:5.5px;}
@@ -217,7 +213,7 @@ html,body{width:100%;height:100%;overflow:hidden;position:fixed;background:var(-
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
-//  OCEAN EMPEROR V6 — Animated Bonus + Full Audio Edition
+//  OCEAN EMPEROR V6.5 — Bouncing Bosses & Competitive Bots
 // ═══════════════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('gameCanvas');
@@ -240,7 +236,6 @@ function initAudio(){
 }
 function resumeAC(){ if(AC.state==='suspended') AC.resume(); }
 
-// ── BACKGROUND MUSIC (Procedural Arcade) ──
 function startBGM(){
   const notes=[220,246,261,294,329,349,392,440,493,523];
   const melody=[0,2,4,7,5,3,1,4,6,8,7,5,3,0,2,4];
@@ -264,7 +259,6 @@ function startBGM(){
   playNote();
 }
 
-// ── AMBIENCE: Underwater bubbles ──
 function startAmbience(){
   const playBubble=()=>{
     if(!soundOn){setTimeout(playBubble,800+Math.random()*1200);return;}
@@ -284,8 +278,6 @@ function startAmbience(){
   playBubble();
 }
 
-// ── SFX LIBRARY ──
-// FIX: Mengganti semua format invalid seperti shoot:(){ menjadi shoot() {
 const SFX = {
   shoot() { _sfx([{t:'square',f:800,ef:200,d:0.05,v:0.3}]); },
   hit() {   _sfx([{t:'sawtooth',f:300,ef:80,d:0.08,v:0.4}]); },
@@ -355,13 +347,30 @@ function toggleSound(){
   document.getElementById('sound-btn').textContent=(soundOn?'🔊':'🔇')+' SFX';
 }
 
-// ── PLAYERS ─────────────────────────────────────────────────────
+// ── WEAPONS DEFS ────────────────────────────────────────────────
+const WEAPON_DEFS={
+  single: {id:'single', name:'Single Shot', ico:'🔫',dmg:1,multi:1,winMod:1.0, price:0,   color:'#00e5ff',desc:'Tembakan standar'},
+  double: {id:'double', name:'Double Shot', ico:'🎯',dmg:1,multi:2,winMod:1.15,price:600, color:'#ffd700',desc:'2 peluru simultan'},
+  triple: {id:'triple', name:'Triple Shot', ico:'💥',dmg:1,multi:3,winMod:1.25,price:1400,color:'#ff9100',desc:'3 peluru menyebar'},
+  laser:  {id:'laser',  name:'Laser Beam',  ico:'⚡',dmg:3,multi:1,winMod:1.38,price:2800,color:'#e040fb',piercing:true,desc:'Tembus semua ikan'},
+  missile:{id:'missile',name:'Missile',     ico:'🚀',dmg:4,multi:1,winMod:1.45,price:4000,color:'#ff2266',explosive:true,desc:'Ledakan area besar'},
+  shotgun:{id:'shotgun',name:'Shotgun',     ico:'💢',dmg:1,multi:6,winMod:1.32,price:2200,color:'#ff8a65',desc:'6 peluru tersebar'},
+  sniper: {id:'sniper', name:'Sniper',      ico:'🎯',dmg:6,multi:1,winMod:1.55,price:4500,color:'#00ff88',desc:'Damage tinggi'},
+  plasma: {id:'plasma', name:'Plasma Burst',ico:'🌀',dmg:5,multi:1,winMod:1.6, price:5500,color:'#e040fb',plasma:true,desc:'AoE plasma'},
+  minigun:{id:'minigun',name:'Minigun',     ico:'🔥',dmg:1,multi:1,winMod:1.22,price:3200,color:'#ff5722',minigun:true,desc:'Rate of fire ekstrem'},
+  nuke:   {id:'nuke',   name:'Nuke Cannon', ico:'☢', dmg:12,multi:1,winMod:2.2,price:9000,color:'#00ff88',nuke:true,desc:'Ledakan masif'},
+  frost:  {id:'frost',  name:'Frost Ray',   ico:'❄️',dmg:2,multi:1,winMod:1.35,price:3500,color:'#80d8ff',frost:true,desc:'Memperlambat ikan'},
+  thunder:{id:'thunder',name:'Thunder',     ico:'⚡',dmg:4,multi:1,winMod:1.5, price:5000,color:'#ffd740',chain:true,desc:'Kilat berantai'},
+};
+
+// ── PLAYERS & BOTS ──────────────────────────────────────────────
 const PLAYER_COLORS=['#00e5ff','#ff2266','#00ffaa','#ffd700','#c040ff','#ff7700'];
 const PLAYER_NAMES=['YOU','BOT-R','BOT-G','BOT-Y','BOT-P','BOT-O'];
 const players=PLAYER_COLORS.map((color,i)=>({
-  id:i,isBot:i>0,name:PLAYER_NAMES[i],color,
-  bal:i===0?10000:3000+Math.random()*4000,bet:10,
-  x:0,y:0,ang:0,totalKills:0,totalWin:0,fireCount:0
+  id:i, isBot:i>0, name:PLAYER_NAMES[i], color,
+  bal:i===0?10000:3000+Math.random()*8000, bet:10,
+  x:0, y:0, ang:0, totalKills:0, totalWin:0, fireCount:0,
+  cooldown: 0, activeWeapon: 'single'
 }));
 
 function resize(){
@@ -388,21 +397,6 @@ let frameCount=0,shakeAmt=0,shakeX=0,shakeY=0,gameOver=false;
 let mouse={x:W/2,y:H/2},comboKills=0,comboTimer=0,lastFire=0,showLB=false,nukeFlash=0;
 let totalKills=0, audioStarted=false;
 
-// ── WEAPONS ─────────────────────────────────────────────────────
-const WEAPON_DEFS={
-  single: {id:'single', name:'Single Shot', ico:'🔫',dmg:1,multi:1,winMod:1.0, price:0,   color:'#00e5ff',desc:'Tembakan standar'},
-  double: {id:'double', name:'Double Shot', ico:'🎯',dmg:1,multi:2,winMod:1.15,price:600, color:'#ffd700',desc:'2 peluru simultan'},
-  triple: {id:'triple', name:'Triple Shot', ico:'💥',dmg:1,multi:3,winMod:1.25,price:1400,color:'#ff9100',desc:'3 peluru menyebar'},
-  laser:  {id:'laser',  name:'Laser Beam',  ico:'⚡',dmg:3,multi:1,winMod:1.38,price:2800,color:'#e040fb',piercing:true,desc:'Tembus semua ikan'},
-  missile:{id:'missile',name:'Missile',     ico:'🚀',dmg:4,multi:1,winMod:1.45,price:4000,color:'#ff2266',explosive:true,desc:'Ledakan area besar'},
-  shotgun:{id:'shotgun',name:'Shotgun',     ico:'💢',dmg:1,multi:6,winMod:1.32,price:2200,color:'#ff8a65',desc:'6 peluru tersebar'},
-  sniper: {id:'sniper', name:'Sniper',      ico:'🎯',dmg:6,multi:1,winMod:1.55,price:4500,color:'#00ff88',desc:'Damage tinggi'},
-  plasma: {id:'plasma', name:'Plasma Burst',ico:'🌀',dmg:5,multi:1,winMod:1.6, price:5500,color:'#e040fb',plasma:true,desc:'AoE plasma'},
-  minigun:{id:'minigun',name:'Minigun',     ico:'🔥',dmg:1,multi:1,winMod:1.22,price:3200,color:'#ff5722',minigun:true,desc:'Rate of fire ekstrem'},
-  nuke:   {id:'nuke',   name:'Nuke Cannon', ico:'☢', dmg:12,multi:1,winMod:2.2,price:9000,color:'#00ff88',nuke:true,desc:'Ledakan masif'},
-  frost:  {id:'frost',  name:'Frost Ray',   ico:'❄️',dmg:2,multi:1,winMod:1.35,price:3500,color:'#80d8ff',frost:true,desc:'Memperlambat ikan'},
-  thunder:{id:'thunder',name:'Thunder',     ico:'⚡',dmg:4,multi:1,winMod:1.5, price:5000,color:'#ffd740',chain:true,desc:'Kilat berantai'},
-};
 const MAX_SLOTS=3;
 let equippedSlots=['single',null,null],activeSlot=0,inventory={single:true};
 let upgrades={dmg:0,rate:0,winrate:0,radius:0};
@@ -427,27 +421,26 @@ const MISSIONS=[
   {id:'m4',desc:'Menangkan 3000 coins',target:'win',    goal:3000, prog:0,reward:600, done:false},
   {id:'m5',desc:'Bunuh 3 ikan jackpot',target:'jackpot',goal:3,    prog:0,reward:3000,done:false},
 ];
-const ACHIEVEMENTS={
-  first_kill:  {name:'First Blood',    desc:'Bunuh ikan pertama!',         icon:'🩸',done:false},
-  kill_50:     {name:'Sharpshooter',   desc:'50 ikan dijatuhkan',          icon:'🎯',done:false},
-  kill_200:    {name:'Ocean Destroyer',desc:'200 ikan dijatuhkan',         icon:'💀',done:false},
-  jackpot_hit: {name:'Lucky Emperor',  desc:'Menangkan Jackpot!',          icon:'🎰',done:false},
-  combo_x5:    {name:'Combo Fever',    desc:'Capai combo 5×!',             icon:'🔥',done:false},
-  combo_x10:   {name:'Insane Combo',   desc:'Capai combo 10×!',            icon:'⚡',done:false},
-  win_10k:     {name:'Millionaire Jr.',desc:'Kumpulkan 10k kemenangan',    icon:'💰',done:false},
-  win_100k:    {name:'Ocean Emperor',  desc:'Kumpulkan 100k kemenangan',   icon:'👑',done:false},
-  level_10:    {name:'Veteran',        desc:'Capai Level 10',              icon:'⭐',done:false},
-  all_weapons: {name:'Arsenal',        desc:'Miliki semua senjata',        icon:'🔫',done:false},
-};
+const ACHIEVEMENTS=[
+  {id:'first_kill',  name:'First Blood',    desc:'Bunuh ikan pertama!',         icon:'🩸',done:false},
+  {id:'kill_50',     name:'Sharpshooter',   desc:'50 ikan dijatuhkan',          icon:'🎯',done:false},
+  {id:'kill_200',    name:'Ocean Destroyer',desc:'200 ikan dijatuhkan',         icon:'💀',done:false},
+  {id:'jackpot_hit', name:'Lucky Emperor',  desc:'Menangkan Jackpot!',          icon:'🎰',done:false},
+  {id:'combo_x5',    name:'Combo Fever',    desc:'Capai combo 5×!',             icon:'🔥',done:false},
+  {id:'combo_x10',   name:'Insane Combo',   desc:'Capai combo 10×!',            icon:'⚡',done:false},
+  {id:'win_10k',     name:'Millionaire Jr.',desc:'Kumpulkan 10k kemenangan',    icon:'💰',done:false},
+  {id:'win_100k',    name:'Ocean Emperor',  desc:'Kumpulkan 100k kemenangan',   icon:'👑',done:false},
+  {id:'level_10',    name:'Veteran',        desc:'Capai Level 10',              icon:'⭐',done:false},
+  {id:'all_weapons', name:'Arsenal',        desc:'Miliki semua senjata',        icon:'🔫',done:false},
+];
 
 // ═══════════════════════════════════════════════════════════════════
-//  FISH TYPES — Each bonus fish has unique animation properties
+//  FISH TYPES
 // ═══════════════════════════════════════════════════════════════════
 const FISH_TYPES=[
   {id:'small',   hp:3,  val:8,   speed:2.4,size:17,color:'#4fc3f7',glow:'#00bcd4',prob:0.26},
   {id:'med',     hp:8,  val:28,  speed:1.6,size:25,color:'#81c784',glow:'#4caf50',prob:0.19},
   {id:'large',   hp:20, val:70,  speed:1.0,size:35,color:'#ff8a65',glow:'#f4511e',prob:0.12},
-  // ── BONUS FISH ──
   {id:'boss',    hp:100,val:450, speed:0.4,size:58,color:'#ff6f00',glow:'#ff9800',prob:0.05},
   {id:'drill',   hp:32, val:0,   speed:1.4,size:38,color:'#00e5ff',glow:'#00bcd4',prob:0.055},
   {id:'bomb',    hp:32, val:0,   speed:1.1,size:37,color:'#ff2266',glow:'#ff5722',prob:0.055},
@@ -463,9 +456,6 @@ function pickFishType(){let r=Math.random(),c=0;for(let t of FISH_TYPES){c+=t.pr
 const frozenFish=new Set();
 const fishes=[],bullets=[],_particles=[],lasers=[],inWorldRoulettes=[],chainLightnings=[];
 
-// ══════════════════════════════════════════════════════════════════
-//  FISH CLASS — Unique draw per bonus type
-// ══════════════════════════════════════════════════════════════════
 const bonusSounds={
   boss:'boss_appear',drill:'drill_appear',bomb:'bomb_appear',
   roulette:'bonus_appear',random:'bonus_appear',jackpot:'jackpot_appear',
@@ -487,24 +477,38 @@ class Fish {
       orbitAngle:Math.random()*Math.PI*2,
       scaleAnim:1,scaleDir:0.003,
       appeared:false,
+      vx:0, vy:0, lastHitBy:-1
     });
     this.x=this.dir===1?-90:W+90;
     this.baseY=(hudTopH+45)+Math.random()*(H-hudTopH-hudBotH-140);
     this.y=this.baseY;
+
+    // BOUNCING DRILL
+    if(this.id === 'drill') {
+      this.drillTimer = 600 + Math.floor(Math.random() * 300); // 10-15s (60fps)
+      this.vx = (Math.random() > 0.5 ? 1 : -1) * (4 + Math.random() * 4);
+      this.vy = (Math.random() > 0.5 ? 1 : -1) * (4 + Math.random() * 4);
+    }
+    // HOPPING BOMB
+    if(this.id === 'bomb') {
+      this.bombTimer = 480 + Math.floor(Math.random() * 240); // 8-12s
+      this.vx = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 3);
+      this.vy = -5 - Math.random() * 5;
+      this.gravity = 0.2;
+      this.beepPhase = 0;
+    }
+
     if(this.id==='jackpot') this.countUp=100+Math.floor(Math.random()*400);
     if(this.id==='boss')    this.roarTimer=0;
     if(this.id==='ghost')   this.ghostPhase=0;
     if(this.id==='electric'){this.zapTimer=0;this.zapTarget=null;}
     if(this.id==='roulette'){this.spinAngle=0;}
-    if(this.id==='bomb'){this.fuseTimer=0;this.beepPhase=0;}
     if(this.id==='twin'){this.splitReady=false;}
-    fishInitSounds.delete(this);
   }
+  
   get speed(){return frozenFish.has(this)?this.baseSpeed*0.2:this.baseSpeed;}
   
   update(){
-    this.x+=this.speed*this.dir;
-    this.y=this.baseY+Math.sin(frameCount*this.waveFreq+this.wave)*this.waveAmp;
     this.tailPh+=0.15;
     this.auraPhase+=0.04;
     this.orbitAngle+=0.03;
@@ -513,7 +517,69 @@ class Fish {
     if(this.flash>0) this.flash--;
     if(this.frozen>0){this.frozen--;if(this.frozen===0)frozenFish.delete(this);}
 
-    // Type-specific update logic
+    if(!this.appeared && this.x > 0 && this.x < W) {
+      this.appeared = true;
+      if(soundOn && bonusSounds[this.id]) SFX[bonusSounds[this.id]]();
+    }
+
+    // ── BOUNCING DRILL LOGIC ──
+    if (this.id === 'drill') {
+      this.x += this.vx; this.y += this.vy;
+      // Bounce Check (Only after it enters the screen)
+      if (this.appeared) {
+        if (this.x < 20 && this.vx < 0) { this.x = 20; this.vx *= -1; }
+        if (this.x > W - 20 && this.vx > 0) { this.x = W - 20; this.vx *= -1; }
+        if (this.y < hudTopH + 30 && this.vy < 0) { this.y = hudTopH + 30; this.vy *= -1; }
+        if (this.y > H - hudBotH - 30 && this.vy > 0) { this.y = H - hudBotH - 30; this.vy *= -1; }
+      }
+      this.orbitAngle = Math.atan2(this.vy, this.vx); // Rotate visual towards movement
+
+      this.drillTimer--;
+      if (this.drillTimer <= 0) {
+        explodeAt(this.x, this.y, 450 * (1 + upgrades.radius * 0.15), 40, this.lastHitBy);
+        floatText('💥 TIME UP!', this.x, this.y, '#ff2266', 28);
+        this.init(); 
+      }
+      return; 
+    }
+
+    // ── HOPPING BOMB LOGIC ──
+    if (this.id === 'bomb') {
+      this.x += this.vx;
+      this.vy += this.gravity;
+      this.y += this.vy;
+      this.beepPhase += 0.2 + (1 - this.bombTimer / 600) * 0.5; // beep faster
+
+      if (this.appeared) {
+        if (this.x < 20 && this.vx < 0) { this.x = 20; this.vx *= -1; }
+        if (this.x > W - 20 && this.vx > 0) { this.x = W - 20; this.vx *= -1; }
+      }
+
+      // Hit Ground
+      if (this.y > H - hudBotH - 40 && this.vy > 0) {
+        this.y = H - hudBotH - 40;
+        this.vy = -6 - Math.random() * 4; // Hop again
+        this.vx = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 4);
+        
+        // Small explosion when hitting ground (damages others, not itself)
+        explodeAt(this.x, this.y, 100, 10, this.lastHitBy, this);
+        if(soundOn) SFX.bomb_appear();
+      }
+
+      this.bombTimer--;
+      if (this.bombTimer <= 0) {
+        // Massive explosion at the end
+        nukeAll(this.lastHitBy);
+        floatText('💥 MEGA BOOM!', this.x, this.y, '#ff2266', 36);
+        this.init();
+      }
+      return; 
+    }
+
+    // NORMAL FISH MOVEMENT
+    this.x += this.speed * this.dir;
+    this.y = this.baseY + Math.sin(frameCount * this.waveFreq + this.wave) * this.waveAmp;
+
     if(this.id==='jackpot'&&frameCount%18===0) this.countUp+=Math.floor(12+Math.random()*16);
     if(this.id==='boss'){this.roarTimer++;if(this.roarTimer%180===0){floatText('👹ROAR!',this.x,this.y-70,'#ff9800',22);SFX.boss_appear&&soundOn&&SFX.boss_appear();}}
     if(this.id==='ghost') this.ghostPhase=Math.sin(frameCount*0.06+this.wave);
@@ -521,14 +587,7 @@ class Fish {
       this.zapTimer++;
       if(this.zapTimer%40===0&&soundOn) SFX.electric_appear();
     }
-    if(this.id==='bomb'){this.beepPhase+=0.15;}
     if(this.id==='roulette'){this.spinAngle+=0.04;}
-
-    // Sound on first appearance in-view
-    if(!this.appeared&&this.x>0&&this.x<W&&bonusSounds[this.id]){
-      this.appeared=true;
-      if(soundOn) SFX[bonusSounds[this.id]]&&SFX[bonusSounds[this.id]]();
-    }
 
     const marg=this.size+95;
     if((this.dir===1&&this.x>W+marg)||(this.dir===-1&&this.x<-marg)) this.init();
@@ -537,15 +596,17 @@ class Fish {
   draw(){
     ctx.save();
     ctx.translate(this.x,this.y);
-    const fl=this.dir===-1?-1:1;
+    let fl=this.dir===-1?-1:1;
 
-    // Flash hit effect
     if(this.flash>0) ctx.globalAlpha=0.35+0.65*Math.sin(this.flash*1.1);
 
-    // Dispatch to per-type draw
+    if (this.id === 'drill') {
+      ctx.rotate(this.orbitAngle); // Point in movement direction
+      fl = 1; // Don't flip horizontally if rotating
+    }
+
     ctx.scale(fl,1);
     switch(this.id){
-      case 'small': case 'med': case 'large': this._drawBasicFish(); break;
       case 'boss':     this._drawBoss(); break;
       case 'drill':    this._drawDrill(); break;
       case 'bomb':     this._drawBomb(); break;
@@ -562,20 +623,17 @@ class Fish {
     this._drawHPBar();
   }
 
-  // ── BASIC FISH ────────────────────────────────────────────────
+  // ── DRAWING METHODS ───────────────────────────────────────────
   _drawBasicFish(){
     const c=this.frozen>0?'#b3e5fc':this.color;
     const g=this.frozen>0?'#80d8ff':this.glow;
     ctx.shadowBlur=18+Math.sin(this.auraPhase)*6; ctx.shadowColor=g;
-    // Body
     ctx.beginPath(); ctx.ellipse(0,0,this.size,this.size*0.52,0,0,Math.PI*2);
     ctx.fillStyle=c; ctx.fill();
-    // Tail
     const tw=Math.sin(this.tailPh)*10;
     ctx.beginPath(); ctx.moveTo(-this.size+4,0);
     ctx.lineTo(-this.size-18,-12+tw); ctx.lineTo(-this.size-18,12+tw); ctx.closePath();
     ctx.fillStyle=c; ctx.fill();
-    // Fin
     ctx.beginPath(); ctx.moveTo(-this.size*0.2,-this.size*0.52);
     ctx.lineTo(this.size*0.1,-this.size*0.88); ctx.lineTo(this.size*0.4,-this.size*0.52);
     ctx.fillStyle=c; ctx.fill();
@@ -584,11 +642,9 @@ class Fish {
     if(this.frozen>0) this._drawFrostRing();
   }
 
-  // ── BOSS FISH ──────────────────────────────────────────────────
   _drawBoss(){
     const s=this.size;
     const pulseR=s+(Math.sin(this.auraPhase)*8);
-    // Outer aura rings
     for(let r=0;r<3;r++){
       const ringR=pulseR+r*14;
       const a=0.15-r*0.04;
@@ -597,7 +653,6 @@ class Fish {
       ctx.beginPath(); ctx.arc(0,0,ringR,0,Math.PI*2); ctx.stroke();
     }
     ctx.globalAlpha=1;
-    // Spiky body
     ctx.shadowBlur=30; ctx.shadowColor='#ff9800';
     ctx.fillStyle='#cc3300';
     ctx.beginPath();
@@ -608,37 +663,30 @@ class Fish {
       i===0?ctx.moveTo(Math.cos(a)*sr,Math.sin(a)*sr):ctx.lineTo(Math.cos(a)*sr,Math.sin(a)*sr);
     }
     ctx.closePath(); ctx.fill();
-    // Body core
     ctx.fillStyle='#ff4400';
     ctx.beginPath(); ctx.ellipse(0,0,s*0.8,s*0.55,0,0,Math.PI*2); ctx.fill();
-    // Pattern
     ctx.fillStyle='rgba(255,200,0,0.3)';
     for(let i=0;i<6;i++){
       const a=this.orbitAngle+i*(Math.PI/3);
       ctx.beginPath(); ctx.arc(Math.cos(a)*s*0.45,Math.sin(a)*s*0.45,4,0,Math.PI*2); ctx.fill();
     }
     ctx.shadowBlur=0;
-    // Crown
     ctx.fillStyle='#ffd700'; ctx.font=`bold ${Math.floor(s*0.55)}px Arial`;
     ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('👑',0,-s*0.1);
-    // Angry eyes
     ctx.shadowBlur=10; ctx.shadowColor='#ff0000';
     ctx.fillStyle='#ff0000';
     ctx.beginPath(); ctx.arc(s*0.35,-s*0.18,s*0.15,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#000';
     ctx.beginPath(); ctx.arc(s*0.37,-s*0.18,s*0.08,0,Math.PI*2); ctx.fill();
-    // HP tag
     ctx.shadowBlur=0; ctx.scale(-1,1); ctx.fillStyle='#ff9800';
     ctx.font=`bold ${Math.floor(s*0.28)}px Orbitron,Arial`;
     ctx.textAlign='center'; ctx.fillText('BOSS',0,-s-20);
     ctx.scale(-1,1);
   }
 
-  // ── DRILL FISH ────────────────────────────────────────────────
   _drawDrill(){
     const s=this.size;
     const spin=frameCount*0.12;
-    // Electric aura
     ctx.shadowBlur=25+Math.sin(this.auraPhase)*10; ctx.shadowColor='#00e5ff';
     for(let i=0;i<8;i++){
       const a=spin+i*(Math.PI/4);
@@ -648,12 +696,10 @@ class Fish {
       ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r); ctx.stroke();
     }
     ctx.globalAlpha=1;
-    // Body
     ctx.fillStyle='#004060';
     ctx.beginPath(); ctx.ellipse(0,0,s,s*0.5,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#00a0c0';
     ctx.beginPath(); ctx.ellipse(0,0,s*0.7,s*0.36,0,0,Math.PI*2); ctx.fill();
-    // Spinning drill tip
     ctx.save(); ctx.translate(s*0.7,0); ctx.rotate(spin*2);
     ctx.fillStyle='#00e5ff'; ctx.shadowBlur=15; ctx.shadowColor='#00e5ff';
     for(let i=0;i<4;i++){
@@ -662,7 +708,6 @@ class Fish {
       ctx.lineTo(Math.cos(a+0.4)*10,Math.sin(a+0.4)*10); ctx.closePath(); ctx.fill();
     }
     ctx.restore();
-    // Sparks
     ctx.shadowBlur=0;
     if(frameCount%6<3){
       ctx.fillStyle='#00ffff'; ctx.globalAlpha=0.8;
@@ -674,56 +719,50 @@ class Fish {
       ctx.globalAlpha=1;
     }
     ctx.shadowBlur=0;
-    ctx.scale(-1,1); ctx.fillStyle='#00e5ff'; ctx.font=`bold 11px Orbitron,Arial`;
+    
+    // Fix text rotation so it always stays upright
+    ctx.save();
+    ctx.rotate(-this.orbitAngle); 
+    ctx.fillStyle='#00e5ff'; ctx.font=`bold 11px Orbitron,Arial`;
     ctx.textAlign='center'; ctx.fillText('DRILL',0,-s-14);
-    ctx.scale(-1,1);
+    ctx.restore();
   }
 
-  // ── BOMB FISH ─────────────────────────────────────────────────
   _drawBomb(){
     const s=this.size;
     const blink=Math.sin(this.beepPhase)*0.5+0.5;
-    // Danger rings
     const pct=1-this.hp/this.maxHp;
     const ringSpeed=1+pct*3;
     ctx.shadowBlur=20+blink*20; ctx.shadowColor=`rgba(255,${Math.floor(100-blink*100)},0,1)`;
-    // Pulse ring expands outward
     const ringR=s+((frameCount*ringSpeed)%30);
     ctx.globalAlpha=Math.max(0,(30-(frameCount*ringSpeed)%30)/30)*0.5;
     ctx.strokeStyle='#ff2266'; ctx.lineWidth=3;
     ctx.beginPath(); ctx.arc(0,0,ringR,0,Math.PI*2); ctx.stroke();
     ctx.globalAlpha=1;
-    // Body
     ctx.fillStyle=`rgb(${Math.floor(180+blink*75)},${Math.floor(20-blink*20)},${Math.floor(20-blink*20)})`;
     ctx.beginPath(); ctx.arc(0,0,s*0.88,0,Math.PI*2); ctx.fill();
-    // Danger stripes
     ctx.save(); ctx.clip();
     ctx.fillStyle='rgba(0,0,0,0.3)';
     for(let i=-3;i<4;i++){
       ctx.fillRect(i*12-s,-(s),8,s*2.2);
     }
     ctx.restore();
-    // Fuse
     ctx.strokeStyle='#886633'; ctx.lineWidth=3; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(0,-s*0.88);
     ctx.quadraticCurveTo(s*0.4,-s*1.3,s*0.2,-s*1.6); ctx.stroke();
-    // Fuse spark
     ctx.fillStyle=`rgba(255,${Math.floor(200+blink*55)},0,${0.7+blink*0.3})`;
     ctx.shadowBlur=12+blink*8; ctx.shadowColor='#ff8800';
     ctx.beginPath(); ctx.arc(s*0.2,-s*1.6,4+blink*2,0,Math.PI*2); ctx.fill();
     ctx.shadowBlur=0;
-    // Skull icon
     ctx.font=`bold ${Math.floor(s*0.65)}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText('💣',0,s*0.05);
     ctx.scale(-1,1); ctx.fillStyle='#ff2266'; ctx.font=`bold 11px Orbitron,Arial`;
     ctx.fillText('BOMB',0,-s-16); ctx.scale(-1,1);
   }
 
-  // ── ROULETTE FISH ─────────────────────────────────────────────
   _drawRouletteFish(){
     const s=this.size;
     const spin=this.spinAngle;
-    // Shimmer aura
     for(let i=0;i<6;i++){
       const a=spin+i*(Math.PI/3);
       const r=s+10+Math.sin(this.auraPhase+i)*5;
@@ -733,7 +772,6 @@ class Fish {
       ctx.beginPath(); ctx.arc(0,0,r,a,a+0.5); ctx.stroke();
     }
     ctx.globalAlpha=1; ctx.shadowBlur=0;
-    // Roulette wheel body
     const WEDGE_COLORS=['#e91e63','#ff5722','#ff9800','#ffc107','#4caf50','#2196f3','#9c27b0','#607d8b'];
     for(let i=0;i<8;i++){
       const a=spin+i*(Math.PI/4);
@@ -741,10 +779,8 @@ class Fish {
       ctx.fillStyle=WEDGE_COLORS[i]; ctx.fill();
       ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=1; ctx.stroke();
     }
-    // Center
     ctx.fillStyle='#111'; ctx.beginPath(); ctx.arc(0,0,s*0.3,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#ffd700'; ctx.beginPath(); ctx.arc(0,0,s*0.18,0,Math.PI*2); ctx.fill();
-    // Pointer
     ctx.fillStyle='#fff'; ctx.shadowBlur=6; ctx.shadowColor='#fff';
     ctx.beginPath(); ctx.moveTo(0,-s-2); ctx.lineTo(-5,-s+8); ctx.lineTo(5,-s+8); ctx.closePath(); ctx.fill();
     ctx.shadowBlur=0;
@@ -752,26 +788,21 @@ class Fish {
     ctx.textAlign='center'; ctx.fillText('ROULETTE',0,-s-16); ctx.scale(-1,1);
   }
 
-  // ── RANDOM BOX FISH ───────────────────────────────────────────
   _drawRandomBox(){
     const s=this.size;
     const bobScale=0.96+0.04*Math.sin(this.auraPhase*2);
     ctx.scale(bobScale,bobScale);
-    // Rainbow aura
     const hue=(frameCount*3)%360;
     ctx.shadowBlur=22+Math.sin(this.auraPhase)*8; ctx.shadowColor=`hsl(${hue},100%,60%)`;
     ctx.strokeStyle=`hsl(${hue},100%,60%)`; ctx.lineWidth=3;
     ctx.beginPath(); ctx.arc(0,0,s+8+Math.sin(this.auraPhase)*4,0,Math.PI*2); ctx.stroke();
-    // Box body
     const hs=s*0.8;
     ctx.fillStyle=`hsl(${(hue+60)%360},70%,40%)`;
     ctx.shadowBlur=15; ctx.shadowColor=`hsl(${hue},100%,60%)`;
     ctx.fillRect(-hs,-hs,hs*2,hs*2);
-    // Ribbon
     ctx.fillStyle=`hsl(${hue},100%,60%)`;
     ctx.fillRect(-hs,-s*0.15,hs*2,s*0.3);
     ctx.fillRect(-s*0.15,-hs,s*0.3,hs*2);
-    // Bow
     ctx.font=`${Math.floor(s*0.55)}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
     ctx.fillText('🎁',0,0);
     ctx.shadowBlur=0; ctx.scale(1/bobScale,1/bobScale);
@@ -779,12 +810,10 @@ class Fish {
     ctx.textAlign='center'; ctx.fillText('LUCKY BOX',0,-s-18); ctx.scale(-1,1);
   }
 
-  // ── JACKPOT FISH ──────────────────────────────────────────────
   _drawJackpot(){
     const s=this.size;
     const pulse=0.92+0.08*Math.sin(this.auraPhase*1.5);
     ctx.scale(pulse,pulse);
-    // Multi-ring golden aura
     for(let r=0;r<4;r++){
       const ra=s+r*12+Math.sin(this.auraPhase+r*0.5)*5;
       ctx.globalAlpha=(0.4-r*0.08)*(0.6+0.4*Math.sin(this.auraPhase+r));
@@ -793,7 +822,6 @@ class Fish {
       ctx.beginPath(); ctx.arc(0,0,ra,0,Math.PI*2); ctx.stroke();
     }
     ctx.globalAlpha=1;
-    // Orbiting stars
     for(let i=0;i<6;i++){
       const a=this.orbitAngle+i*(Math.PI/3);
       const r=s+20;
@@ -801,25 +829,21 @@ class Fish {
       ctx.font=`${Math.floor(s*0.25)}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle';
       ctx.fillText('★',Math.cos(a)*r,Math.sin(a)*r);
     }
-    // Body
     ctx.shadowBlur=30; ctx.shadowColor='#ff9800';
     ctx.fillStyle='#cc8800';
     ctx.beginPath(); ctx.ellipse(0,0,s,s*0.52,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#ffd700';
     ctx.beginPath(); ctx.ellipse(0,0,s*0.78,s*0.4,0,0,Math.PI*2); ctx.fill();
-    // Coin pattern
     ctx.fillStyle='rgba(255,200,0,0.4)';
     for(let i=0;i<8;i++){
       const a=this.orbitAngle*0.5+i*(Math.PI/4);
       ctx.beginPath(); ctx.arc(Math.cos(a)*s*0.4,Math.sin(a)*s*0.4,4+Math.sin(this.auraPhase+i)*2,0,Math.PI*2); ctx.fill();
     }
     ctx.shadowBlur=0;
-    // $ symbol
     ctx.fillStyle='#8b5e00'; ctx.font=`bold ${Math.floor(s*0.6)}px Arial`;
     ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('$',0,2);
     this._drawEye();
     ctx.scale(1/pulse,1/pulse);
-    // Rising coin counter
     ctx.shadowBlur=12; ctx.shadowColor='#ffd700';
     ctx.fillStyle='#ffd700'; ctx.font=`bold ${Math.floor(s*0.3)}px Orbitron,Arial`;
     ctx.textAlign='center'; ctx.scale(-1,1);
@@ -827,25 +851,19 @@ class Fish {
     ctx.shadowBlur=0;
   }
 
-  // ── TWIN FISH ─────────────────────────────────────────────────
   _drawTwin(){
     const s=this.size;
-    // DNA helix-like connecting line between the two fish
     ctx.strokeStyle='rgba(128,222,234,0.4)'; ctx.lineWidth=2; ctx.setLineDash([4,4]);
     ctx.beginPath(); ctx.moveTo(-s*0.6,0); ctx.lineTo(s*0.6,0); ctx.stroke();
     ctx.setLineDash([]);
-    // Aura
     ctx.shadowBlur=18; ctx.shadowColor='#26c6da';
-    // Main body
     ctx.fillStyle='#0097a7';
     ctx.beginPath(); ctx.ellipse(0,0,s,s*0.52,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#80deea';
     ctx.beginPath(); ctx.ellipse(0,0,s*0.7,s*0.36,0,0,Math.PI*2); ctx.fill();
-    // Twin symbol (mirror reflection inside)
     ctx.fillStyle='rgba(0,150,180,0.5)';
     ctx.beginPath(); ctx.ellipse(-s*0.2,0,s*0.3,s*0.18,0,0,Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(s*0.2,0,s*0.3,s*0.18,0,0,Math.PI*2); ctx.fill();
-    // Tail
     const tw=Math.sin(this.tailPh)*10;
     ctx.fillStyle='#0097a7';
     ctx.beginPath(); ctx.moveTo(-s+4,0); ctx.lineTo(-s-16,-11+tw); ctx.lineTo(-s-16,11+tw); ctx.closePath(); ctx.fill();
@@ -855,23 +873,19 @@ class Fish {
     ctx.textAlign='center'; ctx.scale(-1,1); ctx.fillText('✦ TWIN',0,-s-14); ctx.scale(-1,1);
   }
 
-  // ── GHOST FISH ────────────────────────────────────────────────
   _drawGhost(){
     const s=this.size;
     const alpha=0.35+0.35*Math.abs(this.ghostPhase);
     ctx.globalAlpha=ctx.globalAlpha*alpha;
-    // Ectoplasm drips
     for(let i=0;i<3;i++){
       const dx=(i-1)*s*0.35;
       const dy=s*0.5+Math.abs(Math.sin(frameCount*0.08+i))*s*0.3;
       ctx.fillStyle='rgba(160,190,255,0.4)';
       ctx.beginPath(); ctx.arc(dx,dy,s*0.15,0,Math.PI*2); ctx.fill();
     }
-    // Ghostly body
     ctx.shadowBlur=35; ctx.shadowColor='#7090ff';
     ctx.fillStyle='rgba(176,196,255,0.75)';
     ctx.beginPath(); ctx.ellipse(0,0,s,s*0.55,0,0,Math.PI*2); ctx.fill();
-    // Wavy bottom
     ctx.fillStyle='rgba(176,196,255,0.75)';
     ctx.beginPath(); ctx.moveTo(-s,0);
     for(let x=-s;x<=s;x+=s*0.2){
@@ -880,20 +894,16 @@ class Fish {
     }
     ctx.lineTo(s,0); ctx.closePath(); ctx.fill();
     ctx.shadowBlur=0;
-    // Hollow eyes
     ctx.fillStyle='rgba(50,80,200,0.9)';
     ctx.beginPath(); ctx.ellipse(s*0.3,-s*0.1,s*0.18,s*0.22,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='rgba(0,0,0,0.8)';
     ctx.beginPath(); ctx.ellipse(s*0.32,-s*0.1,s*0.1,s*0.14,0,0,Math.PI*2); ctx.fill();
-    // Ghost tag
     ctx.fillStyle='rgba(140,160,255,0.9)'; ctx.font=`bold 10px Orbitron,Arial`;
     ctx.textAlign='center'; ctx.scale(-1,1); ctx.fillText('👻 GHOST',0,-s-14); ctx.scale(-1,1);
   }
 
-  // ── ELECTRIC FISH ─────────────────────────────────────────────
   _drawElectric(){
     const s=this.size;
-    // Zap arcs around body
     for(let i=0;i<8;i++){
       if(Math.random()>0.6) continue;
       const a1=(i/8)*Math.PI*2+(frameCount*0.08);
@@ -903,29 +913,24 @@ class Fish {
       ctx.lineWidth=1.5+Math.random(); ctx.shadowBlur=10; ctx.shadowColor='#ffd700';
       ctx.beginPath();
       ctx.moveTo(Math.cos(a1)*r1,Math.sin(a1)*r1);
-      // Jagged lightning
       const mx=Math.cos((a1+a2)/2)*(r1+r2)/2+(Math.random()-0.5)*12;
       const my=Math.sin((a1+a2)/2)*(r1+r2)/2+(Math.random()-0.5)*12;
       ctx.quadraticCurveTo(mx,my,Math.cos(a2)*r2,Math.sin(a2)*r2);
       ctx.stroke();
     }
     ctx.shadowBlur=28+Math.sin(this.auraPhase)*10; ctx.shadowColor='#ffd700';
-    // Body
     ctx.fillStyle='#886600';
     ctx.beginPath(); ctx.ellipse(0,0,s,s*0.52,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='#ffd740';
     ctx.beginPath(); ctx.ellipse(0,0,s*0.72,s*0.38,0,0,Math.PI*2); ctx.fill();
-    // Stripes
     ctx.fillStyle='rgba(200,150,0,0.4)';
     for(let i=-2;i<=2;i++){
       ctx.fillRect(i*s*0.25-3,-s*0.38,6,s*0.76);
     }
-    // Tail
     const tw=Math.sin(this.tailPh)*11;
     ctx.fillStyle='#886600';
     ctx.beginPath(); ctx.moveTo(-s+4,0); ctx.lineTo(-s-18,-12+tw); ctx.lineTo(-s-18,12+tw); ctx.closePath(); ctx.fill();
     ctx.shadowBlur=0; this._drawEye();
-    // ⚡ symbol
     ctx.fillStyle='#ffd700'; ctx.shadowBlur=10; ctx.shadowColor='#fff';
     ctx.font=`${Math.floor(s*0.45)}px Arial`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('⚡',0,2);
     ctx.shadowBlur=0;
@@ -933,7 +938,6 @@ class Fish {
     ctx.textAlign='center'; ctx.fillText('ELECTRIC',0,-s-16); ctx.scale(-1,1);
   }
 
-  // ── HELPERS ───────────────────────────────────────────────────
   _drawEye(){
     ctx.shadowBlur=0;
     const ex=this.size*0.44, ey=-this.size*0.1;
@@ -959,7 +963,7 @@ class Fish {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  BULLET, LASER, CHAIN, ROULETTE, PARTICLES — (same as V5)
+//  PROJECTILES & FX
 // ═══════════════════════════════════════════════════════════════════
 class Bullet{
   constructor(ox,oy,ang,wDef,ownerId){
@@ -981,6 +985,7 @@ class Bullet{
     for(let f of fishes){
       if(!f.alive||this.piercedFish.has(f))continue;
       if(Math.hypot(this.x-f.x,this.y-f.y)<f.size+9){
+        f.lastHitBy = this.ownerId; // RECORD LAST HIT
         const dv=this.dmg();
         f.hp-=dv;f.flash=9;
         if(this.frost){f.frozen=120;frozenFish.add(f);spawnIce(this.x,this.y);}
@@ -1025,6 +1030,7 @@ class Laser{
       const fx=f.x-ox,fy=f.y-oy;
       if(fx*dx+fy*dy<0)continue;
       if(Math.abs(fx*dy-fy*dx)<f.size+12){
+        f.lastHitBy = ownerId;
         const d=3*(ownerId===0?1+upgrades.dmg*0.2:1);
         f.hp-=d;f.flash=10;spawnSpark(f.x,f.y,players[ownerId].color);
         if(f.hp<=0)killFish(f,ownerId);
@@ -1052,6 +1058,7 @@ function chainLightning(orig,ownerId,dmg,depth=0){
   if(!nearby.length)return;
   const tgt=nearby[Math.floor(Math.random()*nearby.length)];
   chainLightnings.push({x1:orig.x,y1:orig.y,x2:tgt.x,y2:tgt.y,life:12});
+  tgt.lastHitBy = ownerId;
   tgt.hp-=dmg*0.6;tgt.flash=8;spawnSpark(tgt.x,tgt.y,'#ffd740');
   if(tgt.hp<=0)killFish(tgt,ownerId);else chainLightning(tgt,ownerId,dmg*0.6,depth+1);
 }
@@ -1079,6 +1086,8 @@ class InWorldRoulette{
   }
   _giveResult(){
     this.result=this.prizes[Math.floor(Math.random()*this.prizes.length)];
+    if(this.ownerId === -1) return; // Prevent crash if nobody killed it
+    
     const o=players[this.ownerId],win=this.result.mult*o.bet;
     if(win>0){
       o.bal+=win;if(this.ownerId===0){totalWin+=win;updateMissionProgress('win',win);updateUI();}
@@ -1090,7 +1099,6 @@ class InWorldRoulette{
   draw(){
     ctx.save();ctx.translate(this.x,this.y);
     const R=46,seg=(Math.PI*2)/this.prizes.length;
-    // Glow
     ctx.shadowBlur=20;ctx.shadowColor='#c040ff';
     for(let i=0;i<this.prizes.length;i++){
       const a=this.angle+i*seg;
@@ -1153,36 +1161,52 @@ function floatText(str,x,y,color,sz){
   setTimeout(()=>el.remove(),1400);
 }
 
-function explodeAt(x,y,radius,dmg,ownerId){
-  spawnExplosion(x,y,'#ff9100');spawnExplosion(x,y,'#ff2266');
-  if(ownerId===0)shakeAmt=Math.max(shakeAmt,10);
-  if(soundOn)SFX.explosion();
+function explodeAt(x, y, radius, dmg, ownerId, immuneFish = null){
+  spawnExplosion(x,y,'#ff9100'); spawnExplosion(x,y,'#ff2266');
+  if(ownerId===0) shakeAmt=Math.max(shakeAmt,10);
+  if(soundOn) SFX.explosion();
   for(let f of fishes){
-    if(!f.alive)continue;
+    if(!f.alive || f === immuneFish) continue;
     const d=Math.hypot(f.x-x,f.y-y);
-    if(d<radius+f.size){f.hp-=dmg*(1-d/(radius+f.size)*0.4);f.flash=14;if(f.hp<=0)killFish(f,ownerId);}
+    if(d<radius+f.size){
+      f.hp-=dmg*(1-d/(radius+f.size)*0.4); 
+      f.flash=14; 
+      f.lastHitBy=ownerId;
+      if(f.hp<=0) killFish(f,ownerId);
+    }
   }
 }
 function nukeAll(ownerId){
   shakeAmt=Math.max(shakeAmt,22);spawnNukeParticles();nukeFlash=35;
   if(soundOn)SFX.nuke();
   floatText('☢ NUKE!',W/2,H/2,'#00ff88',40);
-  for(let f of fishes){if(!f.alive)continue;f.hp=0;killFish(f,ownerId);}
+  for(let f of fishes){
+    if(!f.alive)continue; 
+    f.hp=0; f.lastHitBy = ownerId;
+    killFish(f,ownerId);
+  }
 }
 
 // ── KILL FISH ─────────────────────────────────────────────────────
-function killFish(f,ownerId){
-  if(!f.alive)return;f.alive=false;
-  const owner=players[ownerId];
+function killFish(f, ownerId){
+  if(!f.alive)return; f.alive=false;
+  const owner = ownerId !== -1 ? players[ownerId] : null;
+
   spawnExplosion(f.x,f.y,f.glow);
-  spawnCoins(f.x,f.y,f.id==='boss'?14:f.id==='jackpot'?10:5,owner);
-  owner.totalKills++;if(ownerId===0){totalKills++;checkAchievements();}
+  
+  if (owner) {
+    spawnCoins(f.x,f.y,f.id==='boss'?14:f.id==='jackpot'?10:5,owner);
+    owner.totalKills++;
+    if(ownerId===0){totalKills++;checkAchievements();}
+  }
+  
   if(soundOn){
     if(f.id==='boss')SFX.explosion();
     else if(f.id==='jackpot')SFX.jackpot_win();
     else SFX.coin();
   }
 
+  // Chain events
   if(f.id==='drill'||f.id==='bomb'){
     floatText('💥 BOOM!',f.x,f.y,'#ff2266',24);
     explodeAt(f.x,f.y,280*(1+upgrades.radius*0.15),14,ownerId);
@@ -1198,30 +1222,33 @@ function killFish(f,ownerId){
     comboKills++;const cTime=buffs.comboMaster?200:110;comboTimer=cTime;
     if(comboKills>=2)showCombo(comboKills);
     if(comboKills>=5)updateMissionProgress('combo',comboKills);
-    if(comboKills>=5&&!ACHIEVEMENTS.combo_x5.done)unlockAchievement('combo_x5');
-    if(comboKills>=10&&!ACHIEVEMENTS.combo_x10.done)unlockAchievement('combo_x10');
+    if(comboKills>=5&&!ACHIEVEMENTS.find(a=>a.id==='combo_x5').done)unlockAchievement('combo_x5');
+    if(comboKills>=10&&!ACHIEVEMENTS.find(a=>a.id==='combo_x10').done)unlockAchievement('combo_x10');
     if(soundOn)SFX.combo();
   }
 
   let win=0;
-  if(f.id==='jackpot'){
-    win=f.countUp;jackpotPool=Math.max(0,jackpotPool-win);updateJackpot();
-    if(ownerId===0){
-      showJackpotWin(win);
-      if(!ACHIEVEMENTS.jackpot_hit.done)unlockAchievement('jackpot_hit');
-      updateMissionProgress('jackpot',1);
-    }else floatText('JACKPOT! +'+win,f.x,f.y-30,'#ffd700',22);
-  }else{
-    const goldMod=(ownerId===0&&buffs.goldFish)?1.5:1;
-    const wid=equippedSlots.find(s=>s!==null)||'single';
-    const winMod=ownerId===0?(WEAPON_DEFS[wid]?.winMod||1):1;
-    const wrB=ownerId===0?(1+upgrades.winrate*0.05):1;
-    const comboMod=ownerId===0?Math.max(1,comboKills*0.08+1):1;
-    win=Math.floor(f.val*(owner.bet/10)*winMod*goldMod*wrB*comboMod);
+  if(owner) {
+    if(f.id==='jackpot'){
+      win=f.countUp;jackpotPool=Math.max(0,jackpotPool-win);updateJackpot();
+      if(ownerId===0){
+        showJackpotWin(win);
+        if(!ACHIEVEMENTS.find(a=>a.id==='jackpot_hit').done)unlockAchievement('jackpot_hit');
+        updateMissionProgress('jackpot',1);
+      }else floatText('JACKPOT! +'+win,f.x,f.y-30,'#ffd700',22);
+    }else{
+      const goldMod=(ownerId===0&&buffs.goldFish)?1.5:1;
+      const wid = ownerId===0 ? (equippedSlots.find(s=>s!==null)||'single') : owner.activeWeapon;
+      const winMod = ownerId===0 ? (WEAPON_DEFS[wid]?.winMod||1) : 1;
+      const wrB = ownerId===0 ? (1+upgrades.winrate*0.05) : 1;
+      const comboMod = ownerId===0 ? Math.max(1,comboKills*0.08+1) : 1;
+      win=Math.floor(f.val*(owner.bet/10)*winMod*goldMod*wrB*comboMod);
+    }
+    owner.bal+=win; owner.totalWin+=win;
+    if(ownerId===0){totalWin+=win;updateMissionProgress('win',win);updateMissionProgress(f.id,1);checkAchievements();updateUI();}
+    if(win>0) floatText('+'+win, f.x, f.y-22, owner.color, 16);
   }
-  owner.bal+=win;owner.totalWin+=win;
-  if(ownerId===0){totalWin+=win;updateMissionProgress('win',win);updateMissionProgress(f.id,1);checkAchievements();updateUI();}
-  if(win>0)floatText('+'+win,f.x,f.y-22,owner.color,16);
+  
   f.init();
 }
 
@@ -1236,8 +1263,9 @@ function showCombo(n){
 function hideCombo(){document.getElementById('combo-display').classList.remove('show');}
 
 function unlockAchievement(id){
-  if(ACHIEVEMENTS[id].done)return;ACHIEVEMENTS[id].done=true;
-  const a=ACHIEVEMENTS[id],toast=document.getElementById('achievement-toast');
+  const a=ACHIEVEMENTS.find(x=>x.id===id);
+  if(a.done)return; a.done=true;
+  const toast=document.getElementById('achievement-toast');
   document.getElementById('ach-icon').textContent=a.icon;
   document.getElementById('ach-title').textContent='ACHIEVEMENT UNLOCKED';
   document.getElementById('ach-desc').textContent=a.name+' — '+a.desc;
@@ -1245,13 +1273,13 @@ function unlockAchievement(id){
   setTimeout(()=>toast.classList.remove('show'),3500);
 }
 function checkAchievements(){
-  if(totalKills>=1&&!ACHIEVEMENTS.first_kill.done)unlockAchievement('first_kill');
-  if(totalKills>=50&&!ACHIEVEMENTS.kill_50.done)unlockAchievement('kill_50');
-  if(totalKills>=200&&!ACHIEVEMENTS.kill_200.done)unlockAchievement('kill_200');
-  if(totalWin>=10000&&!ACHIEVEMENTS.win_10k.done)unlockAchievement('win_10k');
-  if(totalWin>=100000&&!ACHIEVEMENTS.win_100k.done)unlockAchievement('win_100k');
-  if(level>=10&&!ACHIEVEMENTS.level_10.done)unlockAchievement('level_10');
-  if(Object.keys(WEAPON_DEFS).every(w=>inventory[w])&&!ACHIEVEMENTS.all_weapons.done)unlockAchievement('all_weapons');
+  if(totalKills>=1) unlockAchievement('first_kill');
+  if(totalKills>=50) unlockAchievement('kill_50');
+  if(totalKills>=200) unlockAchievement('kill_200');
+  if(totalWin>=10000) unlockAchievement('win_10k');
+  if(totalWin>=100000) unlockAchievement('win_100k');
+  if(level>=10) unlockAchievement('level_10');
+  if(Object.keys(WEAPON_DEFS).every(w=>inventory[w])) unlockAchievement('all_weapons');
 }
 function updateMissionProgress(type,amt){
   for(let m of MISSIONS){
@@ -1269,12 +1297,20 @@ function closeJackpot(){document.getElementById('jackpot-win').style.display='no
 // ── SHOOT ─────────────────────────────────────────────────────────
 function performShoot(player,ang){
   let wDef=WEAPON_DEFS['single'];
-  if(!player.isBot){const sl=equippedSlots[activeSlot]||'single';wDef=WEAPON_DEFS[sl]||WEAPON_DEFS['single'];}
+  if(!player.isBot){
+    const sl=equippedSlots[activeSlot]||'single';
+    wDef=WEAPON_DEFS[sl]||WEAPON_DEFS['single'];
+  } else {
+    wDef = WEAPON_DEFS[player.activeWeapon || 'single'];
+  }
+
   const cost=(player.id===0&&buffs.autoReload&&player.bal<300)?0:player.bet;
   if(player.bal<cost)return;
-  player.bal-=cost;player.ang=ang;player.fireCount++;
-  if(player.id===0)updateUI();
-  if(soundOn&&player.id===0)SFX.shoot();
+  
+  player.bal-=cost; player.ang=ang; player.fireCount++;
+  if(player.id===0) updateUI();
+  if(soundOn&&player.id===0) SFX.shoot();
+  
   if(wDef.id==='laser'){lasers.push(new Laser(player.x,player.y,ang,player.id));spawnSpark(player.x,player.y,player.color);return;}
   const multi=wDef.multi||1;
   const spread=wDef.id==='shotgun'?0.26:wDef.id==='triple'?0.24:wDef.id==='double'?0.12:0;
@@ -1295,18 +1331,32 @@ function shootMainPlayer(){
   performShoot(players[0],ang);
 }
 
-// ── BOT AI ────────────────────────────────────────────────────────
-const botCD=[0,0,0,0,0,0];
+// ── COMPETITIVE BOT AI ──────────────────────────────────────────
 function updateBots(){
   players.forEach((p,idx)=>{
     if(!p.isBot||gameOver)return;
-    botCD[idx]--;if(botCD[idx]>0)return;
-    botCD[idx]=45+idx*9+Math.floor(Math.random()*20);
-    const live=fishes.filter(f=>f.alive&&f.x>80&&f.x<W-80);
+    
+    p.cooldown--;
+    if(p.cooldown>0)return;
+
+    // RANDOM COOLDOWN (Cepat atau Lambat)
+    p.cooldown = Math.floor(Math.random() * 35) + 5; 
+
+    // GANTI SENJATA RANDOM SESEKALI (5% chance per tembakan)
+    if(Math.random() < 0.05) {
+      const weapons = Object.keys(WEAPON_DEFS);
+      p.activeWeapon = weapons[Math.floor(Math.random() * weapons.length)];
+    }
+
+    const live=fishes.filter(f=>f.alive&&f.x>20&&f.x<W-20);
     if(!live.length)return;
-    const tgt=live.sort((a,b)=>b.val-a.val)[Math.floor(Math.random()*Math.min(3,live.length))];
-    let ang=Math.atan2(tgt.y-p.y,tgt.x-p.x);ang+=(Math.random()-0.5)*0.18;
-    if(p.bal<p.bet)p.bal+=200;
+
+    // INCAR IKAN PALING BERHARGA DULUAN
+    const tgt=live.sort((a,b)=>b.val-a.val)[Math.floor(Math.random()*Math.min(5,live.length))];
+    let ang=Math.atan2(tgt.y-p.y,tgt.x-p.x);
+    ang+=(Math.random()-0.5)*0.1; // sedikit meleset
+
+    if(p.bal<p.bet)p.bal+=500; // anti-miskin bot
     performShoot(p,ang);
   });
 }
@@ -1319,7 +1369,16 @@ function drawCannons(){
     ctx.fillStyle='#071828';ctx.beginPath();ctx.ellipse(0,0,42,21,0,0,Math.PI*2);ctx.fill();
     ctx.strokeStyle=p.color;ctx.lineWidth=2;ctx.stroke();
     ctx.rotate(p.ang);
-    const bCount=p.id===0?equippedSlots.filter(s=>s!==null).length:1;
+
+    // Bot draws multiple barrels based on random weapon
+    let bCount = 1;
+    if (p.id === 0) {
+      bCount = equippedSlots.filter(s=>s!==null).length;
+    } else {
+       bCount = WEAPON_DEFS[p.activeWeapon]?.multi || 1;
+       if (bCount > 3) bCount = 3; // cap visual barrels
+    }
+
     for(let i=0;i<bCount;i++){
       const off=bCount>1?(i-(bCount-1)/2)*10:0;
       ctx.fillStyle='#1a3b50';ctx.beginPath();ctx.rect(0,off-7,52,14);ctx.fill();
@@ -1375,12 +1434,10 @@ function drawBG(){
     ctx.globalAlpha=0.15;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(b.x-b.r*0.3,b.y-b.r*0.3,b.r*0.25,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
-  // scan line
   ctx.save();ctx.globalAlpha=0.012;ctx.strokeStyle='#00e5ff';ctx.lineWidth=2;
   const sc=(frameCount*0.7)%(H);ctx.beginPath();ctx.moveTo(0,sc);ctx.lineTo(W,sc);ctx.stroke();ctx.restore();
 }
 
-// ── MINI MAP + LEADERBOARD ────────────────────────────────────────
 function drawMiniMap(){
   const mc=mmCtx,mw=80,mh=50;
   mc.clearRect(0,0,mw,mh);mc.fillStyle='rgba(0,5,15,0.8)';mc.fillRect(0,0,mw,mh);
@@ -1411,7 +1468,6 @@ function updateStreakUI(){
   document.getElementById('streak-count').textContent=comboKills>0?`×${comboKills} COMBO`:'';
 }
 
-// ── WEAPON UI ─────────────────────────────────────────────────────
 function renderWeaponRow(){
   const row=document.getElementById('weapon-row');row.innerHTML='';
   for(let i=0;i<MAX_SLOTS;i++){
@@ -1511,9 +1567,7 @@ function changeBet(d,type){
   document.getElementById('h-bet').textContent=players[0].bet;
 }
 
-// ══════════════════════════════════════════════════════════════════
-//  MAIN LOOP
-// ══════════════════════════════════════════════════════════════════
+// ── MAIN LOOP ─────────────────────────────────────────────────────
 let lastLoopTime=0;
 function loop(ts){
   if(!ts)ts=performance.now();
@@ -1566,25 +1620,20 @@ function loop(ts){
   drawCannons();
   ctx.restore();
 
-  // Combo timer
   if(comboTimer>0){comboTimer--;if(comboTimer===0){comboKills=0;hideCombo();}}
 
-  // Every 3 frames
   if(frameCount%3===0){drawMiniMap();if(showLB)updateLeaderboard();}
   if(frameCount%5===0)updateStreakUI();
 
   updateBots();
 
-  // Auto-fire
   if(autoFire&&!gameOver){
     const sl=equippedSlots[activeSlot]||'single';const wDef=WEAPON_DEFS[sl];
     if(wDef?.minigun)shootMainPlayer();else if(frameCount%9===0)shootMainPlayer();
   }
 
-  // Jackpot grow
   if(frameCount%120===0&&jackpotPool<9999999){jackpotPool+=Math.floor(Math.random()*80+30);updateJackpot();}
 
-  // Level up
   if(totalWin>level*850){level++;floatText(`⭐ LEVEL ${level}!`,W/2,H*0.35,'#00e5ff',30);updateUI();checkAchievements();if(soundOn)SFX.levelup();}
 
   if(!gameOver&&players[0].bal<players[0].bet&&!autoFire)showGameOver();
