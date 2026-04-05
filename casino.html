@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Ocean Emperor V6 — Crazy Bots & Bouncing Bosses</title>
+<title>Ocean Emperor V7 — Ultimate Boss Mechanics</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -213,7 +213,7 @@ html,body{width:100%;height:100%;overflow:hidden;position:fixed;background:var(-
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
-//  OCEAN EMPEROR V6.5 — Bouncing Bosses & Competitive Bots
+//  OCEAN EMPEROR V7 — Ultimate Boss Mechanics
 // ═══════════════════════════════════════════════════════════════════
 
 const canvas = document.getElementById('gameCanvas');
@@ -286,11 +286,7 @@ const SFX = {
   laser() {   _sfx([{t:'sawtooth',f:2000,ef:200,d:0.25,v:0.5}]); },
   bonus_appear() { _sfx([{t:'sine',f:600,ef:1200,d:0.15,v:0.6},{t:'triangle',f:800,ef:1600,d:0.2,v:0.5,delay:0.1}]); },
   jackpot_appear() { _sfx([{t:'sine',f:440,ef:880,d:0.2,v:0.7},{t:'sine',f:660,ef:1320,d:0.2,v:0.7,delay:0.1},{t:'sine',f:880,ef:1760,d:0.2,v:0.7,delay:0.2}]); },
-  jackpot_win() {
-    [261,330,392,523,659,784].forEach((f,i)=>{
-      setTimeout(()=>_sfx([{t:'sine',f,ef:f*2,d:0.35,v:0.8}]),i*80);
-    });
-  },
+  jackpot_win() { [261,330,392,523,659,784].forEach((f,i)=>{setTimeout(()=>_sfx([{t:'sine',f,ef:f*2,d:0.35,v:0.8}]),i*80);}); },
   boss_appear() { _sfx([{t:'sawtooth',f:60,ef:40,d:0.6,v:0.9,noise:true},{t:'square',f:120,ef:80,d:0.4,v:0.6,delay:0.1}]); },
   roulette_spin() { _sfx([{t:'triangle',f:400+Math.random()*200,ef:300,d:0.06,v:0.3}]); },
   roulette_win() { _sfx([{t:'sine',f:880,ef:1760,d:0.3,v:0.9},{t:'sine',f:1100,ef:2200,d:0.3,v:0.9,delay:0.1}]); },
@@ -298,10 +294,7 @@ const SFX = {
   electric_appear() { _sfx([{t:'sawtooth',f:1000,ef:200,d:0.15,v:0.5,noise:true}]); },
   bomb_appear() { _sfx([{t:'square',f:80,ef:40,d:0.2,v:0.7}]); },
   drill_appear() { _sfx([{t:'sawtooth',f:300,ef:600,d:0.2,v:0.6}]); },
-  nuke() {
-    _sfx([{t:'sawtooth',f:40,ef:10,d:1.5,v:1.0,noise:true}]);
-    _screenRumble(40);
-  },
+  nuke() { _sfx([{t:'sawtooth',f:40,ef:10,d:1.5,v:1.0,noise:true}]); _screenRumble(40); },
   levelup() { [523,659,784,1047].forEach((f,i)=>setTimeout(()=>_sfx([{t:'sine',f,ef:f*1.5,d:0.2,v:0.8}]),i*100)); },
   combo() {  _sfx([{t:'triangle',f:600+comboKills*80,ef:1200,d:0.12,v:0.6}]); },
   achievement() { _sfx([{t:'sine',f:880,ef:1760,d:0.15,v:0.8},{t:'sine',f:1100,ef:2200,d:0.15,v:0.8,delay:0.15},{t:'sine',f:1320,ef:2640,d:0.2,v:0.8,delay:0.3}]); }
@@ -476,25 +469,25 @@ class Fish {
       auraPhase:Math.random()*Math.PI*2,
       orbitAngle:Math.random()*Math.PI*2,
       scaleAnim:1,scaleDir:0.003,
-      appeared:false,
+      appeared:false, entered:false,
       vx:0, vy:0, lastHitBy:-1
     });
     this.x=this.dir===1?-90:W+90;
-    this.baseY=(hudTopH+45)+Math.random()*(H-hudTopH-hudBotH-140);
+    this.baseY=(hudTopH+45)+Math.random()*(H-(hudTopH||62)-(hudBotH||88)-140);
     this.y=this.baseY;
 
-    // BOUNCING DRILL
+    // DRILL INIT
     if(this.id === 'drill') {
-      this.drillTimer = 600 + Math.floor(Math.random() * 300); // 10-15s (60fps)
+      this.drillTimer = 600 + Math.floor(Math.random() * 300); // 10-15s memantul
       this.vx = (Math.random() > 0.5 ? 1 : -1) * (4 + Math.random() * 4);
       this.vy = (Math.random() > 0.5 ? 1 : -1) * (4 + Math.random() * 4);
     }
-    // HOPPING BOMB
+    // BOMB INIT
     if(this.id === 'bomb') {
-      this.bombTimer = 480 + Math.floor(Math.random() * 240); // 8-12s
+      this.bombTimer = 480 + Math.floor(Math.random() * 240); // 8-12s lompat
       this.vx = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 3);
       this.vy = -5 - Math.random() * 5;
-      this.gravity = 0.2;
+      this.gravity = 0.25;
       this.beepPhase = 0;
     }
 
@@ -524,54 +517,55 @@ class Fish {
 
     // ── BOUNCING DRILL LOGIC ──
     if (this.id === 'drill') {
-      this.x += this.vx; this.y += this.vy;
-      // Bounce Check (Only after it enters the screen)
-      if (this.appeared) {
-        if (this.x < 20 && this.vx < 0) { this.x = 20; this.vx *= -1; }
-        if (this.x > W - 20 && this.vx > 0) { this.x = W - 20; this.vx *= -1; }
-        if (this.y < hudTopH + 30 && this.vy < 0) { this.y = hudTopH + 30; this.vy *= -1; }
-        if (this.y > H - hudBotH - 30 && this.vy > 0) { this.y = H - hudBotH - 30; this.vy *= -1; }
-      }
-      this.orbitAngle = Math.atan2(this.vy, this.vx); // Rotate visual towards movement
+      if (!this.entered) {
+        this.x += this.speed * this.dir;
+        // Tunggu sampai sepenuhnya masuk layar baru boleh memantul
+        if (this.x > 50 && this.x < W - 50) this.entered = true;
+      } else {
+        this.x += this.vx; this.y += this.vy;
+        
+        // Cek benturan batas layar
+        if (this.x < 30 && this.vx < 0) { this.x = 30; this.vx *= -1; }
+        if (this.x > W - 30 && this.vx > 0) { this.x = W - 30; this.vx *= -1; }
+        if (this.y < (hudTopH||62) + 40 && this.vy < 0) { this.y = (hudTopH||62) + 40; this.vy *= -1; }
+        if (this.y > H - (hudBotH||88) - 40 && this.vy > 0) { this.y = H - (hudBotH||88) - 40; this.vy *= -1; }
 
-      this.drillTimer--;
-      if (this.drillTimer <= 0) {
-        explodeAt(this.x, this.y, 450 * (1 + upgrades.radius * 0.15), 40, this.lastHitBy);
-        floatText('💥 TIME UP!', this.x, this.y, '#ff2266', 28);
-        this.init(); 
+        this.orbitAngle = Math.atan2(this.vy, this.vx); // Bor menghadap arah gerak
+
+        this.drillTimer--;
+        if (this.drillTimer <= 0) killFish(this, this.lastHitBy); // Habis waktu = meledak
       }
       return; 
     }
 
     // ── HOPPING BOMB LOGIC ──
     if (this.id === 'bomb') {
-      this.x += this.vx;
-      this.vy += this.gravity;
-      this.y += this.vy;
-      this.beepPhase += 0.2 + (1 - this.bombTimer / 600) * 0.5; // beep faster
+      if (!this.entered) {
+        this.x += this.speed * this.dir;
+        if (this.x > 50 && this.x < W - 50) this.entered = true;
+      } else {
+        this.x += this.vx;
+        this.vy += this.gravity;
+        this.y += this.vy;
+        this.beepPhase += 0.2 + (1 - this.bombTimer / 600) * 0.5;
 
-      if (this.appeared) {
-        if (this.x < 20 && this.vx < 0) { this.x = 20; this.vx *= -1; }
-        if (this.x > W - 20 && this.vx > 0) { this.x = W - 20; this.vx *= -1; }
-      }
+        // Pantulan Kiri-Kanan
+        if (this.x < 30 && this.vx < 0) { this.x = 30; this.vx *= -1; }
+        if (this.x > W - 30 && this.vx > 0) { this.x = W - 30; this.vx *= -1; }
 
-      // Hit Ground
-      if (this.y > H - hudBotH - 40 && this.vy > 0) {
-        this.y = H - hudBotH - 40;
-        this.vy = -6 - Math.random() * 4; // Hop again
-        this.vx = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 4);
-        
-        // Small explosion when hitting ground (damages others, not itself)
-        explodeAt(this.x, this.y, 100, 10, this.lastHitBy, this);
-        if(soundOn) SFX.bomb_appear();
-      }
+        // Pantulan Bawah (Tanah)
+        if (this.y > H - (hudBotH||88) - 40 && this.vy > 0) {
+          this.y = H - (hudBotH||88) - 40;
+          this.vy = -6 - Math.random() * 4; // Lompat lagi ke atas
+          this.vx = (Math.random() > 0.5 ? 1 : -1) * (2 + Math.random() * 4);
+          
+          // Ledakan kecil setiap kena tanah
+          explodeAt(this.x, this.y, 100, 10, -1, this); 
+          if(soundOn) SFX.bomb_appear();
+        }
 
-      this.bombTimer--;
-      if (this.bombTimer <= 0) {
-        // Massive explosion at the end
-        nukeAll(this.lastHitBy);
-        floatText('💥 MEGA BOOM!', this.x, this.y, '#ff2266', 36);
-        this.init();
+        this.bombTimer--;
+        if (this.bombTimer <= 0) killFish(this, this.lastHitBy); // Habis waktu = MEGA BOOM
       }
       return; 
     }
@@ -583,10 +577,7 @@ class Fish {
     if(this.id==='jackpot'&&frameCount%18===0) this.countUp+=Math.floor(12+Math.random()*16);
     if(this.id==='boss'){this.roarTimer++;if(this.roarTimer%180===0){floatText('👹ROAR!',this.x,this.y-70,'#ff9800',22);SFX.boss_appear&&soundOn&&SFX.boss_appear();}}
     if(this.id==='ghost') this.ghostPhase=Math.sin(frameCount*0.06+this.wave);
-    if(this.id==='electric'){
-      this.zapTimer++;
-      if(this.zapTimer%40===0&&soundOn) SFX.electric_appear();
-    }
+    if(this.id==='electric'){this.zapTimer++; if(this.zapTimer%40===0&&soundOn) SFX.electric_appear();}
     if(this.id==='roulette'){this.spinAngle+=0.04;}
 
     const marg=this.size+95;
@@ -601,8 +592,8 @@ class Fish {
     if(this.flash>0) ctx.globalAlpha=0.35+0.65*Math.sin(this.flash*1.1);
 
     if (this.id === 'drill') {
-      ctx.rotate(this.orbitAngle); // Point in movement direction
-      fl = 1; // Don't flip horizontally if rotating
+      ctx.rotate(this.orbitAngle); // Arah rotasi bor
+      fl = 1; 
     }
 
     ctx.scale(fl,1);
@@ -719,10 +710,7 @@ class Fish {
       ctx.globalAlpha=1;
     }
     ctx.shadowBlur=0;
-    
-    // Fix text rotation so it always stays upright
-    ctx.save();
-    ctx.rotate(-this.orbitAngle); 
+    ctx.save(); ctx.rotate(-this.orbitAngle); 
     ctx.fillStyle='#00e5ff'; ctx.font=`bold 11px Orbitron,Arial`;
     ctx.textAlign='center'; ctx.fillText('DRILL',0,-s-14);
     ctx.restore();
@@ -743,9 +731,7 @@ class Fish {
     ctx.beginPath(); ctx.arc(0,0,s*0.88,0,Math.PI*2); ctx.fill();
     ctx.save(); ctx.clip();
     ctx.fillStyle='rgba(0,0,0,0.3)';
-    for(let i=-3;i<4;i++){
-      ctx.fillRect(i*12-s,-(s),8,s*2.2);
-    }
+    for(let i=-3;i<4;i++){ ctx.fillRect(i*12-s,-(s),8,s*2.2); }
     ctx.restore();
     ctx.strokeStyle='#886633'; ctx.lineWidth=3; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(0,-s*0.88);
@@ -924,9 +910,7 @@ class Fish {
     ctx.fillStyle='#ffd740';
     ctx.beginPath(); ctx.ellipse(0,0,s*0.72,s*0.38,0,0,Math.PI*2); ctx.fill();
     ctx.fillStyle='rgba(200,150,0,0.4)';
-    for(let i=-2;i<=2;i++){
-      ctx.fillRect(i*s*0.25-3,-s*0.38,6,s*0.76);
-    }
+    for(let i=-2;i<=2;i++){ ctx.fillRect(i*s*0.25-3,-s*0.38,6,s*0.76); }
     const tw=Math.sin(this.tailPh)*11;
     ctx.fillStyle='#886600';
     ctx.beginPath(); ctx.moveTo(-s+4,0); ctx.lineTo(-s-18,-12+tw); ctx.lineTo(-s-18,12+tw); ctx.closePath(); ctx.fill();
@@ -956,9 +940,7 @@ class Fish {
     ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(bx,by,bw,bh);
     const barC=pct>0.5?'#4caf50':pct>0.25?'#ffc107':'#f44336';
     ctx.fillStyle=barC; ctx.fillRect(bx,by,bw*pct,bh);
-    if(this.id==='boss'){
-      ctx.strokeStyle='rgba(255,150,0,0.5)'; ctx.lineWidth=1; ctx.strokeRect(bx,by,bw,bh);
-    }
+    if(this.id==='boss'){ ctx.strokeStyle='rgba(255,150,0,0.5)'; ctx.lineWidth=1; ctx.strokeRect(bx,by,bw,bh); }
   }
 }
 
@@ -985,7 +967,7 @@ class Bullet{
     for(let f of fishes){
       if(!f.alive||this.piercedFish.has(f))continue;
       if(Math.hypot(this.x-f.x,this.y-f.y)<f.size+9){
-        f.lastHitBy = this.ownerId; // RECORD LAST HIT
+        f.lastHitBy = this.ownerId; // RECORD ATTACKER
         const dv=this.dmg();
         f.hp-=dv;f.flash=9;
         if(this.frost){f.frozen=120;frozenFish.add(f);spawnIce(this.x,this.y);}
@@ -1086,7 +1068,7 @@ class InWorldRoulette{
   }
   _giveResult(){
     this.result=this.prizes[Math.floor(Math.random()*this.prizes.length)];
-    if(this.ownerId === -1) return; // Prevent crash if nobody killed it
+    if(this.ownerId === -1) return; 
     
     const o=players[this.ownerId],win=this.result.mult*o.bet;
     if(win>0){
@@ -1129,7 +1111,7 @@ class InWorldRoulette{
   }
 }
 
-// ── PARTICLES ────────────────────────────────────────────────────
+// ── PARTICLES & EXPLOSIONS ───────────────────────────────────────
 function spawnSpark(x,y,color){
   for(let i=0;i<7;i++){const a=Math.random()*Math.PI*2;_particles.push({x,y,vx:Math.cos(a)*6,vy:Math.sin(a)*6,color,size:2.5,life:0.55,maxLife:0.55,isCoin:false,ownerId:-1});}
 }
@@ -1152,7 +1134,6 @@ function spawnNukeParticles(){
     _particles.push({x:W/2,y:H/2,vx:Math.cos(a)*s,vy:Math.sin(a)*s,color:i%2?'#ff9100':'#ffd700',size:4+Math.random()*10,life:1.8,maxLife:1.8,isCoin:false,ownerId:-1});
   }
 }
-
 function floatText(str,x,y,color,sz){
   const el=document.createElement('div');
   el.className='floater';el.textContent=str;
@@ -1187,66 +1168,89 @@ function nukeAll(ownerId){
   }
 }
 
-// ── KILL FISH ─────────────────────────────────────────────────────
+// ── KILL FISH (CORE DEATH MECHANICS) ──────────────────────────────
 function killFish(f, ownerId){
-  if(!f.alive)return; f.alive=false;
+  if(!f.alive) return; 
+  f.alive = false; // Mark death prevent infinite loops
+  
   const owner = ownerId !== -1 ? players[ownerId] : null;
 
-  spawnExplosion(f.x,f.y,f.glow);
+  spawnExplosion(f.x, f.y, f.glow);
   
   if (owner) {
-    spawnCoins(f.x,f.y,f.id==='boss'?14:f.id==='jackpot'?10:5,owner);
+    spawnCoins(f.x, f.y, f.id === 'boss' ? 14 : f.id === 'jackpot' ? 10 : 5, owner);
     owner.totalKills++;
-    if(ownerId===0){totalKills++;checkAchievements();}
+    if (ownerId === 0) { totalKills++; checkAchievements(); }
   }
   
-  if(soundOn){
-    if(f.id==='boss')SFX.explosion();
-    else if(f.id==='jackpot')SFX.jackpot_win();
+  if (soundOn) {
+    if (f.id === 'boss') SFX.explosion();
+    else if (f.id === 'jackpot') SFX.jackpot_win();
     else SFX.coin();
   }
 
-  // Chain events
-  if(f.id==='drill'||f.id==='bomb'){
-    floatText('💥 BOOM!',f.x,f.y,'#ff2266',24);
-    explodeAt(f.x,f.y,280*(1+upgrades.radius*0.15),14,ownerId);
-    f.init();return;
+  // ── DEATH EFFECTS ──
+  if (f.id === 'drill') {
+    floatText('💥 DRILL BURST!', f.x, f.y, '#00e5ff', 26);
+    explodeAt(f.x, f.y, 300 * (ownerId===0 ? 1 + upgrades.radius * 0.15 : 1), 35, ownerId, f);
+    f.init(); return; // Jangan berikan hadiah langsung, ledakannya yg menghasilkan uang
   }
+  if (f.id === 'bomb') {
+    floatText('💥 MEGA BOOM!', f.x, f.y, '#ff2266', 30);
+    nukeAll(ownerId);
+    f.init(); return;
+  }
+  if (f.id === 'electric') {
+    floatText('⚡ CHAIN ZAP!', f.x, f.y, '#ffd740', 26);
+    // Menyengat 4 ikan di sekitarnya
+    const nearby = fishes.filter(nf => nf.alive && nf !== f && Math.hypot(nf.x - f.x, nf.y - f.y) < 320);
+    const targets = nearby.sort(() => Math.random() - 0.5).slice(0, 4);
+    targets.forEach(tgt => {
+      chainLightnings.push({x1: f.x, y1: f.y, x2: tgt.x, y2: tgt.y, life: 15});
+      tgt.hp -= 45; // Massive shock damage
+      tgt.flash = 15;
+      tgt.lastHitBy = ownerId;
+      if (tgt.hp <= 0) setTimeout(() => killFish(tgt, ownerId), 50); // delay dikit biar epik
+    });
+    // Tetap lanjut ke bawah agar electric fish memberikan coin
+  }
+
   if(f.id==='roulette'){inWorldRoulettes.push(new InWorldRoulette(f.x,f.y,ownerId,false));f.init();return;}
   if(f.id==='random'){inWorldRoulettes.push(new InWorldRoulette(f.x,f.y,ownerId,true));f.init();return;}
   if(f.id==='twin'){
     for(let i=0;i<2;i++){const nf=new Fish();nf.init('small');nf.x=f.x+(i-0.5)*38;nf.y=f.y;fishes.push(nf);}
   }
 
-  if(ownerId===0){
-    comboKills++;const cTime=buffs.comboMaster?200:110;comboTimer=cTime;
-    if(comboKills>=2)showCombo(comboKills);
-    if(comboKills>=5)updateMissionProgress('combo',comboKills);
-    if(comboKills>=5&&!ACHIEVEMENTS.find(a=>a.id==='combo_x5').done)unlockAchievement('combo_x5');
-    if(comboKills>=10&&!ACHIEVEMENTS.find(a=>a.id==='combo_x10').done)unlockAchievement('combo_x10');
-    if(soundOn)SFX.combo();
+  // COMBO & SCORE CALCULATION
+  if(ownerId === 0){
+    comboKills++; const cTime = buffs.comboMaster ? 200 : 110; comboTimer = cTime;
+    if(comboKills >= 2) showCombo(comboKills);
+    if(comboKills >= 5) updateMissionProgress('combo', 1);
+    if(comboKills >= 5 && !ACHIEVEMENTS.find(a=>a.id==='combo_x5').done) unlockAchievement('combo_x5');
+    if(comboKills >= 10 && !ACHIEVEMENTS.find(a=>a.id==='combo_x10').done) unlockAchievement('combo_x10');
+    if(soundOn) SFX.combo();
   }
 
-  let win=0;
+  let win = 0;
   if(owner) {
-    if(f.id==='jackpot'){
-      win=f.countUp;jackpotPool=Math.max(0,jackpotPool-win);updateJackpot();
-      if(ownerId===0){
+    if(f.id === 'jackpot'){
+      win = f.countUp; jackpotPool = Math.max(0, jackpotPool - win); updateJackpot();
+      if(ownerId === 0){
         showJackpotWin(win);
-        if(!ACHIEVEMENTS.find(a=>a.id==='jackpot_hit').done)unlockAchievement('jackpot_hit');
-        updateMissionProgress('jackpot',1);
-      }else floatText('JACKPOT! +'+win,f.x,f.y-30,'#ffd700',22);
-    }else{
-      const goldMod=(ownerId===0&&buffs.goldFish)?1.5:1;
-      const wid = ownerId===0 ? (equippedSlots.find(s=>s!==null)||'single') : owner.activeWeapon;
-      const winMod = ownerId===0 ? (WEAPON_DEFS[wid]?.winMod||1) : 1;
-      const wrB = ownerId===0 ? (1+upgrades.winrate*0.05) : 1;
-      const comboMod = ownerId===0 ? Math.max(1,comboKills*0.08+1) : 1;
-      win=Math.floor(f.val*(owner.bet/10)*winMod*goldMod*wrB*comboMod);
+        if(!ACHIEVEMENTS.find(a=>a.id==='jackpot_hit').done) unlockAchievement('jackpot_hit');
+        updateMissionProgress('jackpot', 1);
+      } else floatText('JACKPOT! +' + win, f.x, f.y - 30, '#ffd700', 22);
+    } else {
+      const goldMod = (ownerId === 0 && buffs.goldFish) ? 1.5 : 1;
+      const wid = ownerId === 0 ? (equippedSlots[activeSlot] || 'single') : owner.activeWeapon;
+      const winMod = ownerId === 0 ? (WEAPON_DEFS[wid]?.winMod || 1) : 1;
+      const wrB = ownerId === 0 ? (1 + upgrades.winrate * 0.05) : 1;
+      const comboMod = ownerId === 0 ? Math.max(1, comboKills * 0.08 + 1) : 1;
+      win = Math.floor(f.val * (owner.bet / 10) * winMod * goldMod * wrB * comboMod);
     }
-    owner.bal+=win; owner.totalWin+=win;
-    if(ownerId===0){totalWin+=win;updateMissionProgress('win',win);updateMissionProgress(f.id,1);checkAchievements();updateUI();}
-    if(win>0) floatText('+'+win, f.x, f.y-22, owner.color, 16);
+    owner.bal += win; owner.totalWin += win;
+    if(ownerId === 0){ totalWin += win; updateMissionProgress('win', win); updateMissionProgress(f.id, 1); checkAchievements(); updateUI(); }
+    if(win > 0) floatText('+' + win, f.x, f.y - 22, owner.color, 16);
   }
   
   f.init();
@@ -1340,10 +1344,10 @@ function updateBots(){
     if(p.cooldown>0)return;
 
     // RANDOM COOLDOWN (Cepat atau Lambat)
-    p.cooldown = Math.floor(Math.random() * 35) + 5; 
+    p.cooldown = Math.floor(Math.random() * 45) + 5; 
 
-    // GANTI SENJATA RANDOM SESEKALI (5% chance per tembakan)
-    if(Math.random() < 0.05) {
+    // GANTI SENJATA RANDOM SESEKALI (7% chance per tembakan)
+    if(Math.random() < 0.07) {
       const weapons = Object.keys(WEAPON_DEFS);
       p.activeWeapon = weapons[Math.floor(Math.random() * weapons.length)];
     }
@@ -1419,7 +1423,7 @@ function drawBG(){
   }
   ctx.restore();
   for(let sw of seaWeed){
-    const bx=sw.x*W,by=H-hudBotH+2;
+    const bx=sw.x*W,by=H-(hudBotH||88)+2;
     ctx.save();ctx.strokeStyle=sw.color;ctx.lineWidth=4;ctx.lineCap='round';
     ctx.beginPath();ctx.moveTo(bx,by);
     for(let j=1;j<=6;j++){const sy=Math.sin(frameCount*0.025+sw.ph+j*0.5)*12;ctx.quadraticCurveTo(bx+sy,by-j*(sw.h/6)+sw.h*0.05,bx+sy*0.5,by-j*(sw.h/6));}
@@ -1594,12 +1598,19 @@ function loop(ts){
   for(let i=bullets.length-1;i>=0;i--){bullets[i].update();bullets[i].draw();if(!bullets[i].alive)bullets.splice(i,1);}
   for(let i=lasers.length-1;i>=0;i--){lasers[i].update();lasers[i].draw();if(lasers[i].life<=0)lasers.splice(i,1);}
 
-  // Chain lightnings
+  // Chain lightnings (Efek Petir)
   for(let i=chainLightnings.length-1;i>=0;i--){
     const cl=chainLightnings[i];
-    ctx.save();ctx.globalAlpha=cl.life/12;ctx.shadowBlur=12;ctx.shadowColor='#ffd740';
-    ctx.strokeStyle='#ffd740';ctx.lineWidth=2;ctx.setLineDash([5,4]);
-    ctx.beginPath();ctx.moveTo(cl.x1,cl.y1);ctx.lineTo(cl.x2,cl.y2);ctx.stroke();
+    ctx.save();ctx.globalAlpha=cl.life/15;ctx.shadowBlur=15;ctx.shadowColor='#ffd740';
+    ctx.strokeStyle='#ffd740';ctx.lineWidth=3;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(cl.x1,cl.y1);
+    
+    // Bikin petir zigzag dikit
+    const mx = (cl.x1+cl.x2)/2 + (Math.random()-0.5)*40;
+    const my = (cl.y1+cl.y2)/2 + (Math.random()-0.5)*40;
+    ctx.lineTo(mx, my); ctx.lineTo(cl.x2,cl.y2);
+    ctx.stroke();
+    
     ctx.restore();cl.life--;if(cl.life<=0)chainLightnings.splice(i,1);
   }
 
