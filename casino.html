@@ -134,6 +134,27 @@ canvas{display:block;position:absolute;top:0;left:0;}
   .hud-val{font-size:12px;}.jackpot-val{font-size:16px;}
   #bonus-wrap{width:220px;height:220px;}#bonusCanvas{width:220px;height:220px;}
   .shop-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
+  
+  /* REVISI TATA LETAK TOMBOL */
+  .hud-bot {
+    flex-wrap: nowrap;
+    padding: 6px 4px;
+    gap: 4px;
+  }
+  .hud-btn {
+    padding: 6px;
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+  .bet-btn {
+    width: 20px; height: 20px; font-size: 12px;
+  }
+  #h-bet {
+    font-size: 14px !important; min-width: 26px !important;
+  }
+  #weapon-row {
+    bottom: 75px;
+  }
 }
 </style>
 </head>
@@ -141,7 +162,6 @@ canvas{display:block;position:absolute;top:0;left:0;}
 <canvas id="gameCanvas"></canvas>
 <div id="floaters"></div>
 
-<!-- ── UI ── -->
 <div id="ui">
   <div class="hud-top">
     <div class="hud-stat"><div class="hud-label">Saldo</div><div class="hud-val gold" id="h-bal">10,000</div></div>
@@ -169,9 +189,6 @@ canvas{display:block;position:absolute;top:0;left:0;}
   </div>
 </div>
 
-<!-- ── WEAPON ROW (rendered by JS) ── -->
-
-<!-- ── SHOP ── -->
 <div id="shop-overlay">
   <div id="shop-box">
     <div class="shop-header">
@@ -188,7 +205,6 @@ canvas{display:block;position:absolute;top:0;left:0;}
   </div>
 </div>
 
-<!-- ── BONUS WHEEL ── -->
 <div id="bonus-overlay">
   <div id="bonus-box">
     <div id="bonus-title">🎰 BONUS!</div>
@@ -199,7 +215,6 @@ canvas{display:block;position:absolute;top:0;left:0;}
   </div>
 </div>
 
-<!-- ── GAME OVER ── -->
 <div id="gameover">
   <div id="gameover-box">
     <div id="go-title">GAME OVER</div>
@@ -208,7 +223,6 @@ canvas{display:block;position:absolute;top:0;left:0;}
   </div>
 </div>
 
-<!-- ── PIN MODAL ── -->
 <div id="pin-overlay">
   <div id="pin-box">
     <div id="pin-title">🔐 ADMIN ACCESS</div>
@@ -220,7 +234,6 @@ canvas{display:block;position:absolute;top:0;left:0;}
   </div>
 </div>
 
-<!-- ── GOD MODE ── -->
 <div id="god-overlay">
   <div id="god-box">
     <div id="god-title">☢ GOD MODE</div>
@@ -1062,7 +1075,19 @@ function updateJackpot(){ document.getElementById('h-jack').textContent=jackpotP
 
 // ── MAIN LOOP ─────────────────────────────────────────────
 let afId = 0;
-function loop(){
+let lastLoopTime = 0;
+
+function loop(timestamp){
+  // Pastikan variabel timestamp tidak error pada eksekusi pertama
+  if (!timestamp) timestamp = performance.now();
+  
+  // Limiter frame rate ke maksimal ~60 FPS
+  if (timestamp - lastLoopTime < 16) {
+    afId = requestAnimationFrame(loop);
+    return;
+  }
+  lastLoopTime = timestamp;
+
   frameCount++;
 
   if(shakeAmt>0){
@@ -1145,7 +1170,9 @@ window.addEventListener('touchmove', e=>{ const t=e.touches[0]; mouse.x=t.client
 for(let i=0;i<18;i++) fishes.push(new Fish());
 renderWeaponRow();
 updateUI(); updateJackpot();
-loop();
+
+// Memulai fungsi loop menggunakan frame pertama dari browser
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
