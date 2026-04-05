@@ -1,601 +1,1456 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ocean Emperor: Ultimate Weapon Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --neon-blue: #00f3ff;
-            --neon-gold: #ffd700;
-            --neon-red: #ff0055;
-            --neon-green: #00ff66;
-            --glass-bg: rgba(0, 15, 30, 0.75);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ocean Emperor: Ultimate Weapon Edition</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{
+  background:#000811;
+  font-family:'Segoe UI',Arial,sans-serif;
+  overflow:hidden;
+  width:100vw;height:100vh;
+  user-select:none;
+}
+canvas{display:block;position:absolute;top:0;left:0;}
 
-        body {
-            margin: 0; overflow: hidden; background: #000;
-            font-family: 'Rajdhani', sans-serif;
-            user-select: none; cursor: crosshair;
-        }
+/* ===== UI LAYER ===== */
+#ui{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
 
-        canvas { display: block; background: radial-gradient(circle at center, #0b3d66 0%, #000411 100%); }
+/* ===== TOP HUD ===== */
+.hud-top{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:10px 14px;
+  background:linear-gradient(to bottom,rgba(0,5,20,0.92),transparent);
+}
+.jackpot-display{text-align:center;flex:1;}
+.jackpot-label{font-size:9px;letter-spacing:3px;color:#aaa;text-transform:uppercase;}
+.jackpot-val{
+  font-size:22px;font-weight:900;color:#ffd700;
+  text-shadow:0 0 20px rgba(255,215,0,0.8);
+}
+.score-box{text-align:center;min-width:70px;}
+.score-label{font-size:9px;letter-spacing:2px;color:#7af;text-transform:uppercase;}
+.score-val{font-size:16px;font-weight:700;color:#fff;}
 
-        /* UI LAYER */
-        #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
+/* ===== SPECIAL WEAPON BAR ===== */
+#special-bar-wrap{
+  position:absolute;left:50%;transform:translateX(-50%);top:68px;
+  width:280px;display:none;flex-direction:column;align-items:center;gap:3px;
+}
+#special-bar-label{font-size:11px;font-weight:700;letter-spacing:3px;color:#fff;}
+#special-bar-bg{
+  width:100%;height:8px;
+  background:rgba(255,255,255,0.15);
+  border-radius:4px;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.2);
+}
+#special-bar-fill{height:100%;border-radius:4px;transition:width 0.1s linear;}
 
-        /* TOP HUD */
-        .hud-top {
-            display: flex; justify-content: space-between; padding: 20px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-        }
+/* ===== BOTTOM HUD ===== */
+.hud-bottom{
+  pointer-events:auto;
+  background:rgba(0,5,20,0.92);
+  border-top:1px solid rgba(0,200,255,0.2);
+  padding:10px 14px 14px;
+  display:flex;align-items:center;justify-content:space-around;
+  gap:8px;flex-wrap:wrap;
+}
+.stat-col{text-align:center;}
+.stat-label{font-size:9px;letter-spacing:2px;color:#7af;text-transform:uppercase;margin-bottom:2px;}
+.stat-val{font-size:20px;font-weight:900;color:#ffd700;}
 
-        .weapon-timer-bar {
-            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
-            width: 300px; height: 10px; background: #333; border-radius: 5px;
-            display: none; border: 1px solid white; overflow: hidden;
-        }
-        .weapon-fill {
-            height: 100%; background: var(--neon-red); width: 100%;
-            transition: width 0.1s linear;
-        }
+/* ===== BUTTONS ===== */
+.hud-btn{
+  background:rgba(0,200,255,0.08);
+  border:1px solid rgba(0,200,255,0.4);
+  color:#00cfff;
+  padding:6px 12px;
+  font-size:11px;font-weight:700;letter-spacing:1px;
+  border-radius:4px;cursor:pointer;
+  transition:all 0.2s;
+}
+.hud-btn:hover,.hud-btn:active{background:rgba(0,200,255,0.25);}
+.hud-btn.on{
+  background:rgba(0,255,120,0.15);
+  border-color:rgba(0,255,120,0.6);
+  color:#00ff88;
+}
 
-        /* BOTTOM HUD */
-        .hud-bottom {
-            pointer-events: auto;
-            background: var(--glass-bg); backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.2);
-            padding: 15px 40px;
-            display: flex; align-items: center; justify-content: center; gap: 40px;
-        }
+/* ===== BET CONTROLS ===== */
+.bet-ctrl{display:flex;align-items:center;gap:8px;}
+.bet-btn{
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff;width:26px;height:26px;
+  border-radius:50%;font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.15s;
+}
+.bet-btn:hover{background:rgba(255,255,255,0.2);}
 
-        .stat-box {
-            text-align: center; color: white;
-        }
-        .stat-val {
-            font-size: 28px; font-weight: 900; color: var(--neon-gold);
-            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-        }
-        .stat-label { font-size: 12px; color: #aaa; letter-spacing: 2px; }
+/* ===== FLOAT TEXT ANIMATION ===== */
+#floaters{
+  position:absolute;top:0;left:0;
+  width:100%;height:100%;
+  pointer-events:none;overflow:hidden;
+}
+.floater{
+  position:absolute;font-weight:900;font-size:22px;
+  pointer-events:none;
+  animation:floatUp 1.2s ease-out forwards;
+}
+@keyframes floatUp{
+  0%  {opacity:0;transform:translateY(0) scale(0.6);}
+  15% {opacity:1;transform:translateY(-15px) scale(1.2);}
+  100%{opacity:0;transform:translateY(-120px) scale(0.9);}
+}
 
-        .btn {
-            background: transparent; border: 1px solid var(--neon-blue);
-            color: var(--neon-blue); padding: 10px 20px;
-            font-family: inherit; font-weight: bold; cursor: pointer;
-            transition: 0.2s;
-        }
-        .btn:hover { background: var(--neon-blue); color: black; }
-        .btn.active { background: var(--neon-green); color: black; border-color: var(--neon-green); }
+/* ===== GAME OVER OVERLAY ===== */
+#overlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  pointer-events:none;z-index:100;
+}
+#overlay-box{
+  background:rgba(0,5,25,0.95);
+  border:2px solid rgba(255,215,0,0.6);
+  border-radius:12px;padding:30px 50px;text-align:center;
+  display:none;pointer-events:auto;
+  box-shadow:0 0 60px rgba(255,215,0,0.3);
+}
+#overlay-title{font-size:28px;font-weight:900;color:#ffd700;margin-bottom:8px;}
+#overlay-sub{font-size:14px;color:#aaa;margin-bottom:20px;}
+#overlay-btn{
+  background:linear-gradient(135deg,#ffd700,#ff9900);
+  color:#000;border:none;padding:12px 30px;
+  font-size:14px;font-weight:900;border-radius:6px;
+  cursor:pointer;letter-spacing:2px;
+}
 
-        /* Floating Text Animation */
-        .floater {
-            position: absolute; font-weight: 900; font-size: 24px;
-            animation: floatUp 1s forwards; text-shadow: 2px 2px 0 #000;
-        }
-        @keyframes floatUp {
-            0% { transform: translateY(0) scale(0.5); opacity: 0; }
-            20% { transform: translateY(-20px) scale(1.2); opacity: 1; }
-            100% { transform: translateY(-100px) scale(1); opacity: 0; }
-        }
-        
-        /* Shake Screen */
-        .shake { animation: shake 0.5s; }
-        @keyframes shake { 0% { transform: translate(1px, 1px); } 50% { transform: translate(-2px, -2px); } 100% { transform: translate(0,0); } }
-    </style>
+/* ===== BONUS OVERLAY ===== */
+#bonus-overlay{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.88);
+  display:none;align-items:center;justify-content:center;
+  z-index:200;pointer-events:auto;
+}
+#bonus-box{
+  background:radial-gradient(circle at 50% 30%,#0a1a40,#000);
+  border:2px solid rgba(255,215,0,0.7);
+  border-radius:16px;padding:30px;
+  min-width:300px;max-width:90vw;
+  text-align:center;position:relative;
+}
+#bonus-title{
+  font-size:22px;font-weight:900;color:#ffd700;
+  margin-bottom:4px;letter-spacing:2px;
+}
+#bonus-subtitle{font-size:12px;color:#aaa;margin-bottom:20px;letter-spacing:1px;}
+#bonus-canvas-wrap{
+  width:260px;height:260px;margin:0 auto 20px;
+  position:relative;
+}
+#bonusCanvas{border-radius:50%;border:2px solid rgba(255,215,0,0.4);}
+#bonus-result{
+  font-size:32px;font-weight:900;color:#fff;min-height:40px;
+}
+#bonus-countdown{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:72px;font-weight:900;
+  color:rgba(255,255,255,0.15);
+  pointer-events:none;
+}
+#bonus-close{
+  margin-top:16px;
+  background:rgba(0,200,255,0.15);
+  border:1px solid rgba(0,200,255,0.4);
+  color:#00cfff;padding:10px 28px;
+  font-size:13px;font-weight:700;
+  border-radius:6px;cursor:pointer;display:none;
+}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media(max-width:480px){
+  .jackpot-val{font-size:17px;}
+  .stat-val{font-size:16px;}
+  .hud-btn{padding:5px 8px;font-size:10px;}
+  #bonus-box{padding:20px 16px;}
+  #bonus-canvas-wrap{width:220px;height:220px;}
+  #bonusCanvas{width:220px;height:220px;}
+}
+</style>
 </head>
 <body>
 
+<!-- GAME CANVAS -->
 <canvas id="gameCanvas"></canvas>
 
-<div id="ui-layer">
-    <div class="hud-top">
-        <div class="stat-box" style="text-align: left;">
-            <div class="stat-label">GRAND JACKPOT</div>
-            <div class="stat-val">💎 9,999,999</div>
-        </div>
-    </div>
+<!-- FLOATING SCORE TEXT -->
+<div id="floaters"></div>
 
-    <div id="weapon-timer" class="weapon-timer-bar">
-        <div id="weapon-fill" class="weapon-fill"></div>
+<!-- UI LAYER -->
+<div id="ui">
+  <div class="hud-top">
+    <div class="score-box">
+      <div class="score-label">Win</div>
+      <div class="score-val" id="hud-win">0</div>
     </div>
-
-    <div class="hud-bottom">
-        <div class="stat-box">
-            <div class="stat-label">SALDO</div>
-            <div class="stat-val" id="balance">10,000</div>
-        </div>
-        
-        <div class="stat-box">
-            <button class="btn" id="btn-auto" onclick="toggleAuto()">AUTO FIRE: OFF</button>
-        </div>
-
-        <div class="stat-box">
-            <div class="stat-label">BET</div>
-            <div class="stat-val" style="color: white; font-size: 20px;">
-                <span style="cursor:pointer" onclick="changeBet(-10)">[-]</span> 
-                <span id="bet">10</span> 
-                <span style="cursor:pointer" onclick="changeBet(10)">[+]</span>
-            </div>
-        </div>
+    <div class="jackpot-display">
+      <div class="jackpot-label">Grand Jackpot</div>
+      <div class="jackpot-val" id="hud-jackpot">9,999,999</div>
     </div>
+    <div class="score-box">
+      <div class="score-label">Level</div>
+      <div class="score-val" id="hud-level">1</div>
+    </div>
+  </div>
+
+  <!-- Special Weapon Timer Bar -->
+  <div id="special-bar-wrap">
+    <div id="special-bar-label">DRILL ACTIVE</div>
+    <div id="special-bar-bg">
+      <div id="special-bar-fill"></div>
+    </div>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="stat-col">
+      <div class="stat-label">Saldo</div>
+      <div class="stat-val" id="hud-balance">10,000</div>
+    </div>
+    <button class="hud-btn" id="btn-auto" onclick="toggleAuto()">AUTO OFF</button>
+    <div class="stat-col">
+      <div class="stat-label">Bet</div>
+      <div class="bet-ctrl">
+        <div class="bet-btn" onclick="changeBet(-10)">−</div>
+        <span class="stat-val" id="hud-bet" style="color:#fff;font-size:18px;">10</span>
+        <div class="bet-btn" onclick="changeBet(10)">+</div>
+      </div>
+    </div>
+    <button class="hud-btn" onclick="changeBet(0,'max')">MAX BET</button>
+  </div>
+</div>
+
+<!-- GAME OVER OVERLAY -->
+<div id="overlay">
+  <div id="overlay-box">
+    <div id="overlay-title">GAME OVER</div>
+    <div id="overlay-sub">Saldo habis!</div>
+    <button id="overlay-btn" onclick="restartGame()">MAIN LAGI</button>
+  </div>
+</div>
+
+<!-- BONUS WHEEL OVERLAY -->
+<div id="bonus-overlay">
+  <div id="bonus-box">
+    <div id="bonus-title">BONUS JACKPOT!</div>
+    <div id="bonus-subtitle">Berputar...</div>
+    <div id="bonus-canvas-wrap">
+      <canvas id="bonusCanvas" width="260" height="260"></canvas>
+      <div id="bonus-countdown"></div>
+    </div>
+    <div id="bonus-result"></div>
+    <button id="bonus-close" onclick="closeBonus()">KLAIM REWARD</button>
+  </div>
 </div>
 
 <script>
-    /**
-     * ==========================================
-     * KONFIGURASI ASET (GAMBAR)
-     * ==========================================
-     * Jika Anda ingin menggunakan gambar asli, isi URL di dalam tanda kutip.
-     * Jika kosong (""), game akan menggambar bentuk prosedural (Canvas Shape).
-     */
-    const ASSETS = {
-        bg: "",                 // URL Background image
-        fish_small: "",         // URL Ikan Kecil
-        fish_med: "",           // URL Ikan Sedang
-        fish_boss: "",          // URL Boss
-        fish_drill: "",         // URL Ikan Spesial (Drop Drill)
-        fish_bomb: "",          // URL Ikan Spesial (Drop Bomb)
-        fish_jackpot: "",       // URL Ikan Count Up
-        bullet_normal: "",      // URL Peluru Biasa
-        bullet_drill: "",       // URL Peluru Drill
-        bullet_bomb: "",        // URL Bom Bergerak
-        coin: ""                // URL Koin
-    };
+// ============================================================
+//  OCEAN EMPEROR — ULTIMATE WEAPON EDITION
+//  Full source code — siap pakai, copy & paste
+// ============================================================
 
-    // Preload Images Helper
-    const images = {};
-    for (let key in ASSETS) {
-        if (ASSETS[key]) {
-            const img = new Image();
-            img.src = ASSETS[key];
-            images[key] = img;
-        }
+// --- CANVAS SETUP ---
+const canvas = document.getElementById('gameCanvas');
+const ctx    = canvas.getContext('2d');
+let W, H;
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// --- GAME STATE ---
+let balance     = 10000;
+let bet         = 10;
+let autoFire    = false;
+let totalWin    = 0;
+let level       = 1;
+let jackpotPool = 9999999;
+let specialWeapon = null;
+let specialTimer  = 0;
+let specialMax    = 0;
+let mouse       = { x: 0, y: 0 };
+let gameOver    = false;
+let frameCount  = 0;
+let shakeAmt    = 0;
+let cannonX     = 0;
+let cannonY     = 0;
+
+const fishes    = [];
+const bullets   = [];
+const particles = [];
+
+// ============================================================
+//  FISH TYPE DEFINITIONS
+//  prob = spawn probability (total must equal 1)
+// ============================================================
+const FISH_TYPES = [
+  { id:'small',    label:'Small Fish',    hp:3,  val:8,   speed:2.2, size:18, color:'#4fc3f7', glow:'#00bcd4', prob:0.35 },
+  { id:'med',      label:'Medium Fish',   hp:8,  val:25,  speed:1.5, size:26, color:'#81c784', glow:'#4caf50', prob:0.25 },
+  { id:'large',    label:'Large Fish',    hp:18, val:60,  speed:1.0, size:36, color:'#ff8a65', glow:'#f4511e', prob:0.15 },
+  { id:'boss',     label:'BOSS',          hp:80, val:350, speed:0.5, size:56, color:'#ff6f00', glow:'#ff9800', prob:0.05 },
+  { id:'drill',    label:'DRILL FISH',    hp:30, val:0,   speed:1.3, size:38, color:'#00e5ff', glow:'#00bcd4', prob:0.05 },
+  { id:'bomb',     label:'BOMB FISH',     hp:30, val:0,   speed:1.3, size:38, color:'#ff1744', glow:'#ff5722', prob:0.05 },
+  { id:'roulette', label:'ROULETTE FISH', hp:40, val:0,   speed:1.0, size:42, color:'#e040fb', glow:'#9c27b0', prob:0.04 },
+  { id:'random',   label:'LUCKY FISH',    hp:25, val:0,   speed:1.8, size:34, color:'#ffd700', glow:'#ffb300', prob:0.04 },
+  { id:'jackpot',  label:'COUNT UP',      hp:60, val:150, speed:0.7, size:50, color:'#ffd700', glow:'#ff6f00', prob:0.02 },
+];
+
+function pickFishType() {
+  let r = Math.random(), cumul = 0;
+  for (let t of FISH_TYPES) {
+    cumul += t.prob;
+    if (r < cumul) return t;
+  }
+  return FISH_TYPES[0];
+}
+
+// ============================================================
+//  FISH CLASS
+// ============================================================
+class Fish {
+  constructor() { this.init(); }
+
+  init() {
+    const t = pickFishType();
+    // Deep copy type properties
+    this.id      = t.id;
+    this.label   = t.label;
+    this.hp      = t.hp;
+    this.maxHp   = t.hp;
+    this.val     = t.val;
+    this.speed   = t.speed;
+    this.size    = t.size;
+    this.color   = t.color;
+    this.glow    = t.glow;
+
+    this.dir      = Math.random() > 0.5 ? 1 : -1;
+    this.x        = this.dir === 1 ? -80 : W + 80;
+    this.baseY    = 80 + Math.random() * (H - 220);
+    this.y        = this.baseY;
+    this.wave     = Math.random() * Math.PI * 2;
+    this.waveAmp  = 10 + Math.random() * 15;
+    this.waveFreq = 0.02 + Math.random() * 0.02;
+    this.tailPhase = Math.random() * Math.PI * 2;
+    this.alive    = true;
+    this.flash    = 0;
+
+    // Count-Up fish has accumulating value
+    if (this.id === 'jackpot') {
+      this.countUp = 100 + Math.floor(Math.random() * 200);
+    }
+  }
+
+  update() {
+    this.x += this.speed * this.dir;
+    this.y  = this.baseY + Math.sin(frameCount * this.waveFreq + this.wave) * this.waveAmp;
+    this.tailPhase += 0.15;
+
+    // Count-Up accumulates value over time
+    if (this.id === 'jackpot' && frameCount % 30 === 0) {
+      this.countUp += Math.floor(5 + Math.random() * 10);
     }
 
-    // --- GAME ENGINE SETUP ---
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    
-    let width, height;
-    function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize);
-    resize();
+    if (this.flash > 0) this.flash--;
 
-    // --- STATE VARIABLES ---
-    let balance = 10000;
-    let bet = 10;
-    let autoFire = false;
-    let mouse = { x: width/2, y: height/2, down: false };
+    // Respawn when off-screen
+    if ((this.dir === 1 && this.x > W + 100) || (this.dir === -1 && this.x < -100)) {
+      this.init();
+    }
+  }
 
-    // Weapon State
-    let specialWeapon = null; // 'drill' or 'bomb'
-    let specialTimer = 0;     // Frames remaining
-    let specialMaxTime = 0;   // Untuk progress bar
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
 
-    // Entities Arrays
-    const fishes = [];
-    const bullets = [];
-    const particles = [];
-    const texts = [];
+    // Flip sprite based on swim direction
+    const flip = this.dir === -1 ? -1 : 1;
+    ctx.scale(flip, 1);
 
-    // --- CLASSES ---
-
-    class Fish {
-        constructor() {
-            this.reset();
-        }
-
-        reset() {
-            this.id = Math.random();
-            this.y = Math.random() * (height - 200) + 100;
-            this.dir = Math.random() > 0.5 ? 1 : -1;
-            this.x = this.dir === 1 ? -100 : width + 100;
-            
-            // Tentukan Tipe Ikan & Probabilitas
-            const r = Math.random();
-            this.scale = 1;
-            this.angle = 0;
-            this.countUpVal = 0;
-
-            if (r < 0.02) {
-                this.type = 'drill_fish'; // DROP DRILL
-                this.hp = 30; this.maxHp = 30; this.val = 200;
-                this.speed = 1.5; this.size = 40; this.color = '#00f3ff';
-            } else if (r < 0.04) {
-                this.type = 'bomb_fish'; // DROP BOMB
-                this.hp = 30; this.maxHp = 30; this.val = 200;
-                this.speed = 1.5; this.size = 40; this.color = '#ff0055';
-            } else if (r < 0.07) {
-                this.type = 'jackpot'; // COUNT UP
-                this.hp = 50; this.maxHp = 50; this.baseVal = 100; this.val = 100;
-                this.speed = 0.8; this.size = 45; this.color = '#ffd700';
-            } else if (r < 0.2) {
-                this.type = 'boss';
-                this.hp = 80; this.maxHp = 80; this.val = 500;
-                this.speed = 0.5; this.size = 60; this.color = '#ff9900';
-            } else {
-                this.type = 'normal';
-                this.hp = 3; this.maxHp = 3; this.val = 10;
-                this.speed = 2 + Math.random(); this.size = 20; this.color = '#ffffff';
-            }
-        }
-
-        update() {
-            this.x += this.speed * this.dir;
-            this.y += Math.sin(this.x * 0.01) * 1.5; // Gerakan bergelombang
-
-            // Logic Count Up Fish
-            if (this.type === 'jackpot') {
-                if (Math.floor(Date.now() / 100) % 5 === 0) { // Setiap 0.5 detik
-                    this.val += 5; // Nilai naik terus
-                }
-            }
-
-            // Respawn jika keluar layar
-            if ((this.dir === 1 && this.x > width + 100) || (this.dir === -1 && this.x < -100)) {
-                this.reset();
-            }
-        }
-
-        draw() {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.scale(this.dir, 1);
-
-            // 1. CEK APAKAH ADA GAMBAR ASET?
-            let imgKey = null;
-            if (this.type === 'drill_fish') imgKey = 'fish_drill';
-            else if (this.type === 'bomb_fish') imgKey = 'fish_bomb';
-            else if (this.type === 'jackpot') imgKey = 'fish_jackpot';
-            else if (this.type === 'boss') imgKey = 'fish_boss';
-            else imgKey = 'fish_small';
-
-            if (images[imgKey]) {
-                // Render Image
-                const img = images[imgKey];
-                ctx.drawImage(img, -this.size, -this.size/2, this.size*2, this.size);
-            } else {
-                // Render Procedural (Fallback jika tidak ada gambar)
-                ctx.shadowBlur = 15; ctx.shadowColor = this.color;
-                ctx.fillStyle = this.color;
-                
-                // Badan Utama
-                ctx.beginPath();
-                ctx.ellipse(0, 0, this.size, this.size/1.6, 0, 0, Math.PI*2);
-                ctx.fill();
-
-                // Ekor
-                ctx.beginPath();
-                const tailWag = Math.sin(Date.now()/100 * this.speed) * 10;
-                ctx.moveTo(-this.size + 5, 0);
-                ctx.lineTo(-this.size - 20, -15 + tailWag);
-                ctx.lineTo(-this.size - 20, 15 + tailWag);
-                ctx.fill();
-
-                // Tanda Spesial
-                if (this.type === 'drill_fish') {
-                    ctx.fillStyle = 'black'; ctx.font="bold 20px Arial"; 
-                    ctx.scale(this.dir, 1); ctx.fillText("⚡", -5, 5);
-                } else if (this.type === 'bomb_fish') {
-                    ctx.fillStyle = 'black'; ctx.font="bold 20px Arial"; 
-                    ctx.scale(this.dir, 1); ctx.fillText("💣", -8, 5);
-                }
-            }
-
-            // Draw Jackpot Counter
-            if (this.type === 'jackpot') {
-                ctx.scale(this.dir, 1); // Reset flip text
-                ctx.fillStyle = '#fff'; ctx.font = "bold 16px Rajdhani";
-                ctx.shadowBlur = 0;
-                ctx.fillText(`$${this.val}`, -20, -this.size - 10);
-            }
-
-            // Boss HP Bar
-            if (this.maxHp > 10) {
-                ctx.fillStyle = 'red'; ctx.fillRect(-20, -this.size-10, 40, 4);
-                ctx.fillStyle = '#0f0'; ctx.fillRect(-20, -this.size-10, 40 * (this.hp/this.maxHp), 4);
-            }
-
-            ctx.restore();
-        }
+    // Hit flash effect
+    if (this.flash > 0) {
+      ctx.globalAlpha = 0.5 + 0.5 * Math.sin(this.flash * 0.8);
     }
 
-    class SpecialWeapon {
-        constructor(type) {
-            this.type = type; // 'drill' or 'bomb'
-            this.active = true;
-            this.x = width / 2;
-            this.y = height / 2;
-            this.vx = (Math.random() - 0.5) * 10;
-            this.vy = (Math.random() - 0.5) * 10;
-            
-            // DRILL: Bounces around screen
-            // BOMB: Floats around then explodes
-            
-            this.angle = 0;
-        }
+    // Glow halo
+    ctx.shadowBlur  = 20 + Math.sin(frameCount * 0.05) * 8;
+    ctx.shadowColor = this.glow;
 
-        update() {
-            // Physics Movement
-            this.x += this.vx;
-            this.y += this.vy;
+    // === BODY ===
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.size, this.size * 0.55, 0, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
 
-            // Bounce Logic
-            if (this.x < 0 || this.x > width) this.vx *= -1;
-            if (this.y < 0 || this.y > height) this.vy *= -1;
+    // === TAIL ===
+    const tw = Math.sin(this.tailPhase) * 12;
+    ctx.beginPath();
+    ctx.moveTo(-this.size + 4, 0);
+    ctx.lineTo(-this.size - 18, -12 + tw);
+    ctx.lineTo(-this.size - 18,  12 + tw);
+    ctx.closePath();
+    ctx.fillStyle = this.color;
+    ctx.fill();
 
-            this.angle += 0.2; // Rotation
+    // === DORSAL FIN ===
+    ctx.beginPath();
+    ctx.moveTo(-this.size * 0.2, -this.size * 0.55);
+    ctx.lineTo( this.size * 0.1, -this.size * 0.9);
+    ctx.lineTo( this.size * 0.4, -this.size * 0.55);
+    ctx.fillStyle = this.color;
+    ctx.fill();
 
-            // COLLISION DAMAGE (Continuous Damage Area)
-            fishes.forEach(f => {
-                const dist = Math.hypot(this.x - f.x, this.y - f.y);
-                const range = this.type === 'drill' ? 60 : 100;
-                
-                if (dist < range) {
-                    // Drill damage kecil tapi cepat (DPS tinggi)
-                    f.hp -= 0.5; 
-                    spawnParticle(f.x, f.y, 'hit');
-                    
-                    if (f.hp <= 0) handleFishDeath(f);
-                }
-            });
-        }
+    // === EYE ===
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.arc(this.size * 0.45, -this.size * 0.1, this.size * 0.12, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(this.size * 0.47, -this.size * 0.1, this.size * 0.07, 0, Math.PI * 2);
+    ctx.fillStyle = '#111';
+    ctx.fill();
 
-        draw() {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.angle);
-
-            if (this.type === 'drill') {
-                if(images.bullet_drill) {
-                    ctx.drawImage(images.bullet_drill, -30, -30, 60, 60);
-                } else {
-                    // Procedural Drill
-                    ctx.fillStyle = '#00f3ff'; ctx.shadowBlur = 20; ctx.shadowColor = '#00f3ff';
-                    ctx.beginPath(); 
-                    ctx.moveTo(0, -40); ctx.lineTo(15, 0); ctx.lineTo(0, 40); ctx.lineTo(-15, 0); 
-                    ctx.fill();
-                    // Sparks
-                    ctx.strokeStyle = 'white'; ctx.lineWidth = 2;
-                    ctx.beginPath(); ctx.arc(0,0, 30, 0, Math.PI*2); ctx.stroke();
-                }
-            } else {
-                if(images.bullet_bomb) {
-                    ctx.drawImage(images.bullet_bomb, -40, -40, 80, 80);
-                } else {
-                    // Procedural Bomb
-                    ctx.fillStyle = '#ff0055'; ctx.shadowBlur = 20; ctx.shadowColor = '#ff0055';
-                    ctx.beginPath(); ctx.arc(0,0, 30, 0, Math.PI*2); ctx.fill();
-                    ctx.fillStyle = 'white'; ctx.font="20px Arial"; ctx.fillText("☢", -10, 8);
-                }
-            }
-            ctx.restore();
-        }
+    // === SPECIAL MARKINGS ===
+    if (this.id === 'drill') {
+      ctx.fillStyle = 'rgba(0,229,255,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, this.size * 0.6, this.size * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawEmoji(ctx, '⚡', -8, 7, 18);
+    } else if (this.id === 'bomb') {
+      ctx.fillStyle = 'rgba(255,23,68,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, this.size * 0.6, this.size * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawEmoji(ctx, '💣', -10, 7, 16);
+    } else if (this.id === 'roulette') {
+      ctx.fillStyle = 'rgba(224,64,251,0.3)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, this.size * 0.6, this.size * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawEmoji(ctx, '🎰', -10, 7, 16);
+    } else if (this.id === 'random') {
+      ctx.fillStyle = 'rgba(255,215,0,0.25)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, this.size * 0.6, this.size * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawEmoji(ctx, '🎁', -10, 7, 16);
+    } else if (this.id === 'boss') {
+      ctx.fillStyle = 'rgba(255,111,0,0.25)';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, this.size * 0.7, this.size * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+      drawEmoji(ctx, '👑', -11, 8, 18);
     }
 
-    class Bullet {
-        constructor(angle) {
-            this.x = width/2; this.y = height - 50;
-            this.vx = Math.cos(angle) * 15;
-            this.vy = Math.sin(angle) * 15;
-            this.active = true;
-        }
-        update() {
-            this.x += this.vx; this.y += this.vy;
-            if (this.x < 0 || this.x > width || this.y < 0 || this.y > height) this.active = false;
-        }
-        draw() {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.fillStyle = '#ffd700'; ctx.shadowBlur = 10; ctx.shadowColor = 'gold';
-            ctx.beginPath(); ctx.arc(0,0, 5, 0, Math.PI*2); ctx.fill();
-            ctx.restore();
-        }
+    // Count-up value label
+    if (this.id === 'jackpot') {
+      ctx.scale(flip, 1); // un-flip text
+      ctx.shadowBlur = 0;
+      ctx.fillStyle  = '#ffd700';
+      ctx.font       = 'bold 13px Arial';
+      ctx.textAlign  = 'center';
+      ctx.fillText('+' + this.countUp, 0, -this.size - 10);
     }
 
-    // --- GAME LOGIC FUNCTIONS ---
+    ctx.restore();
 
-    function activateSpecial(type) {
-        specialWeapon = new SpecialWeapon(type);
-        specialMaxTime = (type === 'drill' ? 15 : 10) * 60; // 60 FPS
-        specialTimer = specialMaxTime;
-        
-        // Show Timer UI
-        document.getElementById('weapon-timer').style.display = 'block';
-        document.getElementById('weapon-fill').style.width = '100%';
-        
-        spawnText(type.toUpperCase() + " MODE!", width/2, height/2, '#fff');
+    // === HP BAR (drawn in world space, not flipped) ===
+    if (this.maxHp > 5) {
+      const bw = this.size * 1.6;
+      const bh = 4;
+      const bx = this.x - bw / 2;
+      const by = this.y - this.size - 22;
+      const pct = this.hp / this.maxHp;
+      const hpColor = pct > 0.5 ? '#4caf50' : pct > 0.25 ? '#ffc107' : '#f44336';
+
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.fillStyle = hpColor;
+      ctx.fillRect(bx, by, bw * pct, bh);
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth   = 0.5;
+      ctx.strokeRect(bx, by, bw, bh);
+    }
+  }
+}
+
+// Helper: draw emoji centered
+function drawEmoji(c, txt, x, y, size) {
+  c.save();
+  c.shadowBlur   = 0;
+  c.font         = size + 'px Arial';
+  c.textAlign    = 'center';
+  c.textBaseline = 'middle';
+  c.fillText(txt, x, y);
+  c.restore();
+}
+
+// ============================================================
+//  SPECIAL WEAPON — DRILL
+//  Bounces around screen, continuously damages nearby fish
+// ============================================================
+class SpecialDrill {
+  constructor() {
+    this.x    = W / 2;
+    this.y    = H / 2;
+    this.vx   = (Math.random() - 0.5) * 12;
+    this.vy   = (Math.random() - 0.5) * 12;
+    this.angle = 0;
+    this.alive = true;
+  }
+
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Bounce off walls
+    if (this.x < 40  || this.x > W - 40) this.vx *= -1;
+    if (this.y < 40  || this.y > H - 100) this.vy *= -1;
+
+    this.angle += 0.15;
+
+    // Continuous area damage
+    for (let f of fishes) {
+      if (!f.alive) continue;
+      const d = Math.hypot(this.x - f.x, this.y - f.y);
+      if (d < f.size + 50) {
+        f.hp   -= 0.4;
+        f.flash = 5;
+        if (f.hp <= 0) killFish(f);
+      }
+    }
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.angle);
+    ctx.shadowBlur  = 30;
+    ctx.shadowColor = '#00e5ff';
+
+    // Outer pulse rings
+    ctx.strokeStyle = 'rgba(0,229,255,0.6)';
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, 35, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(0,229,255,0.25)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, 50, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Diamond body
+    ctx.fillStyle = '#00e5ff';
+    ctx.beginPath();
+    ctx.moveTo(0, -28);
+    ctx.lineTo(14, 0);
+    ctx.lineTo(0,  28);
+    ctx.lineTo(-14, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.beginPath();
+    ctx.moveTo(0, -12);
+    ctx.lineTo(6,   0);
+    ctx.lineTo(0,  12);
+    ctx.lineTo(-6,  0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.restore();
+
+    // Spark particles
+    for (let i = 0; i < 2; i++) {
+      spawnParticle(
+        this.x + (Math.random() - 0.5) * 60,
+        this.y + (Math.random() - 0.5) * 60,
+        '#00e5ff', 2, 1
+      );
+    }
+  }
+}
+
+// ============================================================
+//  SPECIAL WEAPON — BOMB
+//  Floats around, explodes at end of timer
+// ============================================================
+class SpecialBomb {
+  constructor() {
+    this.x     = W / 2;
+    this.y     = H / 2;
+    this.vx    = (Math.random() - 0.5) * 8;
+    this.vy    = (Math.random() - 0.5) * 8;
+    this.pulse = 0;
+    this.alive = true;
+  }
+
+  update() {
+    this.x  += this.vx;
+    this.y  += this.vy;
+    this.vx *= 0.99;
+    this.vy *= 0.99;
+
+    if (this.x < 40  || this.x > W - 40) this.vx *= -1;
+    if (this.y < 40  || this.y > H - 100) this.vy *= -1;
+
+    this.pulse += 0.08;
+  }
+
+  draw() {
+    const p = Math.sin(this.pulse) * 8;
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.shadowBlur  = 40;
+    ctx.shadowColor = '#ff1744';
+
+    // Outer glow ring
+    ctx.strokeStyle = 'rgba(255,100,100,0.4)';
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    ctx.arc(0, 0, 38 + p, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Main body
+    ctx.fillStyle = '#b71c1c';
+    ctx.beginPath();
+    ctx.arc(0, 0, 28 + p, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#ff1744';
+    ctx.beginPath();
+    ctx.arc(0, 0, 22 + p, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Specular highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath();
+    ctx.arc(-6, -6, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+
+    // Smoke particles
+    for (let i = 0; i < 1; i++) {
+      spawnParticle(
+        this.x + (Math.random() - 0.5) * 40,
+        this.y + (Math.random() - 0.5) * 40,
+        '#ff5722', 3, 1
+      );
+    }
+  }
+}
+
+// ============================================================
+//  BULLET CLASS
+// ============================================================
+class Bullet {
+  constructor(ox, oy) {
+    this.x  = ox;
+    this.y  = oy;
+    const ang = Math.atan2(mouse.y - oy, mouse.x - ox);
+    this.vx    = Math.cos(ang) * 16;
+    this.vy    = Math.sin(ang) * 16;
+    this.alive = true;
+    this.trail = [];
+  }
+
+  update() {
+    // Store trail positions
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > 8) this.trail.shift();
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Out of bounds
+    if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) {
+      this.alive = false;
+      return;
     }
 
-    function spawnParticle(x, y, type) {
-        // Simplified particle push
-        particles.push({x, y, life: 1, type, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5});
+    // Collision with fish
+    for (let f of fishes) {
+      if (!f.alive) continue;
+      if (Math.hypot(this.x - f.x, this.y - f.y) < f.size + 8) {
+        this.alive = false;
+        f.hp--;
+        f.flash = 8;
+        spawnHitSparks(this.x, this.y);
+        if (f.hp <= 0) killFish(f);
+        break;
+      }
     }
+  }
 
-    function spawnText(str, x, y, color) {
-        const el = document.createElement('div');
-        el.className = 'floater';
-        el.innerText = str;
-        el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.color = color;
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 1000);
+  draw() {
+    // Trail
+    for (let i = 0; i < this.trail.length; i++) {
+      const a   = (i / this.trail.length) * 0.5;
+      const sz  = 3 * (i / this.trail.length);
+      ctx.beginPath();
+      ctx.arc(this.trail[i].x, this.trail[i].y, sz, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,215,0,${a})`;
+      ctx.fill();
     }
+    // Head
+    ctx.save();
+    ctx.shadowBlur  = 15;
+    ctx.shadowColor = '#ffd700';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffd700';
+    ctx.fill();
+    ctx.restore();
+  }
+}
 
-    function handleFishDeath(f) {
-        f.hp = 0; // Ensure dead
-        
-        // 1. REWARD LOGIC
-        const win = f.val * (bet / 10);
-        balance += win;
-        spawnText(`+${Math.floor(win)}`, f.x, f.y, '#ffd700');
-        updateUI();
+// ============================================================
+//  PARTICLE SYSTEM
+// ============================================================
+function spawnParticle(x, y, color, size, life) {
+  particles.push({
+    x, y,
+    vx: (Math.random() - 0.5) * 6,
+    vy: (Math.random() - 0.5) * 6 - 1,
+    color,
+    size:    size || 4,
+    life:    life || 1,
+    maxLife: life || 1,
+    isCoin:  false,
+    rotate:  0,
+  });
+}
 
-        // 2. CHECK HIDDEN REWARDS
-        if (f.type === 'drill_fish') activateSpecial('drill');
-        if (f.type === 'bomb_fish') activateSpecial('bomb');
-        if (f.type === 'jackpot') spawnText("JACKPOT!", width/2, height/3, '#ffd700');
+function spawnHitSparks(x, y) {
+  for (let i = 0; i < 5; i++) spawnParticle(x, y, '#ffffff', 3, 0.7);
+}
 
-        // 3. EXPLOSION EFFECT
-        for(let i=0; i<8; i++) spawnParticle(f.x, f.y, 'coin');
-        
-        f.reset(); // Respawn
-    }
-
-    function explodeArea() {
-        // Layar Getar
-        document.body.classList.add('shake');
-        setTimeout(() => document.body.classList.remove('shake'), 500);
-
-        // Kill Radius
-        const cx = specialWeapon.x;
-        const cy = specialWeapon.y;
-        
-        fishes.forEach(f => {
-            const dist = Math.hypot(f.x - cx, f.y - cy);
-            if (dist < 300) { // Big Boom Radius
-                handleFishDeath(f);
-            }
-        });
-
-        // Visual Boom
-        for(let i=0; i<50; i++) spawnParticle(cx, cy, 'boom');
-    }
-
-    function shoot() {
-        if (specialWeapon) return; // Cannot shoot manually during special mode
-        if (balance < bet) return;
-        
-        balance -= bet;
-        updateUI();
-        
-        const angle = Math.atan2(mouse.y - (height-50), mouse.x - width/2);
-        bullets.push(new Bullet(angle));
-    }
-
-    // --- MAIN LOOP ---
-
-    // Init Fishes
-    for(let i=0; i<15; i++) fishes.push(new Fish());
-
-    function loop() {
-        ctx.clearRect(0, 0, width, height);
-
-        // Draw Background (Asset or Gradient)
-        if (images.bg) {
-            ctx.drawImage(images.bg, 0, 0, width, height);
-        } else {
-            // God Rays
-            const g = ctx.createLinearGradient(0,0,0,height);
-            g.addColorStop(0, '#001e36'); g.addColorStop(1, '#000');
-            ctx.fillStyle = g; ctx.fillRect(0,0,width,height);
-        }
-
-        // 1. Handle Special Weapon
-        if (specialWeapon) {
-            specialWeapon.update();
-            specialWeapon.draw();
-            
-            specialTimer--;
-            
-            // Update Bar UI
-            const pct = (specialTimer / specialMaxTime) * 100;
-            document.getElementById('weapon-fill').style.width = pct + '%';
-
-            if (specialTimer <= 0) {
-                // Time's up!
-                explodeArea(); // BOOM di akhir durasi
-                specialWeapon = null;
-                document.getElementById('weapon-timer').style.display = 'none';
-            }
-        }
-
-        // 2. Handle Auto Shoot
-        if (autoFire && !specialWeapon && balance >= bet) {
-            if (Date.now() % 200 < 20) shoot(); // Fire rate limiter
-        }
-
-        // 3. Update Fishes
-        fishes.forEach(f => {
-            f.update();
-            f.draw();
-        });
-
-        // 4. Update Bullets (Normal)
-        for (let i = bullets.length - 1; i >= 0; i--) {
-            let b = bullets[i];
-            b.update();
-            b.draw();
-            
-            if(!b.active) { bullets.splice(i,1); continue; }
-
-            // Collision
-            for (let f of fishes) {
-                if (Math.hypot(b.x - f.x, b.y - f.y) < f.size + 10) {
-                    b.active = false;
-                    f.hp--;
-                    spawnParticle(b.x, b.y, 'hit');
-                    if(f.hp <= 0) handleFishDeath(f);
-                    break;
-                }
-            }
-        }
-
-        // 5. Particles
-        for (let i = particles.length - 1; i >= 0; i--) {
-            let p = particles[i];
-            p.x += p.vx; p.y += p.vy; p.life -= 0.05;
-            ctx.globalAlpha = p.life;
-            ctx.fillStyle = p.type === 'coin' ? 'gold' : (p.type === 'boom' ? 'orange' : 'white');
-            const size = p.type === 'boom' ? 10 : 3;
-            ctx.beginPath(); ctx.arc(p.x, p.y, size, 0, Math.PI*2); ctx.fill();
-            if(p.life <= 0) particles.splice(i,1);
-        }
-        ctx.globalAlpha = 1;
-
-        // Cannon Drawing
-        const angle = Math.atan2(mouse.y - (height-50), mouse.x - width/2);
-        ctx.save();
-        ctx.translate(width/2, height-50);
-        ctx.rotate(angle);
-        ctx.fillStyle = specialWeapon ? '#ff0055' : '#333'; // Merah jika weapon aktif
-        ctx.fillRect(0, -15, 60, 30);
-        ctx.restore();
-
-        ctx.beginPath(); ctx.arc(width/2, height-50, 40, Math.PI, 0); 
-        ctx.fillStyle = '#111'; ctx.fill(); ctx.strokeStyle='#00f3ff'; ctx.stroke();
-
-        requestAnimationFrame(loop);
-    }
-
-    // --- INPUTS ---
-    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-    window.addEventListener('mousedown', (e) => {
-        if (!e.target.closest('.hud-bottom')) shoot();
+function spawnExplosion(x, y, color) {
+  for (let i = 0; i < 20; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 14,
+      vy: (Math.random() - 0.5) * 14 - 3,
+      color,
+      size:    4 + Math.random() * 6,
+      life:    1,
+      maxLife: 1,
+      isCoin:  false,
+      rotate:  0,
     });
+  }
+  for (let i = 0; i < 10; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 20,
+      vy: (Math.random() - 0.5) * 20,
+      color:   '#fff',
+      size:    2,
+      life:    0.8,
+      maxLife: 0.8,
+      isCoin:  false,
+      rotate:  0,
+    });
+  }
+}
 
-    function toggleAuto() {
-        autoFire = !autoFire;
-        const btn = document.getElementById('btn-auto');
-        btn.innerText = autoFire ? "AUTO FIRE: ON" : "AUTO FIRE: OFF";
-        btn.classList.toggle('active', autoFire);
+function spawnCoins(x, y, count) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const spd = 2 + Math.random() * 5;
+    particles.push({
+      x, y,
+      vx:     Math.cos(ang) * spd,
+      vy:     Math.sin(ang) * spd - 3,
+      color:  '#ffd700',
+      size:   5,
+      life:   1.2,
+      maxLife:1.2,
+      isCoin: true,
+      rotate: Math.random() * Math.PI * 2,
+    });
+  }
+}
+
+// ============================================================
+//  FLOATING SCORE TEXT
+// ============================================================
+function floatText(str, x, y, color) {
+  const el = document.createElement('div');
+  el.className = 'floater';
+  el.textContent = str;
+  el.style.cssText = `left:${x}px;top:${y}px;color:${color || '#ffd700'};`;
+  document.getElementById('floaters').appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+// ============================================================
+//  FISH DEATH HANDLER
+// ============================================================
+function killFish(f) {
+  if (!f.alive) return;
+  f.alive = false;
+
+  spawnExplosion(f.x, f.y, f.glow);
+  spawnCoins(f.x, f.y, f.id === 'boss' ? 10 : 4);
+
+  // Special fish: trigger bonus instead of giving coins directly
+  if (f.id === 'drill')    { activateDrill();           f.init(); return; }
+  if (f.id === 'bomb')     { activateBombMode();         f.init(); return; }
+  if (f.id === 'roulette') { openBonus('roulette', f);  return; }
+  if (f.id === 'random')   { openBonus('random',   f);  return; }
+
+  // Normal reward
+  let win = 0;
+  if (f.id === 'jackpot') {
+    win = f.countUp;
+    jackpotPool = Math.max(0, jackpotPool - win);
+    updateJackpot();
+    floatText('JACKPOT! +' + win, f.x, f.y - 30, '#ffd700');
+  } else {
+    win = Math.floor(f.val * (bet / 10));
+  }
+
+  balance  += win;
+  totalWin += win;
+  floatText('+' + win, f.x, f.y - 20, '#ffd700');
+  updateUI();
+  f.init();
+}
+
+// ============================================================
+//  SPECIAL WEAPON — ACTIVATE
+// ============================================================
+function activateDrill() {
+  specialWeapon = new SpecialDrill();
+  specialMax    = 15 * 60; // 15 seconds at 60fps
+  specialTimer  = specialMax;
+
+  const bar = document.getElementById('special-bar-wrap');
+  bar.style.display = 'flex';
+  document.getElementById('special-bar-label').textContent = '⚡ DRILL ACTIVE';
+  document.getElementById('special-bar-fill').style.background = '#00e5ff';
+
+  floatText('⚡ DRILL MODE!', W / 2, H / 2, '#00e5ff');
+  spawnExplosion(W / 2, H / 2, '#00e5ff');
+}
+
+function activateBombMode() {
+  specialWeapon = new SpecialBomb();
+  specialMax    = 10 * 60; // 10 seconds
+  specialTimer  = specialMax;
+
+  const bar = document.getElementById('special-bar-wrap');
+  bar.style.display = 'flex';
+  document.getElementById('special-bar-label').textContent = '💣 BOMB ACTIVE';
+  document.getElementById('special-bar-fill').style.background = '#ff1744';
+
+  floatText('💣 BOMB MODE!', W / 2, H / 2, '#ff1744');
+  spawnExplosion(W / 2, H / 2, '#ff1744');
+}
+
+function endSpecial() {
+  if (!specialWeapon) return;
+
+  // Bomb explodes in a large radius at the end
+  if (specialWeapon instanceof SpecialBomb) {
+    const cx = specialWeapon.x;
+    const cy = specialWeapon.y;
+    spawnExplosion(cx, cy, '#ff5722');
+    spawnExplosion(cx, cy, '#ffd700');
+    shakeScreen();
+    fishes.forEach(f => {
+      if (f.alive && Math.hypot(f.x - cx, f.y - cy) < 250) {
+        f.hp = 0;
+        killFish(f);
+      }
+    });
+  }
+
+  specialWeapon = null;
+  document.getElementById('special-bar-wrap').style.display = 'none';
+}
+
+// ============================================================
+//  BONUS WHEEL — PRIZE TABLES
+// ============================================================
+const ROULETTE_PRIZES = [
+  { label:'2× BET',   mult:2,   color:'#4caf50' },
+  { label:'5× BET',   mult:5,   color:'#8bc34a' },
+  { label:'10× BET',  mult:10,  color:'#ffd700' },
+  { label:'20× BET',  mult:20,  color:'#ff9800' },
+  { label:'50× BET',  mult:50,  color:'#ff5722' },
+  { label:'JACKPOT!', mult:200, color:'#e91e63' },
+  { label:'3× BET',   mult:3,   color:'#009688' },
+  { label:'0× Miss',  mult:0,   color:'#607d8b' },
+  { label:'8× BET',   mult:8,   color:'#2196f3' },
+  { label:'15× BET',  mult:15,  color:'#9c27b0' },
+  { label:'1× BET',   mult:1,   color:'#795548' },
+  { label:'30× BET',  mult:30,  color:'#f44336' },
+];
+
+const RANDOM_BONUSES = [
+  { label:'Free Drill',    type:'drill',    mult:0,  color:'#00e5ff' },
+  { label:'5× BET',        type:'coins',    mult:5,  color:'#ffd700' },
+  { label:'Free Bomb',     type:'bomb',     mult:0,  color:'#ff1744' },
+  { label:'10× BET',       type:'coins',    mult:10, color:'#ff9800' },
+  { label:'20× BET',       type:'coins',    mult:20, color:'#ff5722' },
+  { label:'50× BET',       type:'coins',    mult:50, color:'#e91e63' },
+  { label:'2× BET',        type:'coins',    mult:2,  color:'#4caf50' },
+  { label:'Free Roulette', type:'roulette', mult:0,  color:'#e040fb' },
+];
+
+let bonusAnimId  = null;
+let bonusPrizes  = [];
+let bonusType    = '';
+let currentFish  = null;
+
+// ============================================================
+//  BONUS WHEEL — OPEN & ANIMATE
+// ============================================================
+function openBonus(type, fish) {
+  bonusType   = type;
+  currentFish = fish;
+  bonusPrizes = type === 'roulette' ? ROULETTE_PRIZES : RANDOM_BONUSES;
+
+  // Reset UI
+  document.getElementById('bonus-overlay').style.display  = 'flex';
+  document.getElementById('bonus-title').textContent       = type === 'roulette' ? '🎰 ROULETTE BONUS!' : '🎁 LUCKY BONUS!';
+  document.getElementById('bonus-subtitle').textContent    = 'Roda berputar...';
+  document.getElementById('bonus-result').textContent      = '';
+  document.getElementById('bonus-close').style.display     = 'none';
+  document.getElementById('bonus-countdown').textContent   = '';
+
+  const cv  = document.getElementById('bonusCanvas');
+  const cx  = cv.getContext('2d');
+  const CW  = cv.width;
+  const CH  = cv.height;
+
+  // Pick winning segment
+  const targetSegment = Math.floor(Math.random() * bonusPrizes.length);
+  const segAngle      = (Math.PI * 2) / bonusPrizes.length;
+  const targetAngle   = Math.PI * 6 + Math.PI * 2
+                        - (targetSegment * segAngle + segAngle / 2)
+                        - Math.PI / 2;
+
+  let elapsed  = 0;
+  const frames = 180; // spin duration in frames
+
+  if (bonusAnimId) cancelAnimationFrame(bonusAnimId);
+
+  function spin() {
+    elapsed++;
+    const t    = Math.min(elapsed / frames, 1);
+    const ease = 1 - Math.pow(1 - t, 4); // ease-out quartic
+    const angle = targetAngle * ease;
+
+    drawWheel(angle, bonusPrizes, cv, cx, CW, CH);
+
+    if (elapsed < frames) {
+      bonusAnimId = requestAnimationFrame(spin);
+    } else {
+      drawWheel(targetAngle, bonusPrizes, cv, cx, CW, CH);
+      showBonusResult(bonusPrizes[targetSegment]);
     }
+  }
 
-    function changeBet(val) {
-        if(bet + val >= 10) bet += val;
-        document.getElementById('bet').innerText = bet;
+  spin();
+}
+
+// ============================================================
+//  BONUS WHEEL — DRAW
+// ============================================================
+function drawWheel(angle, prizes, cv, cx, CW, CH) {
+  const R   = CW / 2 - 10;
+  const ox  = CW / 2;
+  const oy  = CH / 2;
+  const seg = (Math.PI * 2) / prizes.length;
+
+  cx.clearRect(0, 0, CW, CH);
+
+  // Draw segments
+  cx.shadowBlur   = 20;
+  cx.shadowColor  = 'rgba(0,0,0,0.5)';
+  for (let i = 0; i < prizes.length; i++) {
+    const a = angle + i * seg;
+    cx.beginPath();
+    cx.moveTo(ox, oy);
+    cx.arc(ox, oy, R, a, a + seg);
+    cx.closePath();
+    cx.fillStyle   = prizes[i].color;
+    cx.fill();
+    cx.strokeStyle = 'rgba(0,0,0,0.3)';
+    cx.lineWidth   = 1.5;
+    cx.stroke();
+  }
+
+  cx.shadowBlur = 0;
+
+  // Segment labels
+  for (let i = 0; i < prizes.length; i++) {
+    const a = angle + i * seg + seg / 2;
+    cx.save();
+    cx.translate(ox + Math.cos(a) * R * 0.68, oy + Math.sin(a) * R * 0.68);
+    cx.rotate(a + Math.PI / 2);
+    cx.fillStyle    = '#fff';
+    cx.font         = 'bold 11px Arial';
+    cx.textAlign    = 'center';
+    cx.textBaseline = 'middle';
+    cx.shadowBlur   = 3;
+    cx.shadowColor  = 'rgba(0,0,0,0.9)';
+    cx.fillText(prizes[i].label, 0, 0);
+    cx.restore();
+  }
+
+  // Center hub
+  cx.beginPath();
+  cx.arc(ox, oy, 18, 0, Math.PI * 2);
+  cx.fillStyle   = '#ffd700';
+  cx.fill();
+  cx.strokeStyle = '#fff';
+  cx.lineWidth   = 2;
+  cx.stroke();
+
+  // Pointer (top)
+  cx.beginPath();
+  cx.moveTo(ox,      oy - R - 5);
+  cx.lineTo(ox - 10, oy - R + 15);
+  cx.lineTo(ox + 10, oy - R + 15);
+  cx.closePath();
+  cx.fillStyle   = '#fff';
+  cx.shadowBlur  = 10;
+  cx.shadowColor = '#fff';
+  cx.fill();
+}
+
+// ============================================================
+//  BONUS WHEEL — SHOW RESULT WITH COUNTDOWN
+// ============================================================
+function showBonusResult(prize) {
+  document.getElementById('bonus-subtitle').textContent = 'Hasil:';
+
+  let resultText = '';
+  let winAmount  = 0;
+
+  if (prize.type === 'drill') {
+    resultText = '⚡ FREE DRILL!';
+    setTimeout(() => { closeBonus(); activateDrill(); }, 1800);
+  } else if (prize.type === 'bomb') {
+    resultText = '💣 FREE BOMB!';
+    setTimeout(() => { closeBonus(); activateBombMode(); }, 1800);
+  } else if (prize.type === 'roulette') {
+    resultText = '🎰 FREE ROULETTE!';
+    setTimeout(() => { closeBonus(); openBonus('roulette', currentFish); }, 1800);
+  } else {
+    const mult = prize.mult || 0;
+    winAmount   = mult * bet;
+    if (mult === 0) {
+      resultText = 'Sayang sekali...';
+    } else {
+      resultText = '+' + winAmount + ' Koin!';
+      balance   += winAmount;
+      totalWin  += winAmount;
+      floatText('+' + winAmount, W / 2, H / 2, '#ffd700');
+      updateUI();
     }
+  }
 
-    function updateUI() {
-        document.getElementById('balance').innerText = balance.toLocaleString();
+  // Countdown animation: 3 … 2 … 1 … reveal
+  let cd = 3;
+  const cdEl = document.getElementById('bonus-countdown');
+
+  function tick() {
+    cdEl.textContent = cd > 0 ? cd : '';
+    if (cd > 0) {
+      cd--;
+      setTimeout(tick, 400);
+    } else {
+      cdEl.textContent = '';
+      document.getElementById('bonus-result').textContent = resultText;
+      document.getElementById('bonus-close').style.display = 'inline-block';
+      if (currentFish) currentFish.init();
     }
+  }
+  tick();
+}
 
-    loop();
+function closeBonus() {
+  document.getElementById('bonus-overlay').style.display = 'none';
+  if (bonusAnimId) cancelAnimationFrame(bonusAnimId);
+}
 
+// ============================================================
+//  SCREEN SHAKE
+// ============================================================
+function shakeScreen() { shakeAmt = 12; }
+
+// ============================================================
+//  BACKGROUND — OCEAN + GOD RAYS + BUBBLES
+// ============================================================
+const bubbles = [];
+for (let i = 0; i < 30; i++) {
+  bubbles.push({
+    x:   Math.random() * 2000,
+    y:   Math.random() * 800,
+    r:   1 + Math.random() * 4,
+    spd: 0.3 + Math.random() * 0.7,
+  });
+}
+
+function drawBackground() {
+  // Ocean gradient
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0,   '#000c1f');
+  g.addColorStop(0.5, '#001a3a');
+  g.addColorStop(1,   '#000811');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  // Animated god rays
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  for (let i = 0; i < 8; i++) {
+    const rx = W * 0.5 + Math.cos(i * 0.8 + frameCount * 0.002) * W * 0.3;
+    const rg = ctx.createLinearGradient(rx, 0, rx + 60, H);
+    rg.addColorStop(0, 'rgba(0,150,255,0.8)');
+    rg.addColorStop(1, 'transparent');
+    ctx.fillStyle = rg;
+    ctx.beginPath();
+    ctx.moveTo(rx - 30,       0);
+    ctx.lineTo(rx + 30 + 80,  H);
+    ctx.lineTo(rx - 80 + 80,  H);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Rising bubbles
+  ctx.save();
+  for (let b of bubbles) {
+    b.y -= b.spd;
+    b.x += Math.sin(frameCount * 0.01 + b.r) * 0.3;
+    if (b.y < -10) { b.y = H + 10; b.x = Math.random() * W; }
+    ctx.globalAlpha  = 0.15;
+    ctx.strokeStyle  = '#4fc3f7';
+    ctx.lineWidth    = 0.8;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // Sea floor
+  ctx.fillStyle   = 'rgba(0,30,60,0.6)';
+  ctx.fillRect(0, H - 40, W, 40);
+  ctx.strokeStyle = 'rgba(0,200,255,0.15)';
+  ctx.lineWidth   = 1;
+  ctx.beginPath();
+  ctx.moveTo(0,  H - 40);
+  ctx.lineTo(W,  H - 40);
+  ctx.stroke();
+}
+
+// ============================================================
+//  CANNON DRAW
+// ============================================================
+function drawCannon() {
+  cannonX = W / 2;
+  cannonY = H - 60;
+
+  const ang = Math.atan2(mouse.y - cannonY, mouse.x - cannonX);
+
+  ctx.save();
+  ctx.translate(cannonX, cannonY);
+
+  // Base platform
+  ctx.shadowBlur  = 20;
+  ctx.shadowColor = '#00bcd4';
+  ctx.fillStyle   = '#1a2a3a';
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 50, 20, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#00bcd4';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+
+  // Rotating barrel
+  ctx.rotate(ang);
+  ctx.fillStyle   = specialWeapon ? '#ff1744' : '#263545';
+  ctx.beginPath();
+  ctx.rect(0, -10, 65, 20);
+  ctx.fill();
+  ctx.strokeStyle = specialWeapon ? '#ff5252' : '#00e5ff';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+
+  // Barrel tip
+  ctx.fillStyle = specialWeapon ? '#ff5252' : '#37474f';
+  ctx.beginPath();
+  ctx.rect(55, -12, 18, 24);
+  ctx.fill();
+
+  ctx.restore();
+
+  // Center orb (pulsing)
+  const pulse = Math.sin(frameCount * 0.1) * 4;
+  ctx.save();
+  ctx.translate(cannonX, cannonY);
+  ctx.shadowBlur  = 20 + pulse;
+  ctx.shadowColor = '#00bcd4';
+  ctx.fillStyle   = '#0097a7';
+  ctx.beginPath();
+  ctx.arc(0, 0, 18, 0, Math.PI * 2);
+  ctx.fill();
+  // Orb highlight
+  ctx.fillStyle = 'rgba(0,229,255,0.5)';
+  ctx.beginPath();
+  ctx.arc(-4, -5, 6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+// ============================================================
+//  SHOOT
+// ============================================================
+function shoot() {
+  if (gameOver || balance < bet) return;
+  balance -= bet;
+  updateUI();
+  bullets.push(new Bullet(cannonX, cannonY));
+  spawnParticle(cannonX, cannonY, '#ffd700', 3, 0.5);
+}
+
+// ============================================================
+//  GAME OVER
+// ============================================================
+function showGameOver() {
+  if (gameOver) return;
+  gameOver = true;
+  document.getElementById('overlay-box').style.display = 'block';
+}
+
+function restartGame() {
+  balance       = 10000;
+  totalWin      = 0;
+  level         = 1;
+  bet           = 10;
+  gameOver      = false;
+  autoFire      = false;
+  jackpotPool   = 9999999;
+  specialWeapon = null;
+  shakeAmt      = 0;
+
+  document.getElementById('btn-auto').textContent = 'AUTO OFF';
+  document.getElementById('btn-auto').classList.remove('on');
+  document.getElementById('overlay-box').style.display = 'none';
+  document.getElementById('special-bar-wrap').style.display = 'none';
+
+  bullets.length   = 0;
+  particles.length = 0;
+  for (let f of fishes) f.init();
+
+  updateUI();
+  updateJackpot();
+}
+
+// ============================================================
+//  UI HELPERS
+// ============================================================
+function toggleAuto() {
+  autoFire = !autoFire;
+  const b  = document.getElementById('btn-auto');
+  b.textContent = autoFire ? 'AUTO ON' : 'AUTO OFF';
+  b.classList.toggle('on', autoFire);
+}
+
+function changeBet(delta, type) {
+  if (type === 'max') {
+    bet = Math.min(balance, 500);
+  } else {
+    bet = Math.max(10, Math.min(500, bet + delta));
+  }
+  document.getElementById('hud-bet').textContent = bet;
+}
+
+function updateUI() {
+  document.getElementById('hud-balance').textContent = Math.floor(balance).toLocaleString();
+  document.getElementById('hud-win').textContent     = Math.floor(totalWin).toLocaleString();
+  document.getElementById('hud-level').textContent   = level;
+}
+
+function updateJackpot() {
+  document.getElementById('hud-jackpot').textContent = jackpotPool.toLocaleString();
+}
+
+// ============================================================
+//  MAIN GAME LOOP
+// ============================================================
+function loop() {
+  frameCount++;
+
+  // Screen shake transform
+  if (shakeAmt > 0) {
+    ctx.save();
+    ctx.translate(
+      (Math.random() - 0.5) * shakeAmt,
+      (Math.random() - 0.5) * shakeAmt
+    );
+    shakeAmt *= 0.8;
+    if (shakeAmt < 0.5) shakeAmt = 0;
+  }
+
+  ctx.clearRect(0, 0, W, H);
+
+  // 1. Background
+  drawBackground();
+
+  // 2. Fishes
+  for (let f of fishes) {
+    if (f.alive) { f.update(); f.draw(); }
+  }
+
+  // 3. Special weapon
+  if (specialWeapon) {
+    specialWeapon.update();
+    specialWeapon.draw();
+    specialTimer--;
+
+    const pct = (specialTimer / specialMax) * 100;
+    document.getElementById('special-bar-fill').style.width = pct + '%';
+
+    if (specialTimer <= 0) endSpecial();
+  }
+
+  // 4. Bullets
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    bullets[i].update();
+    bullets[i].draw();
+    if (!bullets[i].alive) bullets.splice(i, 1);
+  }
+
+  // 5. Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p  = particles[i];
+    p.x     += p.vx;
+    p.y     += p.vy;
+    p.vy    += 0.15;          // gravity
+    p.life  -= 0.025;
+
+    const a  = Math.max(0, p.life / p.maxLife);
+    ctx.save();
+    ctx.globalAlpha  = a;
+    ctx.shadowBlur   = 8;
+    ctx.shadowColor  = p.color;
+
+    if (p.isCoin) {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y, p.size, p.size * 0.5, p.rotate + frameCount * 0.1, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+
+  // 6. Cannon
+  drawCannon();
+
+  if (shakeAmt > 0) ctx.restore();
+
+  // 7. Auto fire
+  if (autoFire && !specialWeapon && balance >= bet && frameCount % 12 === 0) {
+    shoot();
+  }
+
+  // 8. Jackpot pool drifts up slowly
+  if (frameCount % 180 === 0 && jackpotPool < 9999999) {
+    jackpotPool += Math.floor(Math.random() * 50 + 10);
+    updateJackpot();
+  }
+
+  // 9. Level up check
+  if (totalWin > level * 500) {
+    level++;
+    floatText('⬆ LEVEL ' + level, W / 2, H / 3, '#00e5ff');
+    updateUI();
+  }
+
+  // 10. Game over check
+  if (!gameOver && balance < bet && !specialWeapon && !autoFire) {
+    showGameOver();
+  }
+
+  requestAnimationFrame(loop);
+}
+
+// ============================================================
+//  INPUT HANDLING — MOUSE & TOUCH
+// ============================================================
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+
+window.addEventListener('mousedown', e => {
+  if (!e.target.closest('.hud-bottom') && !e.target.closest('#bonus-overlay')) {
+    shoot();
+  }
+});
+
+window.addEventListener('touchstart', e => {
+  if (e.target.closest('.hud-bottom') || e.target.closest('#bonus-overlay')) return;
+  const t = e.touches[0];
+  mouse.x = t.clientX;
+  mouse.y = t.clientY;
+  shoot();
+  e.preventDefault();
+}, { passive: false });
+
+window.addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  mouse.x = t.clientX;
+  mouse.y = t.clientY;
+}, { passive: true });
+
+// ============================================================
+//  INIT
+// ============================================================
+for (let i = 0; i < 18; i++) fishes.push(new Fish());
+updateUI();
+updateJackpot();
+loop();
 </script>
 </body>
 </html>
