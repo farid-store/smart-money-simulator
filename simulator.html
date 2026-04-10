@@ -1,1483 +1,178 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PHANTOM TERMINAL — Smart Money Simulator</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --bg0: #0a0b0e;
-  --bg1: #0f1117;
-  --bg2: #151820;
-  --bg3: #1c2028;
-  --bg4: #232731;
-  --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.12);
-  --up: #00d4a0;
-  --down: #ff4d6d;
-  --warn: #f5a623;
-  --info: #4a9eff;
-  --purple: #a855f7;
-  --text1: #e8eaf0;
-  --text2: #8b92a5;
-  --text3: #4a5068;
-  --mono: 'IBM Plex Mono', monospace;
-  --sans: 'IBM Plex Sans', sans-serif;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg0); color: var(--text1); font-family: var(--sans); font-size: 12px; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Terminal Clone</title>
+    <style>
+        :root {
+            --bg-base: #0a0a0a;
+            --bg-panel: #161616;
+            --bg-header: #1e1e1e;
+            --border-color: #2a2a2a;
+            --text-main: #d1d5db;
+            --text-muted: #6b7280;
+            --color-up: #10b981;
+            --color-down: #ef4444;
+        }
 
-/* SCROLLBAR */
-::-webkit-scrollbar { width: 3px; height: 3px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-/* LAYOUT */
-.app { display: grid; grid-template-rows: 44px 1fr; height: 100vh; }
-.workspace { display: grid; grid-template-columns: 220px 1fr 260px; grid-template-rows: 1fr 180px; height: calc(100vh - 44px); }
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            font-size: 12px;
+        }
 
-/* TOPBAR */
-.topbar {
-  background: var(--bg1);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding: 0;
-  position: relative;
-  z-index: 100;
-}
-.topbar-brand {
-  padding: 0 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-right: 1px solid var(--border);
-  height: 100%;
-}
-.brand-icon {
-  width: 20px; height: 20px;
-  background: var(--purple);
-  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
-  flex-shrink: 0;
-}
-.brand-name { font-family: var(--mono); font-weight: 700; font-size: 11px; letter-spacing: 0.15em; color: var(--text1); }
-.brand-sub { font-family: var(--mono); font-size: 8px; color: var(--text3); letter-spacing: 0.1em; }
+        /* Sidebar Kiri */
+        .sidebar {
+            width: 50px;
+            background-color: var(--bg-header);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10px;
+        }
 
-.ticker-block {
-  padding: 0 16px;
-  border-right: 1px solid var(--border);
-  height: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.ticker-sym { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--warn); }
-.ticker-badge { font-size: 8px; background: var(--bg4); color: var(--text2); padding: 2px 5px; border-radius: 3px; border: 1px solid var(--border2); font-family: var(--mono); }
+        .sidebar-icon {
+            width: 30px;
+            height: 30px;
+            background-color: #333;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
 
-.ticker-stats { display: flex; gap: 16px; padding: 0 16px; border-right: 1px solid var(--border); height: 100%; align-items: center; }
-.stat-item { display: flex; flex-direction: column; gap: 1px; }
-.stat-label { font-size: 8px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
-.stat-val { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+        /* Area Konten Utama */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; padding: 0 16px; }
-.session-info { display: flex; align-items: center; gap: 6px; }
-.pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--up); animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(0.8)} }
-.session-label { font-family: var(--mono); font-size: 9px; color: var(--text2); letter-spacing: 0.1em; }
+        /* Navigasi Atas */
+        .top-nav {
+            height: 40px;
+            background-color: var(--bg-header);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            justify-content: space-between;
+        }
 
-.sm-score { display: flex; flex-direction: column; align-items: flex-end; }
-.sm-score-label { font-size: 8px; color: var(--text3); font-family: var(--mono); }
-.sm-score-val { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--purple); }
+        /* Grid Utama Terminal */
+        .dashboard-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 280px 300px 1fr; /* Kolom 1: Running, Kolom 2: Bid/Offer, Kolom 3: Sisa area */
+            gap: 5px;
+            padding: 5px;
+            background-color: var(--bg-base);
+            height: calc(100vh - 40px);
+        }
 
-/* PANELS */
-.panel { background: var(--bg1); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-.panel.no-border { border-right: none; border-left: 1px solid var(--border); }
-.panel-header {
-  padding: 6px 10px;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-}
-.panel-title { font-family: var(--mono); font-size: 9px; color: var(--text2); letter-spacing: 0.1em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
-.panel-badge { font-size: 7px; padding: 1px 4px; border-radius: 2px; font-family: var(--mono); }
-.badge-purple { background: rgba(168,85,247,0.15); color: var(--purple); border: 1px solid rgba(168,85,247,0.3); }
-.badge-red { background: rgba(255,77,109,0.12); color: var(--down); border: 1px solid rgba(255,77,109,0.25); }
-.badge-green { background: rgba(0,212,160,0.1); color: var(--up); border: 1px solid rgba(0,212,160,0.2); }
-.badge-yellow { background: rgba(245,166,35,0.1); color: var(--warn); border: 1px solid rgba(245,166,35,0.2); }
+        /* Panel Standard */
+        .panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-/* LEFT PANEL — SM CONTROLS */
-.left-panel { grid-row: 1 / 3; }
-.left-scroll { flex: 1; overflow-y: auto; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+        .panel-header {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-color);
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
 
-/* SECTION CARDS */
-.section-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  overflow: hidden;
-}
-.section-card-header {
-  padding: 6px 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-  user-select: none;
-}
-.section-card-title { font-family: var(--mono); font-size: 9px; color: var(--text2); letter-spacing: 0.08em; text-transform: uppercase; }
-.section-card-body { padding: 8px; }
+        .panel-content {
+            padding: 10px;
+            flex: 1;
+            overflow-y: auto;
+        }
 
-/* ALGO CARDS */
-.algo-card {
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  transition: border-color 0.2s;
-}
-.algo-card.active-ice { border-color: rgba(0,212,160,0.4); }
-.algo-card.active-spoof { border-color: rgba(255,77,109,0.4); }
-.algo-card.active-pump { border-color: rgba(245,166,35,0.4); }
-.algo-card.active-trap { border-color: rgba(168,85,247,0.4); }
+        /* Kolom 3 memiliki Grid di dalamnya (Atas: Chart, Bawah: Fundamental) */
+        .right-column {
+            display: grid;
+            grid-template-rows: 60% 40%; /* 60% untuk Chart, 40% untuk Fundamental/Income */
+            gap: 5px;
+        }
 
-.algo-header { display: flex; align-items: center; justify-content: space-between; }
-.algo-name { font-family: var(--mono); font-size: 9px; font-weight: 600; color: var(--text1); letter-spacing: 0.08em; }
-.algo-indicator { width: 6px; height: 6px; border-radius: 50%; background: var(--bg4); transition: all 0.3s; }
-.algo-indicator.on-green { background: var(--up); box-shadow: 0 0 6px var(--up); animation: pulse 1.5s infinite; }
-.algo-indicator.on-red { background: var(--down); box-shadow: 0 0 6px var(--down); animation: pulse 1.5s infinite; }
-.algo-indicator.on-yellow { background: var(--warn); box-shadow: 0 0 6px var(--warn); animation: pulse 1.5s infinite; }
-.algo-indicator.on-purple { background: var(--purple); box-shadow: 0 0 6px var(--purple); animation: pulse 1.5s infinite; }
+        .bottom-right-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Membagi dua area bawah kanan */
+            gap: 5px;
+        }
 
-.algo-desc { font-size: 9px; color: var(--text3); line-height: 1.5; }
-.algo-params { display: flex; flex-direction: column; gap: 4px; }
-.param-row { display: flex; align-items: center; justify-content: space-between; }
-.param-label { font-size: 8px; color: var(--text3); font-family: var(--mono); }
-.param-val { font-family: var(--mono); font-size: 9px; color: var(--text2); }
-.param-input { background: var(--bg4); border: 1px solid var(--border); border-radius: 2px; color: var(--text1); font-family: var(--mono); font-size: 9px; width: 60px; padding: 2px 4px; text-align: right; outline: none; }
-.param-input:focus { border-color: var(--info); }
-
-/* BUTTONS */
-.btn { border: none; border-radius: 3px; cursor: pointer; font-family: var(--mono); font-size: 9px; font-weight: 600; letter-spacing: 0.05em; padding: 5px 10px; transition: all 0.1s; text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 4px; }
-.btn:active { transform: scale(0.97); }
-.btn-ghost { background: var(--bg4); color: var(--text2); border: 1px solid var(--border); }
-.btn-ghost:hover { background: var(--bg3); color: var(--text1); border-color: var(--border2); }
-.btn-green { background: rgba(0,212,160,0.15); color: var(--up); border: 1px solid rgba(0,212,160,0.3); }
-.btn-green:hover { background: rgba(0,212,160,0.25); }
-.btn-red { background: rgba(255,77,109,0.15); color: var(--down); border: 1px solid rgba(255,77,109,0.3); }
-.btn-red:hover { background: rgba(255,77,109,0.25); }
-.btn-yellow { background: rgba(245,166,35,0.12); color: var(--warn); border: 1px solid rgba(245,166,35,0.25); }
-.btn-yellow:hover { background: rgba(245,166,35,0.2); }
-.btn-purple { background: rgba(168,85,247,0.12); color: var(--purple); border: 1px solid rgba(168,85,247,0.25); }
-.btn-purple:hover { background: rgba(168,85,247,0.2); }
-.btn-full { width: 100%; }
-.btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-
-/* MANUAL TRADE */
-.trade-big { padding: 10px 0; font-size: 11px; font-weight: 700; border-radius: 4px; cursor: pointer; border: none; transition: all 0.1s; font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.05em; }
-.trade-buy { background: var(--up); color: #000; }
-.trade-buy:hover { filter: brightness(1.15); }
-.trade-sell { background: var(--down); color: #fff; }
-.trade-sell:hover { filter: brightness(1.15); }
-.trade-big:active { transform: scale(0.97); }
-
-/* MAIN CHART */
-.chart-area { position: relative; background: #000; overflow: hidden; }
-#chartCanvas { display: block; }
-
-/* OVERLAY */
-.chart-overlay {
-  position: absolute; inset: 0; pointer-events: none;
-  display: flex; flex-direction: column;
-  justify-content: space-between;
-  padding: 8px;
-}
-.overlay-top { display: flex; justify-content: space-between; align-items: flex-start; }
-.overlay-bottom { display: flex; justify-content: space-between; align-items: flex-end; }
-
-.algo-status-box {
-  background: rgba(10,11,14,0.85);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.algo-status-row { display: flex; align-items: center; gap: 6px; }
-.status-dot { width: 5px; height: 5px; border-radius: 50%; }
-.status-label { font-family: var(--mono); font-size: 8px; color: var(--text2); }
-.status-label.active { color: var(--text1); }
-
-.chart-info-box {
-  background: rgba(10,11,14,0.85);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 6px 10px;
-}
-.chart-ohlcv { display: flex; gap: 12px; }
-.ohlcv-item { display: flex; flex-direction: column; gap: 1px; }
-.ohlcv-label { font-size: 7px; color: var(--text3); font-family: var(--mono); }
-.ohlcv-val { font-family: var(--mono); font-size: 10px; color: var(--text2); }
-
-/* NOTIFICATION TOAST */
-.toast-container { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 999; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
-.toast {
-  background: var(--bg3);
-  border: 1px solid var(--border2);
-  border-radius: 4px;
-  padding: 6px 14px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--text1);
-  animation: toastIn 0.2s ease;
-  white-space: nowrap;
-}
-@keyframes toastIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-
-/* RIGHT PANEL */
-.right-panel { grid-row: 1 / 3; }
-
-/* ORDER BOOK */
-.ob-container { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-.ob-header-row { display: grid; grid-template-columns: 1fr 70px 1fr; padding: 3px 8px; font-family: var(--mono); font-size: 8px; color: var(--text3); letter-spacing: 0.05em; flex-shrink: 0; }
-.ob-rows { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
-.ob-asks { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
-.ob-bids { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
-.ob-spread { background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 3px 8px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-.ob-spread-label { font-family: var(--mono); font-size: 8px; color: var(--text3); }
-.ob-spread-val { font-family: var(--mono); font-size: 9px; color: var(--warn); font-weight: 600; }
-
-.ob-row {
-  display: grid;
-  grid-template-columns: 1fr 70px 1fr;
-  padding: 1.5px 8px;
-  position: relative;
-  cursor: default;
-  transition: background 0.05s;
-}
-.ob-row:hover { background: var(--bg3); }
-.ob-vol { font-family: var(--mono); font-size: 10px; position: relative; z-index: 2; }
-.ob-price { font-family: var(--mono); font-size: 10px; font-weight: 600; text-align: center; position: relative; z-index: 2; }
-.ob-bar { position: absolute; top: 0; bottom: 0; opacity: 0.15; }
-.ob-bar-bid { right: 0; background: var(--up); }
-.ob-bar-ask { left: 0; background: var(--down); }
-.ob-row.spoof-row { background: rgba(255,77,109,0.06); }
-.ob-row.ice-row { background: rgba(0,212,160,0.06); }
-.ob-row.spoof-row .ob-price { color: var(--down); }
-.ob-row.ice-row .ob-price { color: var(--up); }
-
-/* TAPE */
-.tape-wrap { overflow-y: auto; flex: 1; }
-.tape-row { display: grid; grid-template-columns: 50px 50px 1fr 40px; padding: 1.5px 8px; border-bottom: 1px solid rgba(255,255,255,0.025); }
-.tape-row:hover { background: var(--bg2); }
-.tape-time { font-family: var(--mono); font-size: 9px; color: var(--text3); }
-.tape-price { font-family: var(--mono); font-size: 9px; font-weight: 600; }
-.tape-qty { font-family: var(--mono); font-size: 9px; color: var(--text2); text-align: center; }
-.tape-broker { font-family: var(--mono); font-size: 9px; text-align: right; }
-
-/* BOTTOM BAR */
-.bottom-bar {
-  grid-column: 2;
-  background: var(--bg1);
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  gap: 0;
-  overflow: hidden;
-}
-.bottom-segment { padding: 0 14px; border-right: 1px solid var(--border); height: 100%; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
-.bottom-label { font-family: var(--mono); font-size: 7px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; }
-.bottom-val { font-family: var(--mono); font-size: 11px; font-weight: 600; }
-
-/* BROKER FLOW */
-.broker-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
-.broker-code { font-family: var(--mono); font-size: 9px; font-weight: 700; width: 24px; }
-.broker-bar-wrap { flex: 1; height: 3px; background: var(--bg4); border-radius: 2px; margin: 0 6px; }
-.broker-bar-inner { height: 100%; border-radius: 2px; transition: width 0.4s; }
-.broker-net { font-family: var(--mono); font-size: 8px; width: 36px; text-align: right; }
-
-/* INTELLIGENCE BOX */
-.intel-item { display: flex; align-items: flex-start; gap: 6px; padding: 4px 0; border-bottom: 1px solid var(--border); }
-.intel-item:last-child { border-bottom: none; }
-.intel-icon { width: 14px; height: 14px; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 8px; flex-shrink: 0; margin-top: 1px; }
-.intel-text { font-size: 9px; color: var(--text2); line-height: 1.5; flex: 1; }
-.intel-time { font-family: var(--mono); font-size: 7px; color: var(--text3); white-space: nowrap; }
-
-/* PNL DISPLAY */
-.pnl-bar { display: flex; gap: 4px; }
-.pnl-item { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; padding: 5px 7px; }
-.pnl-label { font-size: 7px; color: var(--text3); font-family: var(--mono); }
-.pnl-val { font-family: var(--mono); font-size: 11px; font-weight: 700; }
-
-/* PHASE INDICATOR */
-.phase-block { padding: 6px 10px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; }
-.phase-title { font-size: 7px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; margin-bottom: 4px; }
-.phase-name { font-family: var(--mono); font-size: 10px; font-weight: 700; }
-.phase-desc { font-size: 8px; color: var(--text2); margin-top: 2px; line-height: 1.4; }
-.phase-bar { height: 3px; background: var(--bg4); border-radius: 2px; margin-top: 6px; }
-.phase-bar-inner { height: 100%; border-radius: 2px; transition: width 0.5s; background: var(--info); }
-
-/* SLIDER CONTROL */
-.slider-row { display: flex; align-items: center; gap: 6px; }
-.slider-label { font-size: 8px; color: var(--text3); font-family: var(--mono); width: 60px; flex-shrink: 0; }
-input[type=range] {
-  flex: 1; height: 3px; -webkit-appearance: none; background: var(--bg4); border-radius: 2px; outline: none; cursor: pointer;
-}
-input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 10px; height: 10px; border-radius: 50%; background: var(--info); cursor: pointer;
-}
-.slider-out { font-family: var(--mono); font-size: 9px; color: var(--text1); width: 30px; text-align: right; }
-
-/* FOREIGN FLOW CHART */
-.ff-bar-wrap { display: flex; align-items: center; gap: 4px; }
-.ff-buy-bar { height: 6px; background: var(--up); border-radius: 1px; transition: width 0.4s; }
-.ff-sell-bar { height: 6px; background: var(--down); border-radius: 1px; transition: width 0.4s; }
-.ff-mid { width: 1px; background: var(--border2); height: 10px; flex-shrink: 0; }
-
-/* TOGGLE SWITCH */
-.toggle-wrap { display: flex; align-items: center; gap: 6px; }
-.toggle { position: relative; width: 24px; height: 13px; cursor: pointer; }
-.toggle input { display: none; }
-.toggle-slider { position: absolute; inset: 0; background: var(--bg4); border-radius: 7px; border: 1px solid var(--border2); transition: 0.2s; }
-.toggle-slider::before { content:''; position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--text3); top: 1px; left: 1px; transition: 0.2s; }
-.toggle input:checked + .toggle-slider { background: rgba(0,212,160,0.2); border-color: var(--up); }
-.toggle input:checked + .toggle-slider::before { background: var(--up); transform: translateX(11px); }
-.toggle-label { font-family: var(--mono); font-size: 9px; color: var(--text2); }
-
-/* CANDLESTICK FLASH */
-.candle-flash { animation: cFlash 0.15s ease-out; }
-@keyframes cFlash { 0%{opacity:.4} 100%{opacity:1} }
-
-/* LOADING/PROGRESS */
-.progress-ring { transform: rotate(-90deg); }
-.progress-ring-circle { transition: stroke-dashoffset 0.5s; }
-
-/* MATRIX RAIN effect on intel */
-.matrix-dot { display: inline-block; width: 4px; height: 4px; border-radius: 50%; margin-right: 2px; animation: mdot 1.2s infinite; }
-@keyframes mdot { 0%,100%{opacity:.2} 50%{opacity:1} }
-</style>
+    </style>
 </head>
 <body>
-<div class="app">
 
-<!-- ══ TOPBAR ══ -->
-<header class="topbar">
-  <div class="topbar-brand">
-    <div class="brand-icon"></div>
-    <div>
-      <div class="brand-name">PHANTOM</div>
-      <div class="brand-sub">SMART MONEY TERMINAL</div>
+    <div class="sidebar">
+        <div class="sidebar-icon"></div>
+        <div class="sidebar-icon"></div>
+        <div class="sidebar-icon"></div>
     </div>
-  </div>
-  <div class="ticker-block">
-    <span class="ticker-sym">GOTO.JK</span>
-    <span class="ticker-badge">IDX · RG</span>
-    <span class="ticker-badge" style="color:var(--purple);border-color:rgba(168,85,247,0.4)">LQ45</span>
-  </div>
-  <div class="ticker-stats">
-    <div class="stat-item">
-      <span class="stat-label">LAST</span>
-      <span class="stat-val" id="hd-last" style="color:#fff;font-size:15px">82</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-label">CHG</span>
-      <span class="stat-val" id="hd-chg" style="color:var(--up)">+0.00%</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-label">OPEN</span>
-      <span class="stat-val" id="hd-open" style="color:var(--text2)">80</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-label">HIGH</span>
-      <span class="stat-val" id="hd-high" style="color:var(--up)">82</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-label">LOW</span>
-      <span class="stat-val" id="hd-low" style="color:var(--down)">79</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-label">VWAP</span>
-      <span class="stat-val" id="hd-vwap" style="color:var(--warn)">81.2</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-label">VOL (LOT)</span>
-      <span class="stat-val" id="hd-vol" style="color:var(--text1)">0</span>
-    </div>
-    <div class="stat-item">
-      <span class="stat-label">F-NET</span>
-      <span class="stat-val" id="hd-fnet" style="color:var(--info)">+0M</span>
-    </div>
-  </div>
-  <div class="topbar-right">
-    <div class="sm-score">
-      <span class="sm-score-label">SM SCORE</span>
-      <span class="sm-score-val" id="sm-score">0</span>
-    </div>
-    <div style="width:1px;height:20px;background:var(--border)"></div>
-    <div class="sm-score" style="align-items:flex-end">
-      <span class="sm-score-label">P&amp;L</span>
-      <span class="sm-score-val" id="hd-pnl" style="color:var(--text2)">+0</span>
-    </div>
-    <div style="width:1px;height:20px;background:var(--border)"></div>
-    <div class="session-info">
-      <div class="pulse-dot"></div>
-      <span class="session-label" id="clock">09:00:00</span>
-    </div>
-  </div>
-</header>
 
-<div class="workspace">
-
-  <!-- ══ LEFT PANEL — SM CONTROL CENTER ══ -->
-  <div class="panel left-panel" style="grid-row:1/3">
-    <div class="panel-header">
-      <span class="panel-title">
-        <span class="status-dot" style="background:var(--purple);box-shadow:0 0 5px var(--purple)"></span>
-        SM Control Center
-      </span>
-      <span class="panel-badge badge-purple">v2.4</span>
-    </div>
-    <div class="left-scroll">
-
-      <!-- PHASE -->
-      <div class="phase-block">
-        <div class="phase-title">Market Phase</div>
-        <div class="phase-name" id="phase-name" style="color:var(--info)">ACCUMULATION</div>
-        <div class="phase-desc" id="phase-desc">SM sedang diam-diam mengumpulkan posisi. Harga flat, volume rendah.</div>
-        <div class="phase-bar"><div class="phase-bar-inner" id="phase-prog" style="width:20%"></div></div>
-      </div>
-
-      <!-- PNL -->
-      <div>
-        <div class="pnl-bar">
-          <div class="pnl-item">
-            <div class="pnl-label">MODAL</div>
-            <div class="pnl-val" id="pnl-modal" style="color:var(--text1)">100M</div>
-          </div>
-          <div class="pnl-item">
-            <div class="pnl-label">POS (LOT)</div>
-            <div class="pnl-val" id="pnl-pos" style="color:var(--info)">0</div>
-          </div>
-          <div class="pnl-item">
-            <div class="pnl-label">PROFIT</div>
-            <div class="pnl-val" id="pnl-profit" style="color:var(--text3)">0</div>
-          </div>
+    <div class="main-wrapper">
+        <div class="top-nav">
+            <div>Search Panel...</div>
+            <div>Akun & Pengaturan</div>
         </div>
-      </div>
 
-      <!-- ALGO: ICEBERG -->
-      <div class="section-card">
-        <div class="section-card-header">
-          <span class="section-card-title">01 — Iceberg Order</span>
-          <div class="algo-indicator" id="ind-ice"></div>
-        </div>
-        <div class="section-card-body" style="display:flex;flex-direction:column;gap:6px">
-          <div class="algo-desc">Pasang bid kecil terlihat, tapi hidden reserve di belakang. Retail tidak tahu ukuran asli pesanan kamu.</div>
-          <div class="algo-params">
-            <div class="param-row">
-              <span class="param-label">VISIBLE LOT</span>
-              <input class="param-input" id="ice-vis" type="number" value="112" min="10">
+        <div class="dashboard-grid">
+            <div class="panel">
+                <div class="panel-header">Running Trade</div>
+                <div class="panel-content">
+                    Data transaksi mengalir di sini...
+                </div>
             </div>
-            <div class="param-row">
-              <span class="param-label">TOTAL RESERVE</span>
-              <input class="param-input" id="ice-res" type="number" value="50000" min="1000">
+
+            <div class="panel" style="display: grid; grid-template-rows: 1fr 1fr; gap: 5px; border: none; background: transparent;">
+                <div class="panel">
+                    <div class="panel-header">Bid / Offer (Depth)</div>
+                    <div class="panel-content">Tabel antrean bid dan offer...</div>
+                </div>
+                <div class="panel">
+                    <div class="panel-header">Broker Action</div>
+                    <div class="panel-content">Ringkasan transaksi broker...</div>
+                </div>
             </div>
-          </div>
-          <button class="btn btn-green btn-full" onclick="SM.toggleAlgo('ICE')">ACTIVATE GHOST BID</button>
-        </div>
-      </div>
 
-      <!-- ALGO: SPOOFING -->
-      <div class="section-card">
-        <div class="section-card-header">
-          <span class="section-card-title">02 — Spoofing Wall</span>
-          <div class="algo-indicator" id="ind-spoof"></div>
-        </div>
-        <div class="section-card-body" style="display:flex;flex-direction:column;gap:6px">
-          <div class="algo-desc">Pasang offer/bid palsu besar untuk menciptakan ilusi supply/demand. Ditarik otomatis sebelum kena.</div>
-          <div class="algo-params">
-            <div class="param-row">
-              <span class="param-label">WALL SIDE</span>
-              <select class="param-input" id="spoof-side" style="width:60px">
-                <option>SELL</option>
-                <option>BUY</option>
-              </select>
+            <div class="right-column">
+                <div class="panel">
+                    <div class="panel-header">Interactive Chart</div>
+                    <div class="panel-content" style="display: flex; align-items: center; justify-content: center; color: #555;">
+                        (Integrasikan TradingView Lightweight Charts di div ini)
+                    </div>
+                </div>
+                
+                <div class="bottom-right-grid">
+                    <div class="panel">
+                        <div class="panel-header">Key Ratios / Solvency</div>
+                        <div class="panel-content">Data fundamental kuartalan...</div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-header">Income Statement</div>
+                        <div class="panel-content">Tabel laporan keuangan...</div>
+                    </div>
+                </div>
             </div>
-            <div class="param-row">
-              <span class="param-label">WALL SIZE (LOT)</span>
-              <input class="param-input" id="spoof-size" type="number" value="500000" min="10000">
-            </div>
-            <div class="param-row">
-              <span class="param-label">PULL AT (IDR)</span>
-              <input class="param-input" id="spoof-pull" type="number" value="1">
-            </div>
-          </div>
-          <button class="btn btn-red btn-full" onclick="SM.toggleAlgo('SPOOF')">DEPLOY FAKE WALL</button>
         </div>
-      </div>
-
-      <!-- ALGO: PUMP -->
-      <div class="section-card">
-        <div class="section-card-header">
-          <span class="section-card-title">03 — Markup Engine</span>
-          <div class="algo-indicator" id="ind-pump"></div>
-        </div>
-        <div class="section-card-body" style="display:flex;flex-direction:column;gap:6px">
-          <div class="algo-desc">Lakukan serangkaian HAKA bertubi-tubi untuk naikkan harga dan tarik FOMO retail masuk.</div>
-          <div class="algo-params">
-            <div class="param-row">
-              <span class="param-label">INTENSITY</span>
-              <div class="slider-row" style="gap:4px;flex:1;padding-left:8px">
-                <input type="range" id="pump-int" min="1" max="10" value="5" style="flex:1">
-                <span class="slider-out" id="pump-int-out">5</span>
-              </div>
-            </div>
-            <div class="param-row">
-              <span class="param-label">TARGET PRICE</span>
-              <input class="param-input" id="pump-tgt" type="number" value="95">
-            </div>
-          </div>
-          <button class="btn btn-yellow btn-full" onclick="SM.toggleAlgo('PUMP')">START MARKUP</button>
-        </div>
-      </div>
-
-      <!-- ALGO: BULL TRAP -->
-      <div class="section-card">
-        <div class="section-card-header">
-          <span class="section-card-title">04 — Bull Trap</span>
-          <div class="algo-indicator" id="ind-trap"></div>
-        </div>
-        <div class="section-card-body" style="display:flex;flex-direction:column;gap:6px">
-          <div class="algo-desc">Buat breakout palsu untuk jebak retail beli di atas, lalu dump cepat. Classic SM move.</div>
-          <div class="algo-params">
-            <div class="param-row">
-              <span class="param-label">BREAKOUT AT</span>
-              <input class="param-input" id="trap-price" type="number" value="90">
-            </div>
-            <div class="param-row">
-              <span class="param-label">DUMP SPEED</span>
-              <select class="param-input" id="trap-speed">
-                <option>FAST</option>
-                <option>SLOW</option>
-              </select>
-            </div>
-          </div>
-          <button class="btn btn-purple btn-full" onclick="SM.toggleAlgo('TRAP')">ARM TRAP</button>
-        </div>
-      </div>
-
-      <!-- MANUAL OVERRIDE -->
-      <div class="section-card">
-        <div class="section-card-header">
-          <span class="section-card-title">Manual Override</span>
-        </div>
-        <div class="section-card-body" style="display:flex;flex-direction:column;gap:6px">
-          <div class="slider-row">
-            <span class="slider-label">QTY (LOT)</span>
-            <input type="range" id="trade-qty" min="100" max="50000" step="100" value="5000">
-            <span class="slider-out" id="trade-qty-out">5000</span>
-          </div>
-          <div class="slider-row">
-            <span class="slider-label">BROKER</span>
-            <select class="param-input" id="trade-broker" style="flex:1;width:auto">
-              <option>MG (Bandar)</option>
-              <option>BK (Bandar)</option>
-              <option>AK (Bandar)</option>
-              <option>ZP (Bandar)</option>
-              <option>CC (Bandar)</option>
-            </select>
-          </div>
-          <div class="btn-group" style="grid-template-columns:1fr 1fr">
-            <button class="trade-big trade-buy" onmousedown="SM.manualTrade('BUY')">▲ HAKA</button>
-            <button class="trade-big trade-sell" onmousedown="SM.manualTrade('SELL')">▼ GORENG</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- BROKER NET FLOW -->
-      <div class="section-card">
-        <div class="section-card-header">
-          <span class="section-card-title">Broker Net Flow</span>
-          <span class="panel-badge badge-yellow">LIVE</span>
-        </div>
-        <div class="section-card-body" id="broker-flow-panel" style="display:flex;flex-direction:column;gap:3px">
-        </div>
-      </div>
-
     </div>
-  </div>
 
-  <!-- ══ CHART AREA ══ -->
-  <div class="chart-area">
-    <canvas id="chartCanvas"></canvas>
-    <div class="chart-overlay">
-      <div class="overlay-top">
-        <div class="algo-status-box">
-          <div style="font-family:var(--mono);font-size:7px;color:var(--text3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Active Algos</div>
-          <div class="algo-status-row"><div class="status-dot" id="st-ice" style="background:var(--text3)"></div><span class="status-label" id="stl-ice">ICEBERG</span></div>
-          <div class="algo-status-row"><div class="status-dot" id="st-spoof" style="background:var(--text3)"></div><span class="status-label" id="stl-spoof">SPOOF WALL</span></div>
-          <div class="algo-status-row"><div class="status-dot" id="st-pump" style="background:var(--text3)"></div><span class="status-label" id="stl-pump">MARKUP ENGINE</span></div>
-          <div class="algo-status-row"><div class="status-dot" id="st-trap" style="background:var(--text3)"></div><span class="status-label" id="stl-trap">BULL TRAP</span></div>
-        </div>
-        <div class="chart-info-box">
-          <div class="chart-ohlcv">
-            <div class="ohlcv-item"><div class="ohlcv-label">O</div><div class="ohlcv-val" id="co-o">—</div></div>
-            <div class="ohlcv-item"><div class="ohlcv-label">H</div><div class="ohlcv-val" id="co-h" style="color:var(--up)">—</div></div>
-            <div class="ohlcv-item"><div class="ohlcv-label">L</div><div class="ohlcv-val" id="co-l" style="color:var(--down)">—</div></div>
-            <div class="ohlcv-item"><div class="ohlcv-label">C</div><div class="ohlcv-val" id="co-c">—</div></div>
-            <div class="ohlcv-item"><div class="ohlcv-label">VOL</div><div class="ohlcv-val" id="co-v" style="color:var(--info)">—</div></div>
-          </div>
-        </div>
-      </div>
-      <div class="overlay-bottom">
-        <div id="intel-overlay" style="display:flex;flex-direction:column;gap:3px;max-width:280px">
-        </div>
-        <div class="algo-status-box" style="text-align:right">
-          <div style="font-family:var(--mono);font-size:7px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">VWAP</div>
-          <div style="font-family:var(--mono);font-size:11px;color:var(--warn);font-weight:700" id="vwap-display">81.20</div>
-          <div style="font-family:var(--mono);font-size:7px;color:var(--text3);margin-top:4px">RETAIL TRAPPED</div>
-          <div style="font-family:var(--mono);font-size:11px;color:var(--down);font-weight:700" id="trapped-count">0</div>
-        </div>
-      </div>
-    </div>
-    <div class="toast-container" id="toast-container"></div>
-  </div>
-
-  <!-- ══ RIGHT PANEL ══ -->
-  <div class="panel no-border right-panel" style="grid-row:1/3">
-    <div class="panel-header">
-      <span class="panel-title">Order Book <span class="panel-badge badge-green" style="margin-left:4px">L2</span></span>
-      <span style="font-family:var(--mono);font-size:8px;color:var(--text3)">DEPTH 10</span>
-    </div>
-    <div class="ob-container">
-      <div class="ob-header-row">
-        <span style="text-align:right">BID VOL</span>
-        <span style="text-align:center">PRICE</span>
-        <span style="text-align:right">ASK VOL</span>
-      </div>
-      <div class="ob-rows">
-        <div class="ob-asks" id="ob-asks"></div>
-        <div class="ob-spread">
-          <span class="ob-spread-label">SPREAD</span>
-          <span class="ob-spread-val" id="ob-spread-val">1</span>
-        </div>
-        <div class="ob-bids" id="ob-bids"></div>
-      </div>
-    </div>
-    <div class="panel-header" style="border-top:1px solid var(--border)">
-      <span class="panel-title">Running Trade <span class="panel-badge badge-yellow" style="margin-left:4px">LIVE</span></span>
-      <div style="display:flex;align-items:center;gap:3px">
-        <div class="matrix-dot" style="background:var(--up)"></div>
-        <div class="matrix-dot" style="background:var(--up);animation-delay:.2s"></div>
-        <div class="matrix-dot" style="background:var(--up);animation-delay:.4s"></div>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:50px 50px 1fr 40px;padding:2px 8px;flex-shrink:0">
-      <span style="font-family:var(--mono);font-size:7px;color:var(--text3)">TIME</span>
-      <span style="font-family:var(--mono);font-size:7px;color:var(--text3)">PRICE</span>
-      <span style="font-family:var(--mono);font-size:7px;color:var(--text3);text-align:center">QTY</span>
-      <span style="font-family:var(--mono);font-size:7px;color:var(--text3);text-align:right">BKR</span>
-    </div>
-    <div class="tape-wrap" id="tape"></div>
-
-    <!-- INTELLIGENCE FEED -->
-    <div class="panel-header" style="border-top:1px solid var(--border)">
-      <span class="panel-title">SM Intelligence <span class="panel-badge badge-purple" style="margin-left:4px">AI</span></span>
-    </div>
-    <div style="padding:6px;overflow-y:auto;max-height:160px" id="intel-feed"></div>
-  </div>
-
-  <!-- ══ BOTTOM STATUS BAR ══ -->
-  <div class="bottom-bar">
-    <div class="bottom-segment">
-      <span class="bottom-label">OPEN</span>
-      <span class="bottom-val" style="color:var(--text2)">80</span>
-    </div>
-    <div class="bottom-segment">
-      <span class="bottom-label">HIGH</span>
-      <span class="bottom-val" id="stat-h" style="color:var(--up)">82</span>
-    </div>
-    <div class="bottom-segment">
-      <span class="bottom-label">LOW</span>
-      <span class="bottom-val" id="stat-l" style="color:var(--down)">79</span>
-    </div>
-    <div class="bottom-segment">
-      <span class="bottom-label">VWAP</span>
-      <span class="bottom-val" id="stat-vwap" style="color:var(--warn)">81.20</span>
-    </div>
-    <div class="bottom-segment">
-      <span class="bottom-label">MKT CAP</span>
-      <span class="bottom-val" style="color:var(--text2)">12.4T</span>
-    </div>
-    <div class="bottom-segment">
-      <span class="bottom-label">FREQ/MIN</span>
-      <span class="bottom-val" id="freq-val" style="color:var(--info)">0</span>
-    </div>
-    <div class="bottom-segment" style="flex:1;border-right:none">
-      <span class="bottom-label">SM STATUS</span>
-      <span class="bottom-val" id="sm-status" style="color:var(--purple)">STEALTH MODE</span>
-    </div>
-    <div class="bottom-segment" style="margin-left:auto;border-left:1px solid var(--border);border-right:none">
-      <span class="bottom-label">RETAIL SENTIMENT</span>
-      <div style="display:flex;align-items:center;gap:6px">
-        <div style="font-family:var(--mono);font-size:9px;color:var(--up)" id="sentiment-bull">▲ 0%</div>
-        <div style="width:60px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden">
-          <div id="sentiment-bar" style="height:100%;background:var(--up);width:50%;transition:width 0.5s"></div>
-        </div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--down)" id="sentiment-bear">▼ 0%</div>
-      </div>
-    </div>
-  </div>
-
-</div>
-</div>
-
-<script>
-const canvas = document.getElementById('chartCanvas');
-const ctx = canvas.getContext('2d');
-
-// ═══════════════════════════════════════
-// CHART ENGINE
-// ═══════════════════════════════════════
-const Chart = {
-  data: [],
-  liveBar: null,
-  W: 0, H: 0,
-  CW: 9, CS: 2,
-
-  init() {
-    this.resize();
-    window.addEventListener('resize', () => this.resize());
-    this.generateHistory();
-    this.startLiveBar();
-  },
-
-  resize() {
-    const p = canvas.parentElement;
-    this.W = canvas.width = p.clientWidth;
-    this.H = canvas.height = p.clientHeight;
-    this.render();
-  },
-
-  generateHistory() {
-    let p = 80, t = Math.floor(Date.now() / 1000) - 200 * 60;
-    for (let i = 0; i < 120; i++) {
-      t += 60;
-      const open = p;
-      const rng = (Math.random() - 0.49) * 3;
-      const close = Math.max(70, Math.min(100, Math.round((open + rng) * 2) / 2));
-      const high = Math.max(open, close) + Math.random() * 1.5;
-      const low = Math.min(open, close) - Math.random() * 1.5;
-      const vol = Math.floor(Math.random() * 8000) + 500;
-      this.data.push({ t, open, high: Math.round(high*2)/2, low: Math.round(low*2)/2, close, vol });
-      p = close;
-    }
-  },
-
-  startLiveBar() {
-    const last = this.data[this.data.length - 1];
-    this.liveBar = {
-      t: last.t + 60,
-      open: last.close,
-      high: last.close,
-      low: last.close,
-      close: last.close,
-      vol: 0,
-      isLive: true
-    };
-  },
-
-  update(price, vol) {
-    const b = this.liveBar;
-    b.vol += vol;
-    b.close = price;
-    if (price > b.high) b.high = price;
-    if (price < b.low) b.low = price;
-
-    const now = Math.floor(Date.now() / 1000);
-    if (now > b.t + 60) {
-      this.data.push({ ...b, isLive: false });
-      if (this.data.length > 200) this.data.shift();
-      b.t = b.t + 60;
-      b.open = b.close;
-      b.high = b.close;
-      b.low = b.close;
-      b.vol = 0;
-    }
-
-    this.render();
-    // Update overlay OHLCV
-    document.getElementById('co-o').textContent = b.open;
-    document.getElementById('co-h').textContent = b.high.toFixed(1);
-    document.getElementById('co-l').textContent = b.low.toFixed(1);
-    document.getElementById('co-c').textContent = b.close;
-    document.getElementById('co-v').textContent = b.vol.toLocaleString();
-  },
-
-  render() {
-    const W = this.W, H = this.H;
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, W, H);
-    if (!this.liveBar) return;
-
-    const allData = [...this.data, this.liveBar];
-    const maxC = Math.floor(W / (this.CW + this.CS));
-    const vis = allData.slice(-maxC);
-
-    // Price range
-    let minP = Infinity, maxP = -Infinity, maxVol = 0;
-    vis.forEach(d => {
-      if (d.high > maxP) maxP = d.high;
-      if (d.low < minP) minP = d.low;
-      if (d.vol > maxVol) maxVol = d.vol;
-    });
-    const pad = (maxP - minP) * 0.15 || 3;
-    minP -= pad; maxP += pad;
-
-    const pH = H * 0.78;
-    const vH = H * 0.15;
-    const vY0 = H * 0.85;
-
-    const getY = p => pH - ((p - minP) / (maxP - minP)) * pH;
-    const getVY = v => vY0 + vH - (v / maxVol) * vH;
-
-    // Grid lines
-    ctx.strokeStyle = '#111418';
-    ctx.lineWidth = 1;
-    const gridStep = Math.ceil((maxP - minP) / 8);
-    const startGrid = Math.ceil(minP / gridStep) * gridStep;
-    ctx.setLineDash([]);
-    for (let p = startGrid; p <= maxP; p += gridStep) {
-      const y = Math.round(getY(p)) + 0.5;
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      ctx.fillStyle = '#333';
-      ctx.font = '9px IBM Plex Mono';
-      ctx.textAlign = 'right';
-      ctx.fillText(p, W - 4, y - 2);
-    }
-
-    // VWAP line
-    const vwap = SM.vwap;
-    if (vwap > 0) {
-      const vy = getY(vwap);
-      ctx.strokeStyle = '#f5a623';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3, 5]);
-      ctx.beginPath(); ctx.moveTo(0, vy); ctx.lineTo(W - 35, vy); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#f5a623';
-      ctx.font = '8px IBM Plex Mono';
-      ctx.textAlign = 'left';
-      ctx.fillText('VWAP', W - 33, vy - 2);
-    }
-
-    // Draw candles
-    vis.forEach((d, i) => {
-      const x = i * (this.CW + this.CS) + 6;
-      const isUp = d.close >= d.open;
-      const col = isUp ? '#00d4a0' : '#ff4d6d';
-      const xC = x + this.CW / 2;
-
-      // Volume bar
-      ctx.fillStyle = isUp ? 'rgba(0,212,160,0.2)' : 'rgba(255,77,109,0.2)';
-      const volH = vY0 + vH - getVY(d.vol);
-      ctx.fillRect(x, getVY(d.vol), this.CW, volH);
-
-      // Wick
-      ctx.strokeStyle = col;
-      ctx.lineWidth = 1;
-      ctx.setLineDash([]);
-      ctx.beginPath();
-      ctx.moveTo(xC, getY(d.high));
-      ctx.lineTo(xC, getY(d.low));
-      ctx.stroke();
-
-      // Body
-      ctx.fillStyle = d.isLive ? 'rgba(0,212,160,0.4)' : col;
-      if (d.isLive) ctx.strokeStyle = col;
-      const y1 = getY(Math.max(d.open, d.close));
-      const y2 = getY(Math.min(d.open, d.close));
-      const bH = Math.max(y2 - y1, 1);
-      if (d.isLive) {
-        ctx.strokeRect(x, y1, this.CW, bH);
-        ctx.fillRect(x, y1, this.CW, bH);
-      } else {
-        ctx.fillRect(x, y1, this.CW, bH);
-      }
-    });
-
-    // Current price line
-    const last = vis[vis.length - 1];
-    if (last) {
-      const ly = getY(last.close);
-      ctx.strokeStyle = 'rgba(255,255,255,0.3)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([2, 6]);
-      ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W - 35, ly); ctx.stroke();
-      ctx.setLineDash([]);
-      const boxColor = last.close >= last.open ? '#00d4a0' : '#ff4d6d';
-      ctx.fillStyle = boxColor;
-      ctx.fillRect(W - 34, ly - 8, 34, 16);
-      ctx.fillStyle = '#000';
-      ctx.font = '9px IBM Plex Mono';
-      ctx.textAlign = 'center';
-      ctx.fillText(last.close, W - 17, ly + 3);
-    }
-
-    ctx.textAlign = 'left';
-  }
-};
-
-// ═══════════════════════════════════════
-// SMART MONEY ENGINE
-// ═══════════════════════════════════════
-const SM = {
-  price: 82,
-  openPrice: 80,
-  high: 82,
-  low: 79,
-  totalVol: 0,
-  totalValue: 0,
-  vwap: 81.2,
-  fnet: 0,
-  tradeCount: 0,
-  smScore: 0,
-  position: 0,
-  capital: 100000000,
-  avgCost: 0,
-  trappedRetail: 0,
-  sessionStart: Date.now(),
-
-  // Algo States
-  iceActive: false,
-  spoofActive: false,
-  pumpActive: false,
-  pumpTarget: 95,
-  trapArmed: false,
-  trapPrice: 90,
-
-  bids: [],
-  asks: [],
-  trades: [],
-  brokerNet: {},
-  intelLog: [],
-  freqCounter: 0,
-
-  BANDAR: ['MG','BK','AK','ZP','CC'],
-  RETAIL: ['YP','PD','NI','XL','KK','EP','AT','ML','LS','KZ'],
-  PHASES: [
-    { name:'ACCUMULATION', color:'var(--info)', desc:'SM diam-diam akumulasi posisi. Harga flat, volume rendah.', prog:20 },
-    { name:'MARKUP', color:'var(--up)', desc:'SM mulai naikkan harga. Retail mulai FOMO, ikut beli.', prog:50 },
-    { name:'DISTRIBUTION', color:'var(--warn)', desc:'SM diam-diam jual ke retail. Harga masih tinggi, volume besar.', prog:75 },
-    { name:'MARKDOWN', color:'var(--down)', desc:'SM sudah keluar. Retail panik jual. Harga turun cepat.', prog:95 },
-  ],
-  currentPhase: 0,
-
-  init() {
-    this.BANDAR.forEach(b => this.brokerNet[b] = 0);
-    this.RETAIL.forEach(r => this.brokerNet[r] = 0);
-    this.generateOB();
-    this.renderOB();
-    this.renderBrokerFlow();
-    setInterval(() => this.tick(), 400);
-    setInterval(() => this.updateClock(), 1000);
-    setInterval(() => this.updateFreq(), 60000);
-    this.addIntel('INIT', 'Terminal aktif. Smart money mode ON.', 'purple');
-    this.addIntel('PHASE', 'Phase Accumulation terdeteksi. Harga di-konsolidasi.', 'info');
-    this.renderIntel();
-
-    // Sliders
-    document.getElementById('pump-int').oninput = e => {
-      document.getElementById('pump-int-out').textContent = e.target.value;
-    };
-    document.getElementById('trade-qty').oninput = e => {
-      document.getElementById('trade-qty-out').textContent = parseInt(e.target.value).toLocaleString();
-    };
-  },
-
-  tick() {
-    this.freqCounter++;
-    const r = Math.random();
-
-    // Auto-pump logic
-    if (this.pumpActive && this.price < this.pumpTarget) {
-      const intensity = parseInt(document.getElementById('pump-int').value);
-      if (Math.random() < intensity * 0.08) {
-        const qty = Math.floor(Math.random() * 5000 * (intensity / 5)) + 1000;
-        this.execTrade(this.price, qty, 'BUY', 'BANDAR', this.BANDAR[Math.floor(Math.random()*this.BANDAR.length)]);
-      }
-    }
-    if (this.pumpActive && this.price >= this.pumpTarget) {
-      this.toggleAlgo('PUMP');
-      this.addIntel('MARKUP', `Target harga ${this.pumpTarget} tercapai! Distribution phase.`, 'warn');
-      this.nextPhase();
-    }
-
-    // Bull trap trigger
-    if (this.trapArmed && this.price >= this.trapPrice) {
-      this.trapArmed = false;
-      document.getElementById('ind-trap').className = 'algo-indicator';
-      this.updateAlgoStatus('trap', false);
-      this.addIntel('TRAP', `BULL TRAP TRIGGERED! Retail beli di ${this.trapPrice}, dump dimulai!`, 'red');
-      this.trappedRetail += Math.floor(Math.random() * 500) + 200;
-      document.getElementById('trapped-count').textContent = this.trappedRetail;
-      setTimeout(() => {
-        for (let i = 0; i < 8; i++) {
-          setTimeout(() => {
-            const qty = Math.floor(Math.random() * 15000) + 5000;
-            this.execTrade(this.price, qty, 'SELL', 'BANDAR', this.BANDAR[Math.floor(Math.random()*this.BANDAR.length)]);
-          }, i * 300);
-        }
-      }, 500);
-    }
-
-    // Retail noise
-    if (r < 0.65) {
-      const side = Math.random() > 0.48 ? 'BUY' : 'SELL';
-      const qty = Math.floor(Math.random() * 500) + 10;
-      const broker = this.RETAIL[Math.floor(Math.random() * this.RETAIL.length)];
-      this.execTrade(this.price, qty, side, 'RETAIL', broker);
-    }
-
-    // Auto-refill iceberg
-    if (this.iceActive) {
-      const bid = this.bids[0];
-      if (bid && bid.v < 80) {
-        bid.v = parseInt(document.getElementById('ice-vis').value) || 112;
-        bid.type = 'ICE';
-      }
-    }
-
-    // Random intel
-    if (Math.random() < 0.04) this.randomIntel();
-
-    this.renderOB();
-    this.renderBrokerFlow();
-    this.updateSentiment();
-    this.updateHeader();
-  },
-
-  execTrade(price, qty, side, type, broker) {
-    // Price movement
-    const isBig = qty > 3000;
-    if (side === 'BUY') {
-      if (isBig) this.price = Math.min(this.price + 1, 200);
-      else if (Math.random() < 0.3) this.price = Math.min(this.price + 0.5, 200);
-    } else {
-      if (this.iceActive && this.price <= this.bids[0]?.p + 0.5) {
-        // Iceberg defends
-      } else {
-        if (isBig) this.price = Math.max(this.price - 1, 1);
-        else if (Math.random() < 0.3) this.price = Math.max(this.price - 0.5, 1);
-      }
-    }
-    this.price = Math.round(this.price);
-
-    // Spoof auto-pull
-    if (this.spoofActive) {
-      const side2 = document.getElementById('spoof-side').value;
-      const pullDist = parseInt(document.getElementById('spoof-pull').value) || 1;
-      if (side2 === 'SELL' && this.price >= this.asks[2]?.p - pullDist) {
-        this.toggleAlgo('SPOOF');
-        this.addIntel('SPOOF', 'WALL DICABUT! Harga mendekati level spoof.', 'red');
-      }
-    }
-
-    // Stats
-    if (this.price > this.high) this.high = this.price;
-    if (this.price < this.low) this.low = this.price;
-    this.totalVol += qty;
-    this.totalValue += this.price * qty * 100;
-    this.vwap = Math.round(this.totalValue / (this.totalVol * 100) * 10) / 10;
-
-    // Foreign flow
-    if (this.BANDAR.includes(broker)) {
-      this.fnet += side === 'BUY' ? qty * 100 * this.price / 1e6 : -qty * 100 * this.price / 1e6;
-    }
-
-    // Broker net
-    if (this.brokerNet[broker] !== undefined) {
-      this.brokerNet[broker] += side === 'BUY' ? qty : -qty;
-    }
-
-    // Position tracking
-    if (type === 'BANDAR' && broker === 'MG') {
-      if (side === 'BUY') {
-        this.avgCost = (this.avgCost * this.position + this.price * qty) / (this.position + qty);
-        this.position += qty;
-        this.smScore += Math.floor(qty / 100);
-      } else {
-        const profit = (this.price - this.avgCost) * qty * 100;
-        this.capital += profit;
-        this.position = Math.max(0, this.position - qty);
-        this.smScore += profit > 0 ? Math.floor(profit / 1000) : -10;
-      }
-    }
-
-    // Trade tape
-    this.trades.unshift({ t: new Date().toLocaleTimeString('id', {hour:'2-digit',minute:'2-digit',second:'2-digit'}), p: this.price, q: qty, s: side, b: broker, type });
-    if (this.trades.length > 80) this.trades.pop();
-
-    this.regenerateOB();
-    Chart.update(this.price, qty);
-    this.renderTape();
-  },
-
-  manualTrade(side) {
-    const qty = parseInt(document.getElementById('trade-qty').value) || 5000;
-    const brokerEl = document.getElementById('trade-broker');
-    const brokerText = brokerEl.options[brokerEl.selectedIndex].text;
-    const broker = brokerText.split(' ')[0];
-    this.execTrade(this.price, qty, side, 'BANDAR', broker);
-    this.addIntel('MANUAL', `${side} ${qty.toLocaleString()} lot @ ${this.price} via ${broker}`, side === 'BUY' ? 'green' : 'red');
-    this.toast(`${side === 'BUY' ? '▲ HAKA' : '▼ GORENG'} ${qty.toLocaleString()} LOT @ ${this.price}`, side === 'BUY' ? '#00d4a0' : '#ff4d6d');
-  },
-
-  toggleAlgo(type) {
-    if (type === 'ICE') {
-      this.iceActive = !this.iceActive;
-      const ind = document.getElementById('ind-ice');
-      ind.className = 'algo-indicator' + (this.iceActive ? ' on-green' : '');
-      this.updateAlgoStatus('ice', this.iceActive);
-      if (this.iceActive) {
-        const visVol = parseInt(document.getElementById('ice-vis').value) || 112;
-        this.bids[0].v = visVol;
-        this.bids[0].type = 'ICE';
-        this.toast('ICEBERG AKTIF — Ghost bid dipasang', '#00d4a0');
-        this.addIntel('ICEBERG', `Ghost bid ${visVol} lot terpasang. Reserve: ${parseInt(document.getElementById('ice-res').value||50000).toLocaleString()} lot`, 'green');
-      } else {
-        if (this.bids[0]) { this.bids[0].type = 'N'; this.bids[0].v = Math.floor(Math.random()*2000)+100; }
-        this.toast('ICEBERG DIMATIKAN', '#8b92a5');
-      }
-    }
-    if (type === 'SPOOF') {
-      this.spoofActive = !this.spoofActive;
-      const ind = document.getElementById('ind-spoof');
-      ind.className = 'algo-indicator' + (this.spoofActive ? ' on-red' : '');
-      this.updateAlgoStatus('spoof', this.spoofActive);
-      if (this.spoofActive) {
-        const size = parseInt(document.getElementById('spoof-size').value) || 500000;
-        const side2 = document.getElementById('spoof-side').value;
-        if (side2 === 'SELL' && this.asks[2]) {
-          this.asks[2].v = size;
-          this.asks[2].type = 'SPOOF';
-        } else if (side2 === 'BUY' && this.bids[2]) {
-          this.bids[2].v = size;
-          this.bids[2].type = 'SPOOF';
-        }
-        this.toast(`SPOOF WALL DEPLOYED — ${(size/1000).toFixed(0)}K LOT`, '#ff4d6d');
-        this.addIntel('SPOOF', `Fake ${side2} wall ${size.toLocaleString()} lot terpasang. Retail akan panik.`, 'red');
-      } else {
-        this.asks.forEach(a => { if (a.type === 'SPOOF') { a.type = 'N'; a.v = Math.floor(Math.random()*2000)+100; } });
-        this.bids.forEach(b => { if (b.type === 'SPOOF') { b.type = 'N'; b.v = Math.floor(Math.random()*2000)+100; } });
-        this.toast('SPOOF WALL DICABUT', '#8b92a5');
-      }
-    }
-    if (type === 'PUMP') {
-      this.pumpActive = !this.pumpActive;
-      this.pumpTarget = parseInt(document.getElementById('pump-tgt').value) || 95;
-      const ind = document.getElementById('ind-pump');
-      ind.className = 'algo-indicator' + (this.pumpActive ? ' on-yellow' : '');
-      this.updateAlgoStatus('pump', this.pumpActive);
-      const btn = document.querySelector('[onclick="SM.toggleAlgo(\'PUMP\')"]');
-      if (this.pumpActive) {
-        btn.textContent = 'STOP MARKUP';
-        this.toast(`MARKUP ENGINE ON — Target: ${this.pumpTarget}`, '#f5a623');
-        this.addIntel('MARKUP', `Markup engine aktif. Target harga ${this.pumpTarget}. Retail akan FOMO.`, 'warn');
-        this.nextPhase();
-        document.getElementById('sm-status').textContent = 'MARKUP MODE';
-      } else {
-        btn.textContent = 'START MARKUP';
-        this.toast('MARKUP ENGINE OFF', '#8b92a5');
-        document.getElementById('sm-status').textContent = 'STEALTH MODE';
-      }
-    }
-    if (type === 'TRAP') {
-      this.trapArmed = !this.trapArmed;
-      this.trapPrice = parseInt(document.getElementById('trap-price').value) || 90;
-      const ind = document.getElementById('ind-trap');
-      ind.className = 'algo-indicator' + (this.trapArmed ? ' on-purple' : '');
-      this.updateAlgoStatus('trap', this.trapArmed);
-      const btn = document.querySelector('[onclick="SM.toggleAlgo(\'TRAP\')"]');
-      if (this.trapArmed) {
-        btn.textContent = 'DISARM TRAP';
-        this.toast(`BULL TRAP ARMED @ ${this.trapPrice}`, '#a855f7');
-        this.addIntel('TRAP', `Bull trap terpasang di ${this.trapPrice}. Tunggu retail ambil bait.`, 'purple');
-      } else {
-        btn.textContent = 'ARM TRAP';
-        this.toast('TRAP DISARMED', '#8b92a5');
-      }
-    }
-    this.renderOB();
-  },
-
-  updateAlgoStatus(key, active) {
-    const dot = document.getElementById(`st-${key}`);
-    const lbl = document.getElementById(`stl-${key}`);
-    const colorMap = { ice: '#00d4a0', spoof: '#ff4d6d', pump: '#f5a623', trap: '#a855f7' };
-    if (dot) dot.style.background = active ? colorMap[key] : 'var(--text3)';
-    if (lbl) lbl.className = 'status-label' + (active ? ' active' : '');
-  },
-
-  generateOB() {
-    this.bids = [];
-    this.asks = [];
-    for (let i = 1; i <= 10; i++) {
-      this.bids.push({ p: this.price - i, v: Math.floor(Math.random()*4000)+100, type: 'N' });
-      this.asks.push({ p: this.price + i, v: Math.floor(Math.random()*4000)+100, type: 'N' });
-    }
-  },
-
-  regenerateOB() {
-    const p = this.price;
-    const newBids = [];
-    const newAsks = [];
-    for (let i = 1; i <= 10; i++) {
-      const bidP = p - i;
-      let bidV = Math.floor(Math.random()*3500)+100;
-      let bidType = 'N';
-      if (this.iceActive && i === 1) {
-        bidV = parseInt(document.getElementById('ice-vis').value) || 112;
-        bidType = 'ICE';
-      }
-      if (this.spoofActive && document.getElementById('spoof-side').value === 'BUY' && i === 3) {
-        bidV = parseInt(document.getElementById('spoof-size').value) || 500000;
-        bidType = 'SPOOF';
-      }
-      newBids.push({ p: bidP, v: bidV, type: bidType });
-
-      const askP = p + i;
-      let askV = Math.floor(Math.random()*3500)+100;
-      let askType = 'N';
-      if (this.spoofActive && document.getElementById('spoof-side').value === 'SELL' && i === 3) {
-        askV = parseInt(document.getElementById('spoof-size').value) || 500000;
-        askType = 'SPOOF';
-      }
-      newAsks.push({ p: askP, v: askV, type: askType });
-    }
-    this.bids = newBids;
-    this.asks = newAsks;
-  },
-
-  renderOB() {
-    const asksEl = document.getElementById('ob-asks');
-    const bidsEl = document.getElementById('ob-bids');
-    if (!asksEl || !bidsEl) return;
-
-    const maxV = Math.max(...this.bids.map(b=>b.v), ...this.asks.map(a=>a.v), 1);
-
-    let asksHtml = '';
-    const reversedAsks = [...this.asks].reverse();
-    reversedAsks.forEach(a => {
-      const barW = Math.min((a.v / maxV) * 100, 100);
-      const isSpoof = a.type === 'SPOOF';
-      const cls = isSpoof ? ' spoof-row' : '';
-      asksHtml += `<div class="ob-row${cls}">
-        <span class="ob-vol" style="text-align:right;color:var(--text3)">—</span>
-        <span class="ob-price" style="color:${isSpoof?'var(--down)':'var(--down)'}${isSpoof?';font-size:9px':''}">${a.p}${isSpoof?'<span style="font-size:7px;color:rgba(255,77,109,0.6)"> ⚠</span>':''}</span>
-        <span class="ob-vol" style="text-align:right;color:${isSpoof?'var(--down)':'var(--text1)'}${isSpoof?';font-weight:700':''}">${a.v.toLocaleString()}</span>
-        <div class="ob-bar ob-bar-ask" style="width:${barW}%"></div>
-      </div>`;
-    });
-
-    let bidsHtml = '';
-    this.bids.forEach(b => {
-      const barW = Math.min((b.v / maxV) * 100, 100);
-      const isIce = b.type === 'ICE';
-      const isSpoof = b.type === 'SPOOF';
-      const cls = isIce ? ' ice-row' : isSpoof ? ' spoof-row' : '';
-      bidsHtml += `<div class="ob-row${cls}">
-        <span class="ob-vol" style="color:${isIce?'var(--up)':isSpoof?'var(--up)':'var(--text1)'}${isIce||isSpoof?';font-weight:700':''}">${b.v.toLocaleString()}${isIce?'<span style="font-size:7px;color:rgba(0,212,160,0.6)"> ❄</span>':''}</span>
-        <span class="ob-price" style="color:var(--up)">${b.p}</span>
-        <span class="ob-vol" style="text-align:right;color:var(--text3)">—</span>
-        <div class="ob-bar ob-bar-bid" style="width:${barW}%;right:0;left:auto"></div>
-      </div>`;
-    });
-
-    asksEl.innerHTML = asksHtml;
-    bidsEl.innerHTML = bidsHtml;
-    document.getElementById('ob-spread-val').textContent = (this.asks[0]?.p - this.bids[0]?.p) || 1;
-  },
-
-  renderTape() {
-    const el = document.getElementById('tape');
-    if (!el) return;
-    const html = this.trades.slice(0, 60).map(t => {
-      const isBandar = this.BANDAR.includes(t.b);
-      const col = t.s === 'BUY' ? 'var(--up)' : 'var(--down)';
-      const bCol = isBandar ? 'var(--purple)' : 'var(--text3)';
-      const fw = isBandar ? '700' : '400';
-      return `<div class="tape-row">
-        <span class="tape-time">${t.t.slice(-8)}</span>
-        <span class="tape-price" style="color:${col}">${t.p}</span>
-        <span class="tape-qty" style="color:${t.q>1000?'var(--text1)':'var(--text2)'};font-weight:${t.q>3000?'700':'400'}">${t.q.toLocaleString()}</span>
-        <span class="tape-broker" style="color:${bCol};font-weight:${fw}">${t.b}</span>
-      </div>`;
-    }).join('');
-    el.innerHTML = html;
-  },
-
-  renderBrokerFlow() {
-    const el = document.getElementById('broker-flow-panel');
-    if (!el) return;
-    const all = [...this.BANDAR.map(b=>({code:b,net:this.brokerNet[b]||0,bandar:true})),
-                 ...this.RETAIL.slice(0,5).map(b=>({code:b,net:this.brokerNet[b]||0,bandar:false}))];
-    all.sort((a,b) => Math.abs(b.net) - Math.abs(a.net));
-    const maxNet = Math.max(...all.map(a => Math.abs(a.net)), 1);
-
-    const html = all.slice(0,8).map(item => {
-      const pct = Math.min(Math.abs(item.net) / maxNet * 100, 100);
-      const col = item.net >= 0 ? 'var(--up)' : 'var(--down)';
-      const bCol = item.bandar ? 'var(--purple)' : 'var(--text2)';
-      const netStr = (item.net >= 0 ? '+' : '') + item.net.toLocaleString();
-      return `<div class="broker-row">
-        <span class="broker-code" style="color:${bCol}">${item.code}</span>
-        <div class="broker-bar-wrap"><div class="broker-bar-inner" style="width:${pct}%;background:${col}"></div></div>
-        <span class="broker-net" style="color:${col}">${item.net>=0?'+':''}${Math.abs(item.net)>999?(Math.abs(item.net)/1000).toFixed(1)+'K':item.net}</span>
-      </div>`;
-    }).join('');
-    el.innerHTML = html;
-  },
-
-  renderIntel() {
-    const feed = document.getElementById('intel-feed');
-    const overlay = document.getElementById('intel-overlay');
-    if (!feed) return;
-
-    const colorMap = { green:'var(--up)', red:'var(--down)', warn:'var(--warn)', info:'var(--info)', purple:'var(--purple)' };
-    const bgMap = { green:'rgba(0,212,160,0.1)', red:'rgba(255,77,109,0.1)', warn:'rgba(245,166,35,0.1)', info:'rgba(74,158,255,0.1)', purple:'rgba(168,85,247,0.1)' };
-    const labelMap = { green:'BUY', red:'SELL', warn:'!', info:'i', purple:'SM' };
-
-    const html = this.intelLog.slice(0, 8).map(item => {
-      const col = colorMap[item.type] || 'var(--text2)';
-      const bg = bgMap[item.type] || 'var(--bg3)';
-      return `<div class="intel-item">
-        <div class="intel-icon" style="background:${bg};color:${col};border:1px solid ${col}20">${labelMap[item.type]||'?'}</div>
-        <div>
-          <div class="intel-text">${item.msg}</div>
-          <div class="intel-time">${item.time}</div>
-        </div>
-      </div>`;
-    }).join('');
-    feed.innerHTML = html;
-
-    // Overlay — last 2 items
-    const overlayHtml = this.intelLog.slice(0,2).map(item => {
-      const col = colorMap[item.type] || 'var(--text2)';
-      return `<div style="background:rgba(10,11,14,0.85);border:1px solid var(--border);border-left:2px solid ${col};border-radius:3px;padding:4px 8px;">
-        <div style="font-family:var(--mono);font-size:8px;color:${col}">${item.tag}</div>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text2)">${item.msg.slice(0,50)}${item.msg.length>50?'...':''}</div>
-      </div>`;
-    }).join('');
-    overlay.innerHTML = overlayHtml;
-  },
-
-  addIntel(tag, msg, type) {
-    this.intelLog.unshift({ tag, msg, type, time: new Date().toLocaleTimeString('id') });
-    if (this.intelLog.length > 30) this.intelLog.pop();
-    this.renderIntel();
-  },
-
-  randomIntel() {
-    const msgs = [
-      { tag:'OI', msg:'Unusual option activity detected. Potential SM footprint.', type:'purple' },
-      { tag:'VOL', msg:'Volume spike 3x rata-rata. Akumulasi terdeteksi.', type:'info' },
-      { tag:'BLOCK', msg:'Block trade besar masuk via RG. Institusi bergerak.', type:'warn' },
-      { tag:'WASH', msg:'Wash trade pattern terdeteksi antar broker bandar.', type:'red' },
-      { tag:'CROSS', msg:'Crossing trade MG-AK ditemukan. Koordinasi SM.', type:'purple' },
-      { tag:'PINNED', msg:'Harga dipinned di level kuat. Support buatan SM.', type:'green' },
-    ];
-    const m = msgs[Math.floor(Math.random() * msgs.length)];
-    this.addIntel(m.tag, m.msg, m.type);
-  },
-
-  nextPhase() {
-    if (this.currentPhase < this.PHASES.length - 1) this.currentPhase++;
-    const ph = this.PHASES[this.currentPhase];
-    document.getElementById('phase-name').textContent = ph.name;
-    document.getElementById('phase-name').style.color = ph.color;
-    document.getElementById('phase-desc').textContent = ph.desc;
-    document.getElementById('phase-prog').style.width = ph.prog + '%';
-    document.getElementById('phase-prog').style.background = ph.color;
-  },
-
-  updateSentiment() {
-    const bullPct = Math.round(45 + (this.price - 81) * 3 + (Math.random() - 0.5) * 10);
-    const clamped = Math.max(10, Math.min(90, bullPct));
-    const bearPct = 100 - clamped;
-    document.getElementById('sentiment-bar').style.width = clamped + '%';
-    document.getElementById('sentiment-bull').textContent = '▲ ' + clamped + '%';
-    document.getElementById('sentiment-bear').textContent = '▼ ' + bearPct + '%';
-  },
-
-  updateHeader() {
-    const open = this.openPrice;
-    const chgPct = ((this.price - open) / open * 100).toFixed(2);
-    const chgColor = this.price >= open ? 'var(--up)' : 'var(--down)';
-    const chgSign = this.price >= open ? '+' : '';
-
-    document.getElementById('hd-last').textContent = this.price;
-    document.getElementById('hd-last').style.color = chgColor;
-    document.getElementById('hd-chg').textContent = chgSign + chgPct + '%';
-    document.getElementById('hd-chg').style.color = chgColor;
-    document.getElementById('hd-high').textContent = this.high;
-    document.getElementById('hd-low').textContent = this.low;
-    document.getElementById('hd-vwap').textContent = this.vwap.toFixed(2);
-    document.getElementById('hd-vol').textContent = this.totalVol.toLocaleString();
-    document.getElementById('stat-h').textContent = this.high;
-    document.getElementById('stat-l').textContent = this.low;
-    document.getElementById('stat-vwap').textContent = this.vwap.toFixed(2);
-    document.getElementById('vwap-display').textContent = this.vwap.toFixed(2);
-
-    const fnetStr = (this.fnet >= 0 ? '+' : '') + Math.round(this.fnet) + 'M';
-    document.getElementById('hd-fnet').textContent = fnetStr;
-    document.getElementById('hd-fnet').style.color = this.fnet >= 0 ? 'var(--up)' : 'var(--down)';
-
-    document.getElementById('sm-score').textContent = this.smScore.toLocaleString();
-
-    const profit = this.position > 0 ? (this.price - this.avgCost) * this.position * 100 : 0;
-    const profitStr = (profit >= 0 ? '+' : '') + Math.round(profit).toLocaleString();
-    document.getElementById('hd-pnl').textContent = profitStr;
-    document.getElementById('hd-pnl').style.color = profit >= 0 ? 'var(--up)' : 'var(--down)';
-    document.getElementById('pnl-pos').textContent = this.position.toLocaleString();
-    document.getElementById('pnl-profit').textContent = profitStr;
-    document.getElementById('pnl-profit').style.color = profit >= 0 ? 'var(--up)' : 'var(--down)';
-  },
-
-  updateClock() {
-    const now = new Date();
-    document.getElementById('clock').textContent = now.toLocaleTimeString('id');
-  },
-
-  updateFreq() {
-    document.getElementById('freq-val').textContent = this.freqCounter;
-    this.freqCounter = 0;
-  },
-
-  toast(msg, color) {
-    const container = document.getElementById('toast-container');
-    const t = document.createElement('div');
-    t.className = 'toast';
-    t.style.borderColor = color;
-    t.style.color = color;
-    t.textContent = msg;
-    container.appendChild(t);
-    setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(() => t.remove(), 300); }, 2500);
-  }
-};
-
-// BOOT
-Chart.init();
-SM.init();
-</script>
 </body>
 </html>
