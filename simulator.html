@@ -1,178 +1,108 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Market Terminal Clone</title>
-    <style>
-        :root {
-            --bg-base: #0a0a0a;
-            --bg-panel: #161616;
-            --bg-header: #1e1e1e;
-            --border-color: #2a2a2a;
-            --text-main: #d1d5db;
-            --text-muted: #6b7280;
-            --color-up: #10b981;
-            --color-down: #ef4444;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-base);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            overflow: hidden;
-            font-size: 12px;
-        }
-
-        /* Sidebar Kiri */
-        .sidebar {
-            width: 50px;
-            background-color: var(--bg-header);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-top: 10px;
-        }
-
-        .sidebar-icon {
-            width: 30px;
-            height: 30px;
-            background-color: #333;
-            border-radius: 4px;
-            margin-bottom: 15px;
-        }
-
-        /* Area Konten Utama */
-        .main-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Navigasi Atas */
-        .top-nav {
-            height: 40px;
-            background-color: var(--bg-header);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            justify-content: space-between;
-        }
-
-        /* Grid Utama Terminal */
-        .dashboard-grid {
-            flex: 1;
-            display: grid;
-            grid-template-columns: 280px 300px 1fr; /* Kolom 1: Running, Kolom 2: Bid/Offer, Kolom 3: Sisa area */
-            gap: 5px;
-            padding: 5px;
-            background-color: var(--bg-base);
-            height: calc(100vh - 40px);
-        }
-
-        /* Panel Standard */
-        .panel {
-            background-color: var(--bg-panel);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border-color);
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .panel-content {
-            padding: 10px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        /* Kolom 3 memiliki Grid di dalamnya (Atas: Chart, Bawah: Fundamental) */
-        .right-column {
-            display: grid;
-            grid-template-rows: 60% 40%; /* 60% untuk Chart, 40% untuk Fundamental/Income */
-            gap: 5px;
-        }
-
-        .bottom-right-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Membagi dua area bawah kanan */
-            gap: 5px;
-        }
-
-    </style>
+  <meta charset="UTF-8" />
+  <title>Trading Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 </head>
-<body>
 
-    <div class="sidebar">
-        <div class="sidebar-icon"></div>
-        <div class="sidebar-icon"></div>
-        <div class="sidebar-icon"></div>
+<body class="bg-[#0D1117] text-white h-screen flex">
+
+  <!-- Sidebar -->
+  <div class="w-16 bg-[#161B22] flex flex-col items-center py-4">
+    <div class="mb-4">📊</div>
+    <div class="mb-4">⭐</div>
+    <div class="mb-4">💼</div>
+  </div>
+
+  <!-- Main -->
+  <div class="flex-1 flex flex-col">
+
+    <!-- Topbar -->
+    <div class="h-12 bg-[#161B22] flex items-center justify-between px-4">
+      <input placeholder="Search stock..."
+        class="bg-[#0D1117] px-3 py-1 rounded text-sm outline-none"/>
+
+      <div class="flex gap-2">
+        <button class="bg-green-600 px-3 py-1 rounded">BUY</button>
+        <button class="bg-red-600 px-3 py-1 rounded">SELL</button>
+      </div>
     </div>
 
-    <div class="main-wrapper">
-        <div class="top-nav">
-            <div>Search Panel...</div>
-            <div>Akun & Pengaturan</div>
+    <!-- Grid Layout -->
+    <div class="grid grid-cols-12 grid-rows-6 gap-2 p-2 flex-1">
+
+      <!-- Order Book -->
+      <div class="col-span-3 row-span-3 bg-[#161B22] rounded p-2 text-sm">
+        <h2 class="mb-2">Order Book</h2>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <h3 class="text-green-400">Bid</h3>
+            <p>10,000</p>
+            <p>9,950</p>
+            <p>9,900</p>
+          </div>
+          <div>
+            <h3 class="text-red-400">Offer</h3>
+            <p>10,100</p>
+            <p>10,150</p>
+            <p>10,200</p>
+          </div>
         </div>
+      </div>
 
-        <div class="dashboard-grid">
-            <div class="panel">
-                <div class="panel-header">Running Trade</div>
-                <div class="panel-content">
-                    Data transaksi mengalir di sini...
-                </div>
-            </div>
+      <!-- Chart -->
+      <div class="col-span-6 row-span-4 bg-[#161B22] rounded p-2">
+        <div id="chart" style="height:100%;"></div>
+      </div>
 
-            <div class="panel" style="display: grid; grid-template-rows: 1fr 1fr; gap: 5px; border: none; background: transparent;">
-                <div class="panel">
-                    <div class="panel-header">Bid / Offer (Depth)</div>
-                    <div class="panel-content">Tabel antrean bid dan offer...</div>
-                </div>
-                <div class="panel">
-                    <div class="panel-header">Broker Action</div>
-                    <div class="panel-content">Ringkasan transaksi broker...</div>
-                </div>
-            </div>
+      <!-- Financial -->
+      <div class="col-span-3 row-span-3 bg-[#161B22] rounded p-2 text-sm">
+        <h2>Financial</h2>
+        <p>Revenue: 25B</p>
+        <p>Net Income: 12B</p>
+        <p>EPS: 120</p>
+      </div>
 
-            <div class="right-column">
-                <div class="panel">
-                    <div class="panel-header">Interactive Chart</div>
-                    <div class="panel-content" style="display: flex; align-items: center; justify-content: center; color: #555;">
-                        (Integrasikan TradingView Lightweight Charts di div ini)
-                    </div>
-                </div>
-                
-                <div class="bottom-right-grid">
-                    <div class="panel">
-                        <div class="panel-header">Key Ratios / Solvency</div>
-                        <div class="panel-content">Data fundamental kuartalan...</div>
-                    </div>
-                    <div class="panel">
-                        <div class="panel-header">Income Statement</div>
-                        <div class="panel-content">Tabel laporan keuangan...</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      <!-- Trades -->
+      <div class="col-span-3 row-span-3 bg-[#161B22] rounded p-2 text-sm">
+        <h2>Trades</h2>
+        <ul>
+          <li>10:01 - 10,050</li>
+          <li>10:02 - 10,075</li>
+          <li>10:03 - 10,060</li>
+        </ul>
+      </div>
+
     </div>
+  </div>
+
+  <!-- Chart Script -->
+  <script>
+    const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+      layout: {
+        background: { color: '#161B22' },
+        textColor: '#DDD'
+      },
+      grid: {
+        vertLines: { color: '#2A2E39' },
+        horzLines: { color: '#2A2E39' }
+      }
+    });
+
+    const candleSeries = chart.addCandlestickSeries();
+
+    candleSeries.setData([
+      { time: '2024-01-01', open: 100, high: 110, low: 95, close: 105 },
+      { time: '2024-01-02', open: 105, high: 115, low: 100, close: 110 },
+      { time: '2024-01-03', open: 110, high: 120, low: 108, close: 115 },
+      { time: '2024-01-04', open: 115, high: 125, low: 112, close: 120 },
+      { time: '2024-01-05', open: 120, high: 130, low: 118, close: 125 },
+    ]);
+
+    chart.timeScale().fitContent();
+  </script>
 
 </body>
 </html>
