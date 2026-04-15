@@ -1470,7 +1470,7 @@ function fmtPnl(n){ return (n>=0?'+':'')+fmtNum(n); }
 function pnlColor(n){ return n>=0?'var(--green)':'var(--red)'; }
 
 /* ============================================================
-   SHARE ACHIEVEMENT (CERTIFICATE MODAL)
+   SHARE ACHIEVEMENT (CERTIFICATE MODAL) - FIXED FORMAT
    ============================================================ */
 function shareAchievement() {
   const netPnlText = document.getElementById('kpi-net').textContent;
@@ -1478,8 +1478,17 @@ function shareAchievement() {
   const tradesCount = document.getElementById('kpi-cnt').textContent.replace(' Trades', '');
   const pfVal = document.getElementById('stat-pf').textContent;
 
+  // Extract numerical value to format with $ properly
+  const netValueStr = netPnlText.replace(/,/g, '').replace('+', '');
+  const netValue = parseFloat(netValueStr) || 0;
+
   document.getElementById('cert-name-val').textContent = ME.name.toUpperCase();
-  document.getElementById('cert-val-pnl').textContent = netPnlText;
+  
+  // Add Dollar sign with proper positive/negative indicator
+  const pnlEl = document.getElementById('cert-val-pnl');
+  const sign = netValue >= 0 ? '+$' : '-$';
+  pnlEl.textContent = sign + fmtNum(Math.abs(netValue));
+  pnlEl.style.color = pnlColor(netValue);
   
   document.getElementById('cert-val-wr').textContent = wrText.replace(' WR', '');
   document.getElementById('cert-val-trades').textContent = tradesCount;
