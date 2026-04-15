@@ -3,338 +3,407 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaridTrade Pro - Payout Certificate</title>
-    <link rel="preconnect" href="https://fonts.googleapis.ArgumentParser">
+    <title>FaridTrade Pro - Certificate Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Alex+Brush&display=swap" rel="stylesheet">
     <style>
         :root {
             --gold: #e8c678;
             --bg-dark: #0a0a0a;
+            --bg-panel: #1a1a1a;
             --text-white: #ffffff;
-            --text-gray: #a0a0a0;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background-color: #1a1a1a;
+            background-color: var(--bg-dark);
             font-family: 'Montserrat', sans-serif;
+            color: var(--text-white);
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
 
-        /* Control Panel untuk Customization */
-        .control-panel {
-            background: #222;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px;
-            display: flex;
-            gap: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            z-index: 10;
+        /* --- DASHBOARD / FORM UI --- */
+        .dashboard-container {
+            background: var(--bg-panel);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #333;
         }
 
-        .control-panel input {
-            padding: 10px;
-            border: 1px solid #444;
-            background: #111;
-            color: var(--text-white);
-            border-radius: 5px;
-            font-family: 'Montserrat', sans-serif;
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .dashboard-header h2 {
+            margin: 0;
+            color: var(--gold);
+            font-weight: 800;
+        }
+
+        .dashboard-header p {
+            margin: 5px 0 0 0;
             font-size: 14px;
+            color: #888;
         }
 
-        .control-panel input:focus {
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: #aaa;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            background: #111;
+            border: 1px solid #444;
+            color: var(--text-white);
+            border-radius: 8px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus {
             outline: none;
             border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(232, 198, 120, 0.2);
         }
 
-        /* Area Sertifikat */
-        .certificate-wrapper {
-            background: radial-gradient(circle at center bottom, #2a2a2a 0%, var(--bg-dark) 60%);
-            width: 1000px;
-            height: 1000px; /* Rasio persegi (1:1) seperti gambar */
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        .btn-generate {
+            width: 100%;
+            padding: 15px;
+            background: var(--gold);
+            color: var(--bg-dark);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .btn-generate:hover {
+            background: #f0d494;
+            transform: translateY(-2px);
+        }
+
+        /* --- MODAL / POPUP UI --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
-            padding: 80px;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
             box-sizing: border-box;
         }
 
-        /* Garis tipis pemisah */
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: color 0.2s;
+        }
+
+        .close-btn:hover {
+            color: var(--gold);
+        }
+
+        /* --- CERTIFICATE (RESPONSIVE WITH CONTAINER QUERIES) --- */
+        .certificate-wrapper {
+            /* Container Query: Elemen di dalam akan scaling berdasarkan lebar wrapper ini */
+            container-type: inline-size;
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Menjaga rasio kotak sempurna di HP maupun Desktop */
+            background: radial-gradient(circle at center bottom, #2a2a2a 0%, var(--bg-dark) 60%);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0,0,0,1);
+            box-sizing: border-box;
+        }
+
+        /* Dekorasi */
         .divider {
             position: absolute;
-            top: 250px;
-            left: 80px;
-            right: 80px;
+            top: 25cqw;
+            left: 8cqw;
+            right: 8cqw;
             height: 1px;
             background: rgba(255, 255, 255, 0.15);
         }
-
         .divider.bottom {
             top: auto;
-            bottom: 250px;
+            bottom: 25cqw;
+        }
+        .floor-light {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25cqw;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.05), transparent);
+            pointer-events: none;
         }
 
-        /* Bagian Kiri (Teks) */
+        /* Layout Kiri & Kanan menggunakan padding dinamis (cqw) */
+        .content-inner {
+            position: absolute;
+            top: 8cqw;
+            left: 8cqw;
+            right: 8cqw;
+            bottom: 8cqw;
+            display: flex;
+            justify-content: space-between;
+        }
+
         .left-content {
-            flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
             z-index: 2;
         }
 
+        /* Skala Font berbasis persentase lebar kontainer (cqw) */
         .header-title h1 {
             color: var(--text-white);
-            font-size: 75px;
+            font-size: 7.5cqw;
             font-weight: 900;
             margin: 0;
             line-height: 1;
-            letter-spacing: 2px;
+            letter-spacing: 0.2cqw;
         }
 
         .header-title .certificate-text {
             color: var(--gold);
-            font-size: 70px;
-            font-weight: 900;
-            margin: 0;
-            line-height: 1;
-            letter-spacing: 2px;
+            font-size: 7cqw;
             position: relative;
             display: inline-block;
-            padding: 0 15px;
+            padding: 0 1.5cqw;
         }
 
-        /* Efek Bracket [ ] di tulisan CERTIFICATE */
         .header-title .certificate-text::before,
         .header-title .certificate-text::after {
             content: '';
             position: absolute;
-            width: 25px;
-            height: 25px;
-            border: 4px solid var(--text-white);
+            width: 2.5cqw;
+            height: 2.5cqw;
+            border: 0.4cqw solid var(--text-white);
         }
-        .header-title .certificate-text::before {
-            top: -5px;
-            left: -10px;
-            border-right: none;
-            border-bottom: none;
-        }
-        .header-title .certificate-text::after {
-            bottom: -5px;
-            right: -10px;
-            border-left: none;
-            border-top: none;
-        }
+        .header-title .certificate-text::before { top: -0.5cqw; left: -1cqw; border-right: none; border-bottom: none; }
+        .header-title .certificate-text::after { bottom: -0.5cqw; right: -1cqw; border-left: none; border-top: none; }
 
-        /* Info Utama */
-        .main-info {
-            margin-top: 100px;
-        }
+        .main-info { margin-top: 10cqw; }
 
         .label {
             color: var(--text-white);
-            font-size: 14px;
+            font-size: 1.4cqw;
             font-weight: 600;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
+            letter-spacing: 0.1cqw;
+            margin-bottom: 1cqw;
         }
 
-        .name {
-            color: var(--text-white);
-            font-size: 55px;
-            font-weight: 800;
-            margin: 0 0 40px 0;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+        .name { color: var(--text-white); font-size: 5.5cqw; font-weight: 800; margin: 0 0 4cqw 0; }
+        .amount { color: var(--gold); font-size: 6.5cqw; font-weight: 800; margin: 0 0 4cqw 0; }
+        .date { color: var(--text-white); font-size: 3cqw; font-weight: 600; margin: 0; }
 
-        .amount {
-            color: var(--gold);
-            font-size: 65px;
-            font-weight: 800;
-            margin: 0 0 40px 0;
-        }
-
-        .date {
-            color: var(--text-white);
-            font-size: 30px;
-            font-weight: 600;
-            margin: 0;
-        }
-
-        /* Footer (Signatures) */
         .footer-signatures {
             position: absolute;
-            bottom: 80px;
-            left: 80px;
+            bottom: 8cqw;
+            left: 8cqw;
             display: flex;
-            gap: 100px;
+            gap: 10cqw;
+            z-index: 2;
         }
 
-        .signature-block {
-            display: flex;
-            flex-direction: column;
-        }
+        .signature-title { color: var(--text-white); font-size: 1.4cqw; font-weight: 600; margin-bottom: 0.5cqw; }
+        .signature-name { color: var(--text-white); font-family: 'Alex Brush', cursive; font-size: 4.5cqw; font-weight: 400; margin: 0; }
 
-        .signature-title {
-            color: var(--text-white);
-            font-size: 14px;
-            font-weight: 600;
-            letter-spacing: 1px;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-        }
-
-        .signature-name {
-            color: var(--text-white);
-            font-family: 'Alex Brush', cursive;
-            font-size: 45px;
-            font-weight: 400;
-            margin: 0;
-        }
-
-        /* Bagian Kanan (Logo & Trophy) */
         .right-content {
-            position: absolute;
-            top: 80px;
-            right: 80px;
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            z-index: 2;
         }
 
-        .platform-logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
+        .platform-logo { display: flex; align-items: center; gap: 1.5cqw; }
         .platform-logo-icon {
-            width: 45px;
-            height: 45px;
-            background: var(--text-white);
+            width: 4.5cqw; height: 4.5cqw; background: var(--text-white);
             clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
+        .platform-name { color: var(--text-white); font-size: 2.2cqw; font-weight: 800; text-align: right; line-height: 1.1; }
 
-        .platform-logo-icon::inner {
-            content: 'FT';
-            color: var(--bg-dark);
-            font-weight: 900;
-            font-size: 20px;
-        }
-
-        .platform-name {
-            color: var(--text-white);
-            font-size: 22px;
-            font-weight: 800;
-            text-align: right;
-            line-height: 1.1;
-        }
-
-        /* Placeholder Trophy */
         .trophy-container {
             position: absolute;
-            bottom: 60px;
-            right: 60px;
-            width: 350px;
-            height: 500px;
-            /* Kamu bisa mengganti URL di bawah dengan link gambar trophy PNG transparan aslimu */
+            bottom: 6cqw;
+            right: 6cqw;
+            width: 35cqw;
+            height: 50cqw;
             background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Transparent_Trophy.png');
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center bottom;
-            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.9));
+            filter: drop-shadow(0 2cqw 3cqw rgba(0,0,0,0.9));
             z-index: 3;
-        }
-
-        /* Efek tekstur lantai/cahaya */
-        .floor-light {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 250px;
-            background: linear-gradient(to top, rgba(255, 255, 255, 0.05), transparent);
-            pointer-events: none;
-            z-index: 1;
         }
 
     </style>
 </head>
 <body>
 
-    <div class="control-panel">
-        <input type="text" id="inputName" placeholder="Nama Peserta" value="NDUMISO" onkeyup="updateCert()">
-        <input type="text" id="inputAmount" placeholder="Nominal (Contoh: $500)" value="$500" onkeyup="updateCert()">
-        <input type="date" id="inputDate" value="2026-04-15" onchange="updateCert()">
+    <div class="dashboard-container">
+        <div class="dashboard-header">
+            <h2>FARIDTRADE PRO</h2>
+            <p>Payout Certificate Generator</p>
+        </div>
+
+        <div class="form-group">
+            <label for="inputName">Nama Peserta</label>
+            <input type="text" id="inputName" placeholder="Contoh: NDUMISO" value="NDUMISO">
+        </div>
+
+        <div class="form-group">
+            <label for="inputAmount">Nominal Payout</label>
+            <input type="text" id="inputAmount" placeholder="Contoh: $500" value="$500">
+        </div>
+
+        <div class="form-group">
+            <label for="inputDate">Tanggal</label>
+            <input type="date" id="inputDate" value="2026-04-15">
+        </div>
+
+        <button class="btn-generate" onclick="generateAndShow()">Buat Sertifikat</button>
     </div>
 
-    <div class="certificate-wrapper" id="certificate">
-        <div class="divider"></div>
-        <div class="divider bottom"></div>
-        <div class="floor-light"></div>
+    <div class="modal-overlay" id="certModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">&times;</button>
 
-        <div class="left-content">
-            <div class="header-title">
-                <h1>PAYOUT</h1>
-                <h1 class="certificate-text">CERTIFICATE</h1>
-            </div>
+            <div class="certificate-wrapper" id="certificate">
+                <div class="divider"></div>
+                <div class="divider bottom"></div>
+                <div class="floor-light"></div>
 
-            <div class="main-info">
-                <div class="label">PROUDLY PRESENTED TO:</div>
-                <h2 class="name" id="certName">NDUMISO</h2>
+                <div class="content-inner">
+                    <div class="left-content">
+                        <div class="header-title">
+                            <h1>PAYOUT</h1>
+                            <h1 class="certificate-text">CERTIFICATE</h1>
+                        </div>
 
-                <div class="label">PROFIT SPLIT</div>
-                <h2 class="amount" id="certAmount">$500</h2>
+                        <div class="main-info">
+                            <div class="label">PROUDLY PRESENTED TO:</div>
+                            <h2 class="name" id="certName">NDUMISO</h2>
 
-                <div class="label">DATE</div>
-                <h3 class="date" id="certDate">2026-04-15</h3>
+                            <div class="label">PROFIT SPLIT</div>
+                            <h2 class="amount" id="certAmount">$500</h2>
+
+                            <div class="label">DATE</div>
+                            <h3 class="date" id="certDate">2026-04-15</h3>
+                        </div>
+                    </div>
+
+                    <div class="right-content">
+                        <div class="platform-logo">
+                            <div class="platform-logo-icon"></div>
+                            <div class="platform-name">FARIDTRADE<br>PRO</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-signatures">
+                    <div class="signature-block">
+                        <div class="signature-title">FOUNDER & CEO</div>
+                        <div class="signature-name">Farid Siddiq</div>
+                    </div>
+                    <div class="signature-block">
+                        <div class="signature-title">EXECUTIVE BUSINESS PARTNER</div>
+                        <div class="signature-name">Rifky Fahmi</div>
+                    </div>
+                </div>
+
+                <div class="trophy-container"></div>
             </div>
         </div>
-
-        <div class="footer-signatures">
-            <div class="signature-block">
-                <div class="signature-title">FOUNDER & CEO</div>
-                <div class="signature-name">Farid Siddiq</div>
-            </div>
-            <div class="signature-block">
-                <div class="signature-title">EXECUTIVE BUSINESS PARTNER</div>
-                <div class="signature-name">Rifky Fahmi</div>
-            </div>
-        </div>
-
-        <div class="right-content">
-            <div class="platform-logo">
-                <div class="platform-logo-icon"></div>
-                <div class="platform-name">FARIDTRADE<br>PRO</div>
-            </div>
-        </div>
-        
-        <div class="trophy-container"></div>
     </div>
 
     <script>
-        function updateCert() {
-            // Mengambil value dari input
-            const name = document.getElementById('inputName').value;
+        const modal = document.getElementById('certModal');
+
+        function generateAndShow() {
+            // Ambil value dari form
+            const name = document.getElementById('inputName').value.toUpperCase();
             const amount = document.getElementById('inputAmount').value;
             const date = document.getElementById('inputDate').value;
 
-            // Memperbarui tampilan sertifikat
-            document.getElementById('certName').innerText = name.toUpperCase();
-            document.getElementById('certAmount').innerText = amount;
-            document.getElementById('certDate').innerText = date;
+            // Masukkan ke sertifikat
+            document.getElementById('certName').innerText = name || 'NAMA PESERTA';
+            document.getElementById('certAmount').innerText = amount || '$0';
+            document.getElementById('certDate').innerText = date || 'YYYY-MM-DD';
+
+            // Tampilkan Modal
+            modal.classList.add('active');
         }
+
+        function closeModal() {
+            // Sembunyikan Modal
+            modal.classList.remove('active');
+        }
+
+        // Tutup modal jika user klik area gelap di luar sertifikat
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
     </script>
 
 </body>
