@@ -6,12 +6,12 @@
 <title>FaridTrade Pro | SnR & Breakout Journal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Montserrat:wght@400;600;700;800;900&family=Alex+Brush&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <style>
 /* ============================================================
-   DESIGN TOKENS — DEEP OCEAN BLUE
+   DESIGN TOKENS — DEEP OCEAN BLUE + PREMIUM GOLD
    ============================================================ */
 :root {
   --bg0:      #020810;
@@ -35,12 +35,14 @@
   --green:    #34d399;
   --red:      #f87171;
   --amber:    #fbbf24;
-  --gold:     #eab308;
+  --gold:     #e8c678; /* Added Gold from prop firm style */
   --r:        12px;
   --r2:       18px;
   --fh:       'Rajdhani', sans-serif;
   --fb:       'Manrope', sans-serif;
   --fm:       'JetBrains Mono', monospace;
+  --fcert:    'Montserrat', sans-serif; /* For Certificate */
+  --fsig:     'Alex Brush', cursive; /* For Signatures */
 }
 
 /* ============================================================
@@ -304,7 +306,7 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
 .scard-lbl{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 
 /* ============================================================
-   MODAL & CERTIFICATE STYLES
+   MODALS & POPUP STYLES
    ============================================================ */
 .overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.7);
@@ -319,47 +321,86 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
   max-height:92vh;overflow-y:auto;position:relative;
 }
 .modal-lg{max-width:640px}
-.modal-xl{max-width:800px; background:var(--bg0);}
+/* Cert modal should be wider and fully transparent to let the cert card shine */
+.modal-cert{
+  max-width:800px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
 .mh{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start}
 .mb{padding:20px 24px}
 .mf{padding:14px 24px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
 .mclose{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;line-height:1;padding:0;transition:color .15s}
 .mclose:hover{color:var(--text)}
 
-/* Certificate styling */
-.cert-box {
+/* ============================================================
+   CERTIFICATE STYLE (CONTAINER QUERIES)
+   ============================================================ */
+.certificate-wrapper {
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 1 / 1; 
+  background: radial-gradient(circle at center bottom, #2a2a2a 0%, #0a0a0a 60%);
   position: relative;
-  background: linear-gradient(145deg, var(--bg1) 0%, #061124 100%);
-  border: 1px solid var(--border2);
-  border-radius: 20px;
-  padding: 40px;
-  text-align: center;
   overflow: hidden;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.8), inset 0 0 0 1px rgba(255,255,255,0.05);
+  box-shadow: 0 10px 40px rgba(0,0,0,1);
+  box-sizing: border-box;
+  font-family: var(--fcert);
+  border-radius: 16px;
+  border: 1px solid #333;
 }
-.cert-box::before {
-  content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-  background: radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 50%);
-  z-index: 0; pointer-events: none;
+.divider {
+  position: absolute; top: 25cqw; left: 8cqw; right: 8cqw; height: 1px;
+  background: rgba(255, 255, 255, 0.15);
 }
-.cert-box::after {
-  content: ''; position: absolute; inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cpath d='M0 0h100v100H0z' fill='none'/%3E%3Cpath d='M10 10l80 80M90 10L10 90' stroke='rgba(255,255,255,0.01)' stroke-width='1'/%3E%3C/svg%3E");
-  z-index: 0; pointer-events: none;
+.divider.bottom { top: auto; bottom: 25cqw; }
+.floor-light {
+  position: absolute; bottom: 0; left: 0; width: 100%; height: 25cqw;
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.05), transparent);
+  pointer-events: none;
 }
-.cert-content { position: relative; z-index: 1; }
-.cert-head { margin-bottom: 25px; }
-.cert-logo { font-family: var(--fh); font-size: 1.8rem; font-weight: 700; color: var(--text); letter-spacing: 0.1em; display:flex; align-items:center; justify-content:center; gap:10px;}
-.cert-logo span { color: var(--blue4); }
-.cert-title { font-size: 0.8rem; font-weight: 800; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.25em; margin-bottom: 5px; }
-.cert-subtitle { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; }
-.cert-name { font-family: var(--fh); font-size: 3.2rem; font-weight: 700; color: #fff; line-height: 1.1; margin-bottom: 30px; text-shadow: 0 0 25px rgba(59,130,246,0.4); text-transform:uppercase;}
-.cert-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 35px; }
-.cert-stat { background: rgba(5,14,31,0.6); border: 1px solid var(--border); border-radius: 12px; padding: 18px 10px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); }
-.cert-stat-lbl { font-size: 0.6rem; color: var(--muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 5px; }
-.cert-stat-val { font-family: var(--fm); font-size: 1.3rem; font-weight: 600; color: var(--text); }
-.cert-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed var(--border2); padding-top: 20px; text-align:left;}
-.cert-seal { width: 50px; height: 50px; border-radius: 50%; background:linear-gradient(135deg, rgba(34,211,238,0.1), rgba(59,130,246,0.1)); border: 1px solid var(--blue4); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--blue4); box-shadow: 0 0 15px rgba(59,130,246,0.3);}
+.content-inner {
+  position: absolute; top: 8cqw; left: 8cqw; right: 8cqw; bottom: 8cqw;
+  display: flex; justify-content: space-between;
+}
+.left-content { display: flex; flex-direction: column; justify-content: flex-start; z-index: 2; }
+.header-title h1 { color: #fff; font-size: 7.5cqw; font-weight: 900; margin: 0; line-height: 1; letter-spacing: 0.2cqw; }
+.header-title .certificate-text { color: var(--gold); font-size: 7cqw; position: relative; display: inline-block; padding: 0 1.5cqw; }
+.header-title .certificate-text::before,
+.header-title .certificate-text::after { content: ''; position: absolute; width: 2.5cqw; height: 2.5cqw; border: 0.4cqw solid #fff; }
+.header-title .certificate-text::before { top: -0.5cqw; left: -1cqw; border-right: none; border-bottom: none; }
+.header-title .certificate-text::after { bottom: -0.5cqw; right: -1cqw; border-left: none; border-top: none; }
+
+.main-info { margin-top: 8cqw; }
+.cert-label { color: #fff; font-size: 1.4cqw; font-weight: 600; letter-spacing: 0.1cqw; margin-bottom: 1cqw; text-transform: uppercase; }
+.cert-name { color: #fff; font-size: 5.5cqw; font-weight: 800; margin: 0 0 2cqw 0; text-transform: uppercase;}
+.cert-amount { color: var(--gold); font-size: 6.5cqw; font-weight: 800; margin: 0 0 2.5cqw 0; }
+.cert-date { color: #fff; font-size: 3cqw; font-weight: 600; margin: 0; }
+
+.cert-stats-row { display: flex; gap: 3cqw; margin-bottom: 3cqw; }
+.cert-stats-val { color: #fff; font-size: 2.5cqw; font-weight: 700; }
+
+.footer-signatures { position: absolute; bottom: 8cqw; left: 8cqw; display: flex; gap: 10cqw; z-index: 2; }
+.signature-title { color: #fff; font-size: 1.4cqw; font-weight: 600; margin-bottom: 0.5cqw; }
+.signature-name { color: #fff; font-family: var(--fsig); font-size: 4.5cqw; font-weight: 400; margin: 0; }
+
+.right-content { display: flex; flex-direction: column; align-items: flex-end; z-index: 2; }
+.platform-logo { display: flex; align-items: center; gap: 1.5cqw; }
+.platform-logo-icon { width: 4.5cqw; height: 4.5cqw; background: #fff; clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+.platform-name { color: #fff; font-size: 2.2cqw; font-weight: 800; text-align: right; line-height: 1.1; }
+
+.trophy-container {
+  position: absolute; bottom: 6cqw; right: 6cqw; width: 35cqw; height: 50cqw;
+  background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Transparent_Trophy.png');
+  background-size: contain; background-repeat: no-repeat; background-position: center bottom;
+  filter: drop-shadow(0 2cqw 3cqw rgba(0,0,0,0.9)); z-index: 3;
+}
+
+/* Modal close specifically for the cert */
+.cert-close-btn { position: absolute; top: -40px; right: 0; background: transparent; border: none; color: white; font-size: 30px; cursor: pointer; z-index: 1001; transition: color 0.2s; }
+.cert-close-btn:hover { color: var(--gold); }
 
 /* ============================================================
    AUTH CARD
@@ -475,8 +516,6 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
   .g2{grid-template-columns:1fr}
   .gjl{grid-template-columns:1fr}
   .gcal{grid-template-columns:1fr}
-  .cert-grid { grid-template-columns: repeat(2, 1fr); }
-  .cert-name { font-size: 2.2rem; }
 }
 @media(min-width:641px){#botnav{display:none!important}}
 </style>
@@ -674,7 +713,7 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
           </div>
         </div>
       </div>
-      <button class="btn btn-primary" onclick="shareAchievement()" style="padding:.8rem 1.4rem;font-size:.85rem;background:linear-gradient(135deg, var(--blue3), var(--blue1));">
+      <button class="btn btn-primary" onclick="shareAchievement()" style="padding:.8rem 1.4rem;font-size:.85rem;background:var(--gold);color:var(--bg0);border:none;">
         <i class="fa-solid fa-medal"></i> Lihat Sertifikat Pencapaian
       </button>
     </div>
@@ -905,59 +944,74 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
 </div>
 
 <div class="overlay" id="m-achievement">
-  <div class="modal modal-xl">
-    <div class="mh" style="border-bottom:none; padding-bottom:0;">
-      <div></div> <button class="mclose" onclick="closeModal('m-achievement')"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    <div class="mb" style="padding: 0 30px 30px;">
-      
-      <div class="cert-box" id="cert-capture-area">
-        <div class="cert-content">
-          <div class="cert-head">
-            <div class="cert-logo"><i class="fa-solid fa-chart-line" style="color:var(--blue4)"></i> FARIDTRADE <span>PRO</span></div>
-          </div>
-          
-          <div class="cert-title">Trading Performance Certificate</div>
-          <div class="cert-subtitle" style="margin-bottom: 25px;">This is to certify the trading statistics of</div>
-          
-          <div class="cert-name" id="cert-name-val">YOUR NAME</div>
-          
-          <div class="cert-grid">
-            <div class="cert-stat">
-              <div class="cert-stat-lbl">Net PnL</div>
-              <div class="cert-stat-val" id="cert-val-pnl">$0.00</div>
+  <div class="modal modal-cert">
+    <button class="cert-close-btn" onclick="closeModal('m-achievement')"><i class="fa-solid fa-xmark"></i></button>
+    
+    <div class="certificate-wrapper" id="certificate">
+        <div class="divider"></div>
+        <div class="divider bottom"></div>
+        <div class="floor-light"></div>
+
+        <div class="content-inner">
+            <div class="left-content">
+                <div class="header-title">
+                    <h1>PAYOUT</h1>
+                    <h1 class="certificate-text">CERTIFICATE</h1>
+                </div>
+
+                <div class="main-info">
+                    <div class="cert-label">PROUDLY PRESENTED TO:</div>
+                    <h2 class="cert-name" id="cert-name-val">—</h2>
+
+                    <div class="cert-label">PROFIT SPLIT</div>
+                    <h2 class="cert-amount" id="cert-val-pnl">$0.00</h2>
+
+                    <div class="cert-stats-row">
+                        <div>
+                            <div class="cert-label" style="font-size: 1cqw; margin-bottom: 0.2cqw;">WINRATE</div>
+                            <div class="cert-stats-val" id="cert-val-wr">0%</div>
+                        </div>
+                        <div>
+                            <div class="cert-label" style="font-size: 1cqw; margin-bottom: 0.2cqw;">TRADES</div>
+                            <div class="cert-stats-val" id="cert-val-trades">0</div>
+                        </div>
+                        <div>
+                            <div class="cert-label" style="font-size: 1cqw; margin-bottom: 0.2cqw;">PROFIT FACTOR</div>
+                            <div class="cert-stats-val" id="cert-val-pf">0.00</div>
+                        </div>
+                    </div>
+
+                    <div class="cert-label">DATE</div>
+                    <h3 class="cert-date" id="cert-date">2026-04-15</h3>
+                </div>
             </div>
-            <div class="cert-stat">
-              <div class="cert-stat-lbl">Winrate</div>
-              <div class="cert-stat-val" id="cert-val-wr" style="color:var(--blue4)">0%</div>
+
+            <div class="right-content">
+                <div class="platform-logo">
+                    <div class="platform-logo-icon"></div>
+                    <div class="platform-name">FaridTrade<br>Pro</div>
+                </div>
             </div>
-            <div class="cert-stat">
-              <div class="cert-stat-lbl">Total Trades</div>
-              <div class="cert-stat-val" id="cert-val-trades">0</div>
-            </div>
-            <div class="cert-stat">
-              <div class="cert-stat-lbl">Profit Factor</div>
-              <div class="cert-stat-val" id="cert-val-pf">0.00</div>
-            </div>
-          </div>
-          
-          <div class="cert-footer">
-            <div>
-              <div style="font-weight:700; color:var(--text); font-size:0.85rem; margin-bottom:2px;">Verified by Journal System</div>
-              <div id="cert-date">Date: —</div>
-            </div>
-            <div class="cert-seal">
-              <i class="fa-solid fa-check-double"></i>
-            </div>
-          </div>
         </div>
-      </div>
-      
-      <div style="text-align:center; margin-top:18px; font-size:0.75rem; color:var(--muted); font-weight:600;">
-        <i class="fa-solid fa-camera"></i> Screenshot pop-up ini untuk dibagikan ke sosial media
-      </div>
-      
+
+        <div class="footer-signatures">
+            <div class="signature-block">
+                <div class="signature-title">FOUNDER & CEO</div>
+                <div class="signature-name">Farid Siddiq</div>
+            </div>
+            <div class="signature-block">
+                <div class="signature-title">EXECUTIVE BUSINESS PARTNER</div>
+                <div class="signature-name">Rifky Fahmi</div>
+            </div>
+        </div>
+
+        <div class="trophy-container"></div>
     </div>
+    
+    <div style="text-align:center; margin-top:18px; font-size:0.75rem; color:var(--text); font-weight:600; text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+      <i class="fa-solid fa-camera"></i> Screenshot area ini untuk dibagikan ke sosial media
+    </div>
+
   </div>
 </div>
 
@@ -995,12 +1049,12 @@ const CL_BO = [
 /* ============================================================
    STATE
    ============================================================ */
-let DB   = {users:[],trades:[]};   // full cloud database
-let ME   = null;                    // current logged-in user object
+let DB   = {users:[],trades:[]};
+let ME   = null;
 let CHART= null;
 let CAL_DATE = new Date();
 let SAVING = false;
-let useTPSL = false; // State for TP/SL Toggle
+let useTPSL = false;
 
 /* ============================================================
    TOAST
@@ -1107,9 +1161,6 @@ function setBtn(id, loading){
   b.style.opacity = loading ? '.6' : '1';
 }
 
-/* ============================================================
-   HASH PASSWORD (simple btoa)
-   ============================================================ */
 function hashPwd(p){ return btoa(unescape(encodeURIComponent(p))); }
 
 /* ============================================================
@@ -1307,9 +1358,6 @@ function toggleTPSL(){
   }
 }
 
-/* ============================================================
-   AUTO CALC PnL
-   ============================================================ */
 function autoCalcPnl(){
   const en  = parseFloat(document.getElementById('f-entry').value);
   const ex  = parseFloat(document.getElementById('f-exit').value);
@@ -1378,9 +1426,6 @@ async function deleteTrade(id, fromModal=false){
   renderAll();
 }
 
-/* ============================================================
-   CLEAR ALL TRADES
-   ============================================================ */
 async function clearAllTrades(){
   if(!confirm('Hapus SEMUA trade akun ini secara permanen?')) return;
   DB.trades = DB.trades.filter(t=>t.uid!==ME.id);
@@ -1413,9 +1458,6 @@ function getFiltered(){
   );
 }
 
-/* ============================================================
-   SESSION HELPER
-   ============================================================ */
 function getSession(ts){
   const h = new Date(ts).getHours();
   if(h>=6&&h<14)  return {name:'ASIAN',  cls:'basian',  icon:'fa-sun'};
@@ -1423,42 +1465,29 @@ function getSession(ts){
   return               {name:'NY',     cls:'bny',     icon:'fa-moon'};
 }
 
-/* ============================================================
-   FORMAT HELPERS
-   ============================================================ */
 function fmtNum(n){ return parseFloat(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtPnl(n){ return (n>=0?'+':'')+fmtNum(n); }
-function fmtDollar(n){ return '$'+fmtNum(Math.abs(n)); }
 function pnlColor(n){ return n>=0?'var(--green)':'var(--red)'; }
 
 /* ============================================================
    SHARE ACHIEVEMENT (CERTIFICATE MODAL)
    ============================================================ */
 function shareAchievement() {
-  // Grab current displayed stats
   const netPnlText = document.getElementById('kpi-net').textContent;
   const wrText = document.getElementById('kpi-wr').textContent;
   const tradesCount = document.getElementById('kpi-cnt').textContent.replace(' Trades', '');
   const pfVal = document.getElementById('stat-pf').textContent;
-  
-  // Extract numerical value for color checking
-  const netValueStr = netPnlText.replace(/,/g, '').replace('+', '');
-  const netValue = parseFloat(netValueStr) || 0;
 
-  // Populate Certificate
-  document.getElementById('cert-name-val').textContent = ME.name;
-  
-  const pnlEl = document.getElementById('cert-val-pnl');
-  pnlEl.textContent = netPnlText;
-  pnlEl.style.color = pnlColor(netValue);
+  document.getElementById('cert-name-val').textContent = ME.name.toUpperCase();
+  document.getElementById('cert-val-pnl').textContent = netPnlText;
   
   document.getElementById('cert-val-wr').textContent = wrText.replace(' WR', '');
   document.getElementById('cert-val-trades').textContent = tradesCount;
   document.getElementById('cert-val-pf').textContent = pfVal;
 
   const today = new Date();
-  const dateStr = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-  document.getElementById('cert-date').textContent = 'Date: ' + dateStr;
+  const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+  document.getElementById('cert-date').textContent = dateStr;
   
   openModal('m-achievement');
 }
@@ -1474,7 +1503,6 @@ function renderAll(){
   const target  = bal*0.08;
   const limit   = bal*0.10;
 
-  // KPI computation
   let totalPnl=0, grossW=0, grossL=0, wins=0;
   let cW=0,mW=0,cL=0,mL=0;
   let sesPnl={ASIAN:0,LONDON:0,NY:0};
@@ -1760,7 +1788,7 @@ function exportData(){
 }
 
 /* ============================================================
-   BALANCE MODAL TRIGGER (for nav button)
+   BALANCE MODAL TRIGGER
    ============================================================ */
 const _origOpenModal = openModal;
 window.openModal = function(id){
