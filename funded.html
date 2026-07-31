@@ -136,6 +136,7 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
 .g2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
 .gcal{display:grid;grid-template-columns:5fr 7fr;gap:16px}
 .gjl{display:grid;grid-template-columns:420px 1fr;gap:16px}
+.cal-inner-grid{display:grid;grid-template-columns:3fr 2fr;gap:18px}
 .scard{background:var(--panel);border:1px solid var(--border);border-radius:var(--r2);backdrop-filter:blur(20px);padding:18px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;z-index:1}
 .scard::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(59,130,246,.05) 0%,transparent 60%);pointer-events:none}
 .scard:hover{border-color:var(--border2);transform:translateY(-2px)}
@@ -200,6 +201,12 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
 .cd-n{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.04)}
 .cd-w{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.2)}
 .cd-l{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.15)}
+.wk-row{display:flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--border);border-radius:11px;padding:9px 12px}
+.wk-row .wk-lbl{font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;min-width:52px}
+.wk-row .wk-range{font-size:.6rem;color:var(--muted2);font-family:var(--fm)}
+.wk-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden}
+.wk-bar{height:100%;border-radius:99px}
+.wk-val{font-family:var(--fm);font-size:.72rem;font-weight:700;min-width:70px;text-align:right}
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);border:1px solid var(--border2);padding:10px 20px;border-radius:12px;font-size:.8rem;font-weight:600;z-index:999;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;box-shadow:0 8px 32px rgba(0,0,0,.5)}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.tok{border-color:rgba(52,211,153,.4);color:var(--green)}
@@ -238,7 +245,7 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
 .pg-controls{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-top:1px solid var(--border)}
 .pg-controls span{font-size:.72rem;color:var(--muted);font-weight:600;font-family:var(--fm)}
 @media(max-width:1100px){.gjl{grid-template-columns:1fr}}
-@media(max-width:900px){.gcal{grid-template-columns:1fr}.g4{grid-template-columns:repeat(2,1fr)}.g5{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.gcal{grid-template-columns:1fr}.g4{grid-template-columns:repeat(2,1fr)}.g5{grid-template-columns:repeat(2,1fr)}.cal-inner-grid{grid-template-columns:1fr}}
 @media(max-width:640px){
   #topnav{display:none}
   #botnav{display:flex}
@@ -250,6 +257,7 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
   .gjl{grid-template-columns:1fr}
   .gcal{grid-template-columns:1fr}
   .fr4{grid-template-columns:1fr 1fr}
+  .cal-inner-grid{grid-template-columns:1fr}
 }
 @media(min-width:641px){#botnav{display:none!important}}
 </style>
@@ -491,7 +499,7 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
     </div>
 
     <div class="panel" style="padding:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
-      <div>
+      <div style="flex:1;min-width:280px">
         <div class="sh" style="margin-bottom:12px">
           <div class="sh-ico" style="background:rgba(251,191,36,.1);color:var(--amber)"><i class="fa-solid fa-shield-cat"></i></div>
           <h3>Risk Insight & Pencapaian</h3>
@@ -502,9 +510,17 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
             <div class="fm" style="font-size:1.2rem;font-weight:600;color:var(--amber)" id="risk-safelot">0.00 Lot</div>
           </div>
           <div>
+            <div style="font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:4px">Risiko Max / Trade ($)</div>
+            <div class="fm" style="font-size:1.2rem;font-weight:600;color:var(--cyan)" id="risk-dollarrisk">$0.00</div>
+          </div>
+          <div>
             <div style="font-size:.62rem;color:var(--muted);font-weight:700;text-transform:uppercase;margin-bottom:4px">Batas Consecutive Loss (Max DD)</div>
             <div class="fm" style="font-size:1.2rem;font-weight:600;color:var(--red)" id="risk-maxloss">0 Trades</div>
           </div>
+        </div>
+        <div style="margin-top:14px;font-size:.7rem;color:var(--muted);line-height:1.7;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:10px 14px">
+          <i class="fa-solid fa-circle-info" style="color:var(--amber);margin-right:5px"></i>
+          <b>Lot bersifat fleksibel</b>, patokannya bukan angka lot tetap tapi <b>Risiko Max/Trade ($)</b> di atas — hasil dari persentase risk × equity berjalan. Lot aman dihitung ulang tiap trade: <span class="fm" style="color:var(--text)">Lot = Risiko Max/Trade ÷ (Jarak SL × Nilai per Poin)</span>. Artinya SL boleh lebar atau sempit, tapi kerugian dalam dolar tetap konsisten di angka <b id="risk-dollarrisk-inline" class="fm" style="color:var(--cyan)">$0.00</b> per trade. Kalau terjadi <b id="risk-maxloss-inline">0</b> kali loss beruntun senilai itu, limit max drawdown akun akan tersentuh — jadi itulah batas consecutive loss riil-mu.
         </div>
       </div>
       <button class="btn btn-primary" onclick="shareAchievement()" style="padding:.8rem 1.4rem;font-size:.85rem;background:var(--gold);color:var(--bg0);border:none">
@@ -523,8 +539,16 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
             <button onclick="chMon(1)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.7rem"><i class="fa-solid fa-chevron-right"></i></button>
           </div>
         </div>
-        <div class="cal-hdr"><span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span></div>
-        <div class="cal-grid" id="cal-grid"></div>
+        <div class="cal-inner-grid">
+          <div>
+            <div class="cal-hdr"><span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span></div>
+            <div class="cal-grid" id="cal-grid"></div>
+          </div>
+          <div>
+            <div style="font-size:.62rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Ringkasan Mingguan</div>
+            <div id="cal-weekly" style="display:flex;flex-direction:column;gap:7px"></div>
+          </div>
+        </div>
       </div>
       <div class="panel" style="padding:20px;display:flex;flex-direction:column">
         <div class="sh" style="margin-bottom:8px">
@@ -652,46 +676,6 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
       </div>
 
       <div style="display:flex;flex-direction:column;gap:16px">
-        <div class="panel" style="padding:22px;display:flex;flex-direction:column" id="s-calc">
-          <div class="sh" style="margin-bottom:16px">
-            <div class="sh-ico" style="background:rgba(16,185,129,.1);color:var(--green)"><i class="fa-solid fa-calculator"></i></div>
-            <h3>Compounding Calculator</h3>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px">
-            <div class="fg"><label>Mata Uang</label>
-              <select id="calc-currency" class="inp"><option value="IDR">Rupiah (IDR)</option><option value="USD">USD ($)</option><option value="USC" selected>USD Cent (¢)</option></select>
-            </div>
-            <div class="fg"><label>Modal Awal</label><input type="number" id="calc-capital" class="inp fm" value="56818"></div>
-            <div class="fg"><label>Target Bulan</label><input type="number" id="calc-months" class="inp fm" value="30"></div>
-            <div class="fg"><label>Risk Ratio</label>
-              <div style="display:flex;gap:8px">
-                <select id="calc-rr-select" class="inp" onchange="toggleCustomRR()">
-                  <option value="1:2" selected>1:2</option><option value="1:3">1:3</option><option value="1:5">1:5</option><option value="custom">Custom</option>
-                </select>
-                <input type="text" id="calc-rr-custom" class="inp fm" placeholder="1:4" style="display:none;width:50%">
-              </div>
-            </div>
-            <div class="fg"><label>Profit Bulanan (%)</label><input type="number" id="calc-profit-pct" class="inp fm" value="8" step="0.1"></div>
-            <div class="fg"><label>Risiko/Trade (%)</label><input type="number" id="calc-risk-pct" class="inp fm" value="1.5" step="0.1"></div>
-          </div>
-          <button class="btn btn-primary btn-full" onclick="generateCompoundingTable()" style="padding:.72rem;font-size:.85rem;margin-bottom:16px">
-            <i class="fa-solid fa-rotate"></i> Kalkulasi Compounding
-          </button>
-          <div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px">
-            <table style="width:100%;border-collapse:collapse;white-space:nowrap">
-              <thead><tr style="background:var(--bg2)">
-                <th style="padding:10px 14px;text-align:center;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Bulan</th>
-                <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Saldo Awal</th>
-                <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Profit/Bulan</th>
-                <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Risk/Trade</th>
-                <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Saldo Akhir</th>
-                <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Estimasi (IDR)</th>
-              </tr></thead>
-              <tbody id="calc-result-body"></tbody>
-            </table>
-          </div>
-        </div>
-
         <div class="panel" style="display:flex;flex-direction:column;min-height:500px" id="s-history">
           <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
             <h3 class="fh" style="font-size:1rem;font-weight:700">Riwayat Trade</h3>
@@ -729,6 +713,47 @@ label,.lbl{display:block;font-size:.66rem;font-weight:700;color:var(--muted);tex
         </div>
       </div>
     </div>
+
+    <div class="panel" style="padding:22px;display:flex;flex-direction:column" id="s-calc">
+      <div class="sh" style="margin-bottom:16px">
+        <div class="sh-ico" style="background:rgba(16,185,129,.1);color:var(--green)"><i class="fa-solid fa-calculator"></i></div>
+        <h3>Compounding Calculator</h3>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px">
+        <div class="fg"><label>Mata Uang</label>
+          <select id="calc-currency" class="inp"><option value="IDR">Rupiah (IDR)</option><option value="USD">USD ($)</option><option value="USC" selected>USD Cent (¢)</option></select>
+        </div>
+        <div class="fg"><label>Modal Awal</label><input type="number" id="calc-capital" class="inp fm" value="56818"></div>
+        <div class="fg"><label>Target Bulan</label><input type="number" id="calc-months" class="inp fm" value="30"></div>
+        <div class="fg"><label>Risk Ratio</label>
+          <div style="display:flex;gap:8px">
+            <select id="calc-rr-select" class="inp" onchange="toggleCustomRR()">
+              <option value="1:2" selected>1:2</option><option value="1:3">1:3</option><option value="1:5">1:5</option><option value="custom">Custom</option>
+            </select>
+            <input type="text" id="calc-rr-custom" class="inp fm" placeholder="1:4" style="display:none;width:50%">
+          </div>
+        </div>
+        <div class="fg"><label>Profit Bulanan (%)</label><input type="number" id="calc-profit-pct" class="inp fm" value="8" step="0.1"></div>
+        <div class="fg"><label>Risiko/Trade (%)</label><input type="number" id="calc-risk-pct" class="inp fm" value="1.5" step="0.1"></div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="generateCompoundingTable()" style="padding:.72rem;font-size:.85rem;margin-bottom:16px">
+        <i class="fa-solid fa-rotate"></i> Kalkulasi Compounding
+      </button>
+      <div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px">
+        <table style="width:100%;border-collapse:collapse;white-space:nowrap">
+          <thead><tr style="background:var(--bg2)">
+            <th style="padding:10px 14px;text-align:center;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Bulan</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Saldo Awal</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Profit/Bulan</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Risk/Trade</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Saldo Akhir</th>
+            <th style="padding:10px 14px;text-align:right;font-size:.63rem;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border)">Estimasi (IDR)</th>
+          </tr></thead>
+          <tbody id="calc-result-body"></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1548,6 +1573,9 @@ function renderAll(){
   document.getElementById('risk-safelot').textContent = Math.max(safeLotValue, 0.01).toFixed(2) + ' Lot';
   const maxLossConsecutive = Math.max(0, limit / Math.max(riskAmount,0.0001));
   document.getElementById('risk-maxloss').textContent = Math.floor(maxLossConsecutive) + ' Trades';
+  document.getElementById('risk-dollarrisk').innerHTML = formatMoneyStr(riskAmount);
+  document.getElementById('risk-dollarrisk-inline').innerHTML = formatMoneyStr(riskAmount);
+  document.getElementById('risk-maxloss-inline').textContent = Math.floor(maxLossConsecutive);
 
   renderTable(trades);
   updateChart(chartCats, chartEq);
@@ -1726,6 +1754,50 @@ function renderCal(trades){
       g.innerHTML+=`<div class="cal-d cd-n"><span style="font-size:.62rem;font-weight:700;color:var(--muted2);opacity:.5">${day}</span></div>`;
     }
   }
+  renderWeeklyCal(y, m, first, days, daily);
+}
+
+/* Ringkasan mingguan untuk bulan yang sedang ditampilkan di kalender,
+   mengikuti pembagian baris yang sama seperti grid kalender (Min-Sab) */
+function renderWeeklyCal(y, m, firstDow, daysInMonth, daily){
+  const wk = document.getElementById('cal-weekly');
+  if(!wk) return;
+  const MN=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const weeks = [];
+  let cur = { days:[], sum:0, hasData:false };
+  // isi offset kosong di minggu pertama
+  for(let i=0;i<firstDow;i++) cur.days.push(null);
+  for(let day=1;day<=daysInMonth;day++){
+    cur.days.push(day);
+    if(daily[day]!==undefined){ cur.sum += daily[day]; cur.hasData = true; }
+    if(cur.days.length===7){ weeks.push(cur); cur = { days:[], sum:0, hasData:false }; }
+  }
+  if(cur.days.length){ weeks.push(cur); }
+
+  const maxAbs = Math.max(...weeks.map(w=>Math.abs(w.sum)), 1);
+
+  if(!weeks.some(w=>w.hasData)){
+    wk.innerHTML = `<div style="font-size:.72rem;color:var(--muted2);padding:14px 4px;text-align:center">Belum ada trade bulan ini.</div>`;
+    return;
+  }
+
+  wk.innerHTML = weeks.map((w,i)=>{
+    const validDays = w.days.filter(d=>d!==null);
+    if(!validDays.length) return '';
+    const startD = validDays[0], endD = validDays[validDays.length-1];
+    const isW = w.sum>=0;
+    const barPct = Math.min(Math.abs(w.sum)/maxAbs*100, 100);
+    const barColor = isW ? 'var(--green)' : 'var(--red)';
+    const valTxt = w.hasData ? `${isW?'+':'-'}${getCurrencyPrefix()}${fmtNum(Math.abs(w.sum))}${getCurrencySymbol()}` : '—';
+    return `<div class="wk-row">
+      <div>
+        <div class="wk-lbl">Wk ${i+1}</div>
+        <div class="wk-range">${startD}-${endD} ${MN[m]}</div>
+      </div>
+      <div class="wk-bar-wrap"><div class="wk-bar" style="width:${w.hasData?barPct:0}%;background:${barColor}"></div></div>
+      <div class="wk-val" style="color:${w.hasData?(isW?'var(--green)':'var(--red)'):'var(--muted2)'}">${valTxt}</div>
+    </div>`;
+  }).join('');
 }
 
 /* ============================================================
