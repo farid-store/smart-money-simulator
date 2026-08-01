@@ -3,490 +3,548 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Fruit Flip 5x5 Gacha 🎰</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<title>Royal Fruit Slot Gacha 🎰</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0e0d0b;
-    --panel: #1b1712;
+    --bg-dark: #090807;
+    --panel: #161310;
     --gold: #c7a24a;
-    --gold-bright: #e4c77a;
-    --rust: #a1543f;
+    --gold-bright: #f0d58b;
+    --gold-dim: #7a632c;
+    --red-alert: #e53935;
     --text-main: #ede6d6;
-    --text-dim: #a79c87;
-    --card-back: linear-gradient(135deg, #241f18, #181410);
-    --card-front: #f3ead4;
     --font-serif: 'Fraunces', serif;
     --font-mono: 'JetBrains Mono', monospace;
   }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   
   body {
-    background-color: var(--bg); color: var(--text-main);
-    font-family: var(--font-mono); display: flex; flex-direction: column;
-    align-items: center; min-height: 100vh; overflow-x: hidden;
-    user-select: none; /* Mencegah seleksi teks saat menggesek layar */
+    background: radial-gradient(circle at 50% 30%, #1c1814 0%, var(--bg-dark) 100%);
+    color: var(--text-main); font-family: var(--font-mono);
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; overflow: hidden; touch-action: none;
   }
 
-  body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: 0.04;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  }
-
-  /* HEADER (SALDO & SETTING) */
-  header {
-    width: 100%; max-width: 600px; padding: 20px;
+  /* APP BAR (TOP) */
+  .top-bar {
+    width: 100%; max-width: 500px; padding: 15px 20px;
     display: flex; justify-content: space-between; align-items: center;
+    background: linear-gradient(180deg, rgba(28,24,20,0.9), transparent);
     border-bottom: 1px solid rgba(199, 162, 74, 0.2);
-    margin-bottom: 20px;
-  }
-  .balance-container { display: flex; flex-direction: column; gap: 5px; }
-  .label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
-  .balance { font-family: var(--font-serif); font-size: 24px; color: var(--gold-bright); }
-  
-  .header-actions { display: flex; gap: 10px; }
-  .btn-outline {
-    background: transparent; border: 1px solid var(--gold); color: var(--gold);
-    padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 12px;
-    transition: 0.2s;
-  }
-  .btn-outline:hover { background: var(--gold); color: var(--bg); }
-
-  /* GAME BOARD 5x5 */
-  .game-board {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
-    width: 95%; max-width: 450px; margin-bottom: 20px;
-    perspective: 1200px; touch-action: none; /* Mencegah scrolling saat drag */
-  }
-
-  /* KARTU */
-  .card {
-    aspect-ratio: 1 / 1; width: 100%; cursor: pointer;
-    position: relative; transform-style: preserve-3d;
-    transition: transform 0.5s cubic-bezier(0.4, 0.2, 0.2, 1), box-shadow 0.3s ease;
-  }
-  
-  .card.flipped { transform: rotateY(180deg); }
-  
-  .card-face {
-    position: absolute; inset: 0; backface-visibility: hidden;
-    border-radius: 8px; display: flex; align-items: center; justify-content: center;
-    font-size: clamp(1.5rem, 5vw, 2.5rem); box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-  }
-
-  .card-back {
-    background: var(--card-back); border: 1px solid rgba(199, 162, 74, 0.3);
-    color: var(--gold); font-family: var(--font-serif);
-    text-shadow: 0 0 8px rgba(199, 162, 74, 0.5);
-  }
-  .card-back::after { content: '✦'; font-size: clamp(1rem, 3vw, 1.5rem); opacity: 0.5; }
-  
-  .card-front {
-    background: var(--card-front); transform: rotateY(180deg);
-    border: 2px solid var(--gold);
-  }
-
-  /* Animasi Kemenangan */
-  .card.win .card-front {
-    animation: winPulse 0.8s infinite alternate;
-    border-color: #ff3366; background: #fff5f7;
-    box-shadow: 0 0 15px rgba(255, 51, 102, 0.8);
     z-index: 10;
   }
-  @keyframes winPulse {
-    0% { transform: rotateY(180deg) scale(1); }
-    100% { transform: rotateY(180deg) scale(1.15); }
+  .btn-info {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--panel); border: 2px solid var(--gold);
+    color: var(--gold-bright); font-family: var(--font-serif); font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
   }
-
-  /* CONTROLS (TARUHAN & KESULITAN) */
-  .controls {
-    width: 95%; max-width: 450px; background: var(--panel);
-    padding: 15px 20px; border-radius: 16px; border: 1px solid rgba(199, 162, 74, 0.2);
-    display: flex; flex-direction: column; gap: 15px; text-align: center; z-index: 10;
-  }
-
-  .control-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .control-row input, .control-row select {
-    background: var(--bg); border: 1px solid var(--gold); color: var(--gold-bright);
-    padding: 8px 12px; border-radius: 8px; font-family: inherit; font-size: 14px; 
-    flex: 1; text-align: center;
-  }
-
-  .spin-btn {
-    background: linear-gradient(135deg, var(--gold), var(--gold-bright));
-    color: var(--bg); font-family: var(--font-serif); font-size: 1.2rem;
-    padding: 15px; border: none; border-radius: 10px; cursor: pointer;
-    font-weight: 800; text-transform: uppercase; letter-spacing: 2px;
-    box-shadow: 0 10px 20px rgba(199, 162, 74, 0.3); transition: 0.2s;
-  }
-  .spin-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(199, 162, 74, 0.4); }
-  .spin-btn:active { transform: translateY(0); }
-  .spin-btn:disabled { background: #444; color: #777; cursor: not-allowed; box-shadow: none; transform: none; }
-
-  .message { height: 20px; font-size: 13px; color: var(--gold-bright); font-weight: bold; }
-
-  /* OVERLAY JACKPOT */
-  .jackpot-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    z-index: 5000; opacity: 0; pointer-events: none; transition: 0.3s;
-  }
-  .jackpot-overlay.show { opacity: 1; pointer-events: auto; animation: screenShake 0.4s infinite; }
-  .jackpot-text {
-    font-family: var(--font-serif); font-size: clamp(3rem, 10vw, 5rem); font-weight: 800;
-    color: #ffeb3b; text-transform: uppercase;
-    text-shadow: 0 0 20px #ff9800, 0 0 40px #ff5722, 0 0 60px #f44336;
-    animation: textPulse 0.5s infinite alternate; margin-bottom: 20px;
-  }
-  .jackpot-amount {
-    font-size: 2rem; color: #fff; font-weight: bold;
-    text-shadow: 0 0 10px rgba(255,255,255,0.5);
-  }
+  .btn-info:active { transform: scale(0.9); }
   
-  @keyframes textPulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
-  @keyframes screenShake {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    25% { transform: translate(-1px, -2px) rotate(-1deg); }
-    50% { transform: translate(-3px, 0px) rotate(1deg); }
-    75% { transform: translate(3px, 2px) rotate(0deg); }
-    100% { transform: translate(1px, -1px) rotate(-1deg); }
+  .balance-box { text-align: right; }
+  .balance-box .label { font-size: 10px; color: var(--gold-dim); letter-spacing: 2px; }
+  .balance-box .amount { font-family: var(--font-serif); font-size: 24px; color: var(--gold-bright); text-shadow: 0 0 10px rgba(199, 162, 74, 0.4); }
+
+  /* GAME BOARD */
+  .game-container {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    width: 100%; padding: 10px; perspective: 1000px;
+  }
+  .grid-5x5 {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px;
+    width: 95%; max-width: 420px;
+  }
+  .card {
+    aspect-ratio: 1 / 1; width: 100%; position: relative;
+    transform-style: preserve-3d; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    cursor: pointer;
+  }
+  .card.flipped { transform: rotateY(180deg); }
+  .card-face {
+    position: absolute; inset: 0; backface-visibility: hidden; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(1.5rem, 6vw, 2.5rem); box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  }
+  .card-back {
+    background: linear-gradient(135deg, #241f18, #181410);
+    border: 1px solid var(--gold-dim); color: var(--gold);
+  }
+  .card-back::after { content: '✦'; font-size: 1.2rem; opacity: 0.3; }
+  .card-front {
+    background: #fdfaf3; transform: rotateY(180deg); border: 2px solid var(--gold);
+  }
+  .card.win .card-front {
+    animation: winPulse 0.6s infinite alternate; border-color: #ff3366; background: #fff0f3;
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.8); z-index: 5;
+  }
+  @keyframes winPulse { 0% { transform: rotateY(180deg) scale(1); } 100% { transform: rotateY(180deg) scale(1.15); } }
+
+  /* CONTROL PANEL */
+  .control-panel {
+    width: 100%; max-width: 500px; background: var(--panel);
+    padding: 20px; border-top: 1px solid var(--gold-dim);
+    border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
+    display: flex; flex-direction: column; gap: 15px; z-index: 10;
   }
 
-  /* CONFETTI CANVAS */
-  #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 4999; }
+  .bet-controls {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg-dark); padding: 8px; border-radius: 12px; border: 1px solid var(--gold-dim);
+  }
+  .bet-btn {
+    background: #241f18; border: 1px solid var(--gold-dim); color: var(--gold-bright);
+    width: 40px; height: 40px; border-radius: 8px; font-size: 20px; font-weight: bold;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .bet-btn:active { background: var(--gold-dim); }
+  .bet-amount { font-family: var(--font-serif); font-size: 20px; color: #fff; width: 100px; text-align: center; }
+  .bet-max { background: linear-gradient(135deg, var(--gold), var(--gold-bright)); color: #000; font-size: 12px; width: 50px; }
+
+  .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn-spin {
+    padding: 14px 10px; border: none; border-radius: 10px; font-family: var(--font-mono);
+    font-weight: 800; font-size: 14px; text-transform: uppercase; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+  }
+  .btn-spin:active { transform: translateY(2px); }
+  .btn-spin:disabled { opacity: 0.5; pointer-events: none; }
+  
+  .btn-manual { background: #2a241d; color: var(--gold-bright); border: 1px solid var(--gold-dim); grid-column: 1 / -1; }
+  .btn-auto-norm { background: linear-gradient(135deg, #1b5e20, #2e7d32); color: #fff; }
+  .btn-auto-fast { background: linear-gradient(135deg, #b71c1c, #d32f2f); color: #fff; }
+  
+  .btn-subtitle { font-size: 9px; opacity: 0.7; font-weight: 500; }
+
+  .message-board { text-align: center; font-size: 12px; color: var(--gold-bright); font-weight: bold; height: 16px; }
+
+  /* OVERLAYS (MODAL, JACKPOT, ZONK) */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.9);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 5000; opacity: 0; pointer-events: none; transition: 0.3s; padding: 20px;
+  }
+  .overlay.show { opacity: 1; pointer-events: auto; }
+
+  /* Paytable Modal */
+  .modal-box {
+    background: var(--panel); border: 2px solid var(--gold); border-radius: 16px;
+    width: 100%; max-width: 400px; padding: 20px; text-align: center;
+  }
+  .modal-box h2 { color: var(--gold-bright); font-family: var(--font-serif); margin-bottom: 15px; }
+  .paytable-list { text-align: left; font-size: 12px; line-height: 1.8; color: #ccc; margin-bottom: 20px; }
+  .paytable-list span { color: var(--gold-bright); font-weight: bold; }
+  .btn-close {
+    background: var(--gold); color: #000; padding: 10px 30px; border-radius: 8px;
+    font-weight: bold; border: none; cursor: pointer;
+  }
+
+  /* Jackpot Animations */
+  .jackpot-content { text-align: center; animation: bounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .jp-title {
+    font-family: var(--font-serif); font-size: clamp(3rem, 10vw, 4.5rem); font-weight: 800;
+    text-transform: uppercase; margin-bottom: 10px; line-height: 1;
+  }
+  .jp-mini { color: #00e5ff; text-shadow: 0 0 20px #00b0ff, 0 0 40px #00e5ff; }
+  .jp-mega { color: #d500f9; text-shadow: 0 0 20px #aa00ff, 0 0 40px #d500f9; }
+  .jp-super { color: #ffeb3b; text-shadow: 0 0 20px #ff9800, 0 0 40px #ff3d00; animation: textPulse 0.5s infinite alternate; }
+  .jp-amount { font-family: var(--font-mono); font-size: 2.5rem; color: #fff; font-weight: 800; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+  .jp-close-hint { font-size: 12px; color: #aaa; margin-top: 30px; animation: blink 1.5s infinite; }
+
+  /* Zonk Bomb */
+  .zonk-content { text-align: center; }
+  .zonk-emoji { font-size: 6rem; animation: shakeBomb 0.5s infinite; }
+  .zonk-text { color: var(--red-alert); font-family: var(--font-serif); font-size: 2.5rem; font-weight: bold; text-shadow: 0 0 20px red; margin: 10px 0; }
+  .zonk-minus { font-size: 1.5rem; color: #fff; }
+
+  @keyframes textPulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes shakeBomb {
+    0% { transform: translate(2px, 1px) rotate(0deg); }
+    25% { transform: translate(-2px, -2px) rotate(-5deg); }
+    50% { transform: translate(-3px, 0px) rotate(5deg); }
+    75% { transform: translate(3px, 2px) rotate(0deg); }
+    100% { transform: translate(1px, -1px) rotate(-5deg); }
+  }
+
+  canvas { position: fixed; inset: 0; pointer-events: none; z-index: 4999; }
 </style>
 </head>
 <body>
 
   <canvas id="confettiCanvas"></canvas>
 
-  <!-- JACKPOT OVERLAY -->
-  <div class="jackpot-overlay" id="jackpotOverlay">
-    <div class="jackpot-text">MEGA JACKPOT!</div>
-    <div class="jackpot-amount" id="jackpotAmount">+1,000,000</div>
+  <!-- APP BAR -->
+  <div class="top-bar">
+    <button class="btn-info" onclick="showPaytable()">?</button>
+    <div class="balance-box">
+      <div class="label">SALDO ANDA</div>
+      <div class="amount" id="balanceDisplay">100,000</div>
+    </div>
   </div>
 
-  <header>
-    <div class="balance-container">
-      <span class="label">Saldo Anda</span>
-      <span class="balance" id="balanceDisplay">💰 50,000</span>
-    </div>
-    <div class="header-actions">
-      <button class="btn-outline" onclick="customSaldo()">Atur Saldo</button>
-    </div>
-  </header>
+  <!-- GAME BOARD 5x5 -->
+  <div class="game-container">
+    <div class="grid-5x5" id="board"></div>
+  </div>
 
-  <!-- 5x5 Grid (Di-generate via JS) -->
-  <div class="game-board" id="board"></div>
+  <!-- CONTROL PANEL -->
+  <div class="control-panel">
+    <div class="bet-controls">
+      <button class="bet-btn" onclick="changeBet(-1)">-</button>
+      <div class="bet-amount" id="betDisplay">1,000</div>
+      <button class="bet-btn" onclick="changeBet(1)">+</button>
+      <button class="bet-btn bet-max" onclick="maxBet()">MAX</button>
+    </div>
+    
+    <div class="message-board" id="messageBox">Pilih metode buka kartu.</div>
 
-  <div class="controls">
-    <div class="control-row">
-      <span class="label">Taruhan:</span>
-      <input type="number" id="betInput" value="1000" min="100" step="500">
+    <div class="action-buttons">
+      <button class="btn-spin btn-manual" id="btnManual" onclick="startSpin('manual')">
+        BUKA MANUAL
+        <span class="btn-subtitle">Usap kartu di layar</span>
+      </button>
+      <button class="btn-spin btn-auto-norm" id="btnAutoNorm" onclick="startSpin('normal')">
+        AUTO NORMAL
+        <span class="btn-subtitle">Buka satu per satu</span>
+      </button>
+      <button class="btn-spin btn-auto-fast" id="btnAutoFast" onclick="startSpin('fast')">
+        AUTO FAST
+        <span class="btn-subtitle">Buka secepat kilat</span>
+      </button>
     </div>
-    <div class="control-row">
-      <span class="label">Tingkat Kesulitan:</span>
-      <select id="diffSelect">
-        <option value="easy">Gampang (Sering Menang)</option>
-        <option value="normal" selected>Sedang (Normal)</option>
-        <option value="hard">Sulit (Murni RNG)</option>
-      </select>
+  </div>
+
+  <!-- MODAL: PAYTABLE -->
+  <div class="overlay" id="paytableModal" onclick="this.classList.remove('show')">
+    <div class="modal-box" onclick="event.stopPropagation()">
+      <h2>Daftar Hadiah (Paytable)</h2>
+      <div class="paytable-list">
+        • <span>🍒 (Ceri):</span> x1<br>
+        • <span>🍋 (Lemon):</span> x2<br>
+        • <span>🍉 (Semangka):</span> x4<br>
+        • <span>🍇 (Anggur):</span> x8<br>
+        • <span>⭐ (Bintang):</span> x20<br>
+        • <span>👑 (Mahkota):</span> x50<br><br>
+        <b>Syarat Sejajar (Garis H/V/D):</b><br>
+        - 3 Sejajar = Hadiah Buah x 1<br>
+        - 4 Sejajar = Hadiah Buah x 3<br>
+        - 5 Sejajar = Hadiah Buah x 10<br><br>
+        <i>Note: Garis Diagonal diskon 50%. Jika kalah > 4x, waspada Bom Zonk!</i>
+      </div>
+      <button class="btn-close" onclick="document.getElementById('paytableModal').classList.remove('show')">TUTUP</button>
     </div>
-    <button class="spin-btn" id="spinBtn" onclick="prepareSpin()">ACAK KARTU ✦</button>
-    <div class="message" id="messageBox">Pasang taruhan, acak, lalu usap kartu!</div>
+  </div>
+
+  <!-- MODAL: JACKPOT -->
+  <div class="overlay" id="jackpotModal" onclick="closeJackpot()">
+    <div class="jackpot-content">
+      <div class="jp-title" id="jpTitle">JACKPOT</div>
+      <div class="jp-amount" id="jpAmount">+ 0</div>
+      <div class="jp-close-hint">Ketuk layar untuk lanjut</div>
+    </div>
+  </div>
+
+  <!-- MODAL: ZONK BOMB -->
+  <div class="overlay" id="zonkModal" onclick="this.classList.remove('show')">
+    <div class="zonk-content">
+      <div class="zonk-emoji">💣</div>
+      <div class="zonk-text">ZONK BOMB!</div>
+      <div class="zonk-minus" id="zonkMinus">- 0</div>
+      <div class="jp-close-hint">Sial! Ketuk layar untuk lanjut</div>
+    </div>
   </div>
 
 <script>
-  // ================= DATA & KONFIGURASI =================
-  let balance = 50000;
+  // ================= STATE & DATA =================
+  let balance = 100000;
+  let currentBet = 1000;
+  let lossStreak = 0;
+  
   let canFlip = false;
   let flippedCount = 0;
-  let currentGridData = [];
-  let betAmount = 0;
+  let gridData = [];
+  let cards = [];
+  let isSpinning = false;
 
-  // Emoticon buah & multiplier
-  // Di 5x5, dapat 5 berturut-turut itu sangat langka, makanya multiplier dinaikkan.
+  const betSteps = [100, 500, 1000, 2500, 5000, 10000, 25000, 50000];
+
   const SYMBOLS = [
-    { emoji: '🍒', mult: 5, weight: 50 },
-    { emoji: '🍋', mult: 10, weight: 35 },
-    { emoji: '🍉', mult: 25, weight: 20 },
-    { emoji: '🍇', mult: 50, weight: 10 },
-    { emoji: '⭐', mult: 200, weight: 4 },
-    { emoji: '👑', mult: 1000, weight: 1 } // Jackpot Ultimate
+    { emoji: '🍒', mult: 1, weight: 50 },
+    { emoji: '🍋', mult: 2, weight: 35 },
+    { emoji: '🍉', mult: 4, weight: 20 },
+    { emoji: '🍇', mult: 8, weight: 10 },
+    { emoji: '⭐', mult: 20, weight: 4 },
+    { emoji: '👑', mult: 50, weight: 1 }
   ];
 
-  // Tingkat kemungkinan sistem "memaksa" menang per kesulitan
-  const DIFFICULTY_FORCE_WIN = {
-    easy: 0.50,   // 50% jaminan ada 1 garis menang
-    normal: 0.20, // 20% jaminan
-    hard: 0.02    // 2% (Murni Hoki)
-  };
-
-  // Garis Kemenangan 5x5 (Total 12 Garis)
+  // 12 Garis Kemenangan 5x5
   const PAYLINES = [
-    // Horizontal (Reward Normal x1.5)
-    { line: [0,1,2,3,4], type: 'H', bonus: 1.5 },
-    { line: [5,6,7,8,9], type: 'H', bonus: 1.5 },
-    { line: [10,11,12,13,14], type: 'H', bonus: 1.5 },
-    { line: [15,16,17,18,19], type: 'H', bonus: 1.5 },
-    { line: [20,21,22,23,24], type: 'H', bonus: 1.5 },
-    // Vertikal (Reward Normal x1.5)
-    { line: [0,5,10,15,20], type: 'V', bonus: 1.5 },
-    { line: [1,6,11,16,21], type: 'V', bonus: 1.5 },
-    { line: [2,7,12,17,22], type: 'V', bonus: 1.5 },
-    { line: [3,8,13,18,23], type: 'V', bonus: 1.5 },
-    { line: [4,9,14,19,24], type: 'V', bonus: 1.5 },
-    // Diagonal (Reward Terendah x0.5)
-    { line: [0,6,12,18,24], type: 'D', bonus: 0.5 },
-    { line: [4,8,12,16,20], type: 'D', bonus: 0.5 }
+    { line: [0,1,2,3,4], type: 'H' }, { line: [5,6,7,8,9], type: 'H' },
+    { line: [10,11,12,13,14], type: 'H' }, { line: [15,16,17,18,19], type: 'H' },
+    { line: [20,21,22,23,24], type: 'H' },
+    { line: [0,5,10,15,20], type: 'V' }, { line: [1,6,11,16,21], type: 'V' },
+    { line: [2,7,12,17,22], type: 'V' }, { line: [3,8,13,18,23], type: 'V' },
+    { line: [4,9,14,19,24], type: 'V' },
+    { line: [0,6,12,18,24], type: 'D' }, { line: [4,8,12,16,20], type: 'D' }
   ];
 
   const boardEl = document.getElementById('board');
   const balanceEl = document.getElementById('balanceDisplay');
-  const messageEl = document.getElementById('messageBox');
-  const spinBtn = document.getElementById('spinBtn');
-  const jackpotOverlay = document.getElementById('jackpotOverlay');
-  let cards = [];
+  const betEl = document.getElementById('betDisplay');
+  const msgEl = document.getElementById('messageBox');
+  const buttons = document.querySelectorAll('.btn-spin, .bet-btn');
 
-  // ================= INIT UI =================
+  // ================= UI SETUP =================
+  function updateUI() {
+    balanceEl.textContent = balance.toLocaleString();
+    betEl.textContent = currentBet.toLocaleString();
+  }
+
+  function changeBet(dir) {
+    if (isSpinning) return;
+    let idx = betSteps.indexOf(currentBet);
+    if (idx === -1) idx = 0;
+    idx += dir;
+    if (idx >= 0 && idx < betSteps.length) { currentBet = betSteps[idx]; updateUI(); }
+  }
+  function maxBet() {
+    if (isSpinning) return;
+    currentBet = betSteps[betSteps.length - 1]; updateUI();
+  }
+  function showPaytable() { document.getElementById('paytableModal').classList.add('show'); }
+
   function initBoard() {
     boardEl.innerHTML = '';
     cards = [];
     for (let i = 0; i < 25; i++) {
       const card = document.createElement('div');
-      card.className = 'card';
-      card.dataset.index = i;
-      card.innerHTML = `
-        <div class="card-face card-back"></div>
-        <div class="card-face card-front"></div>
-      `;
-      // Interaksi Buka Kartu (Hover & Klik untuk Desktop)
-      card.addEventListener('mouseenter', () => revealCard(i));
-      card.addEventListener('mousedown', () => revealCard(i));
-      
-      boardEl.appendChild(card);
-      cards.push(card);
+      card.className = 'card'; card.dataset.index = i;
+      card.innerHTML = `<div class="card-face card-back"></div><div class="card-face card-front"></div>`;
+      card.addEventListener('mouseenter', () => handleManualFlip(i));
+      card.addEventListener('mousedown', () => handleManualFlip(i));
+      boardEl.appendChild(card); cards.push(card);
     }
-
-    // Interaksi Usap (Sweep to Reveal) untuk HP (Touch Screen)
-    boardEl.addEventListener('touchmove', handleTouchSweep, { passive: false });
-    
+    boardEl.addEventListener('touchmove', (e) => {
+      if(!canFlip) return; e.preventDefault();
+      const touch = e.touches[0];
+      const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (elem && elem.closest('.card')) { handleManualFlip(elem.closest('.card').dataset.index); }
+    }, { passive: false });
     updateUI();
-  }
-
-  function updateUI() {
-    balanceEl.innerHTML = `💰 ${balance.toLocaleString()}`;
-  }
-
-  function customSaldo() {
-    if (canFlip || spinBtn.disabled) return;
-    let input = prompt("Masukkan jumlah saldo awal:", balance);
-    if (input !== null && !isNaN(input) && input > 0) {
-      balance = parseInt(input); updateUI();
-    }
   }
 
   function getRandomSymbol() {
-    const totalWeight = SYMBOLS.reduce((sum, sym) => sum + sym.weight, 0);
-    let randomNum = Math.random() * totalWeight;
-    for (let sym of SYMBOLS) {
-      if (randomNum < sym.weight) return sym;
-      randomNum -= sym.weight;
-    }
+    const totalW = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
+    let r = Math.random() * totalW;
+    for (let sym of SYMBOLS) { if (r < sym.weight) return sym; r -= sym.weight; }
     return SYMBOLS[0];
   }
 
-  // ================= LOGIKA GRID & RNG =================
-  function generateGridData(difficulty) {
-    let grid = new Array(25).fill(null);
-    let forceWinChance = DIFFICULTY_FORCE_WIN[difficulty] || 0.2;
-
-    // Sistem "Pity" / Memaksa Menang
-    if (Math.random() < forceWinChance) {
-      // Pilih satu garis acak
-      let targetLine = PAYLINES[Math.floor(Math.random() * PAYLINES.length)];
-      // Pilih satu simbol acak
-      let symbol = getRandomSymbol();
-      // Taruh di grid
-      targetLine.line.forEach(idx => { grid[idx] = symbol; });
-    }
-
-    // Isi sisa grid kosong murni RNG
-    for (let i = 0; i < 25; i++) {
-      if (!grid[i]) grid[i] = getRandomSymbol();
-    }
-    return grid;
+  // ================= SPIN MECHANICS =================
+  function setControls(disabled) {
+    isSpinning = disabled;
+    buttons.forEach(b => b.disabled = disabled);
   }
 
-  // ================= PERMAINAN =================
-  function prepareSpin() {
-    betAmount = parseInt(document.getElementById('betInput').value);
-    const diff = document.getElementById('diffSelect').value;
-
-    if (isNaN(betAmount) || betAmount <= 0) { alert("Taruhan tidak valid!"); return; }
-    if (betAmount > balance) { alert("Saldo tidak cukup!"); return; }
-
-    balance -= betAmount;
-    updateUI();
-
-    spinBtn.disabled = true;
-    canFlip = false;
-    flippedCount = 0;
-    messageEl.textContent = "Mengocok kartu...";
-    messageEl.style.color = "var(--text-dim)";
+  async function startSpin(mode) {
+    if (currentBet > balance) { msgEl.textContent = "Saldo tidak cukup!"; msgEl.style.color = "var(--red-alert)"; return; }
     
-    // Tutup kartu yang terbuka & hilangkan efek menang
+    setControls(true);
+    balance -= currentBet; updateUI();
+    msgEl.textContent = "Mempersiapkan kartu..."; msgEl.style.color = "var(--text-main)";
+    
     cards.forEach(c => c.classList.remove('flipped', 'win'));
+    await new Promise(r => setTimeout(r, 300)); // Wait close anim
 
-    setTimeout(() => {
-      currentGridData = generateGridData(diff);
-      // Tulis simbol ke HTML (tapi belum ditunjukkan karena card face down)
-      cards.forEach((c, i) => {
-        c.querySelector('.card-front').textContent = currentGridData[i].emoji;
-      });
-
-      canFlip = true;
-      messageEl.textContent = "✨ Usap atau tap semua kartu untuk membuka! ✨";
-      messageEl.style.color = "var(--gold-bright)";
-    }, 400); // Waktu nunggu tutup kartu selesai
-  }
-
-  // Fungsi untuk fitur usap layar HP
-  function handleTouchSweep(e) {
-    if (!canFlip) return;
-    e.preventDefault(); // Mencegah layar ter-scroll ke bawah saat mengusap
-    const touch = e.touches[0];
-    const elem = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (elem && elem.closest('.card')) {
-      const idx = parseInt(elem.closest('.card').dataset.index);
-      revealCard(idx);
-    }
-  }
-
-  function revealCard(index) {
-    if (!canFlip || cards[index].classList.contains('flipped')) return;
+    // Pity system for standardizing hit rate slightly
+    let forceWin = (Math.random() < 0.2); 
+    gridData = new Array(25).fill(null);
     
-    cards[index].classList.add('flipped');
-    flippedCount++;
-
-    if (flippedCount === 25) {
-      canFlip = false;
-      messageEl.textContent = "Mengecek kemenangan...";
-      setTimeout(() => evaluateWin(), 600);
+    if (forceWin) {
+        let tLine = PAYLINES[Math.floor(Math.random() * PAYLINES.length)];
+        let sym = getRandomSymbol();
+        let matchCount = Math.random() > 0.8 ? 5 : (Math.random() > 0.5 ? 4 : 3);
+        let startIdx = Math.floor(Math.random() * (6 - matchCount));
+        for(let i=0; i<matchCount; i++) { gridData[tLine.line[startIdx + i]] = sym; }
+    }
+    for (let i = 0; i < 25; i++) { if (!gridData[i]) gridData[i] = getRandomSymbol(); }
+    
+    cards.forEach((c, i) => c.querySelector('.card-front').textContent = gridData[i].emoji);
+    
+    flippedCount = 0;
+    
+    if (mode === 'manual') {
+      canFlip = true;
+      msgEl.textContent = "Usap kartu untuk membuka!"; msgEl.style.color = "var(--gold-bright)";
+    } else if (mode === 'normal') {
+      msgEl.textContent = "Auto Reveal...";
+      for(let i=0; i<25; i++) { await new Promise(r => setTimeout(r, 120)); flipCardAuto(i); }
+    } else if (mode === 'fast') {
+      msgEl.textContent = "Super Fast Reveal!";
+      for(let i=0; i<25; i++) { await new Promise(r => setTimeout(r, 20)); flipCardAuto(i); }
     }
   }
 
-  // ================= CEK KEMENANGAN =================
+  function handleManualFlip(idx) {
+    if (!canFlip || cards[idx].classList.contains('flipped')) return;
+    cards[idx].classList.add('flipped'); flippedCount++;
+    if (flippedCount === 25) { canFlip = false; setTimeout(evaluateWin, 500); }
+  }
+
+  function flipCardAuto(idx) {
+    cards[idx].classList.add('flipped'); flippedCount++;
+    if (flippedCount === 25) { setTimeout(evaluateWin, 500); }
+  }
+
+  // ================= EVALUATION & WIN =================
   function evaluateWin() {
     let totalWin = 0;
     let winningIndices = new Set();
-    let isMegaJackpot = false;
 
-    PAYLINES.forEach(payline => {
-      let isLineWin = true;
-      let firstSymbol = currentGridData[payline.line[0]].emoji;
-      
-      // Cek apakah ke-5 kartu di garis ini sama semua
-      for(let i = 1; i < 5; i++) {
-        if(currentGridData[payline.line[i]].emoji !== firstSymbol) {
-          isLineWin = false; break;
+    PAYLINES.forEach(pl => {
+      // Cari kemunculan simbol berturut-turut terpanjang dalam baris ini
+      let maxSeq = 1; let currentSeq = 1; let bestSym = gridData[pl.line[0]]; let currSym = gridData[pl.line[0]];
+      let bestIndices = [pl.line[0]]; let currIndices = [pl.line[0]];
+
+      for(let i=1; i<5; i++) {
+        if(gridData[pl.line[i]].emoji === currSym.emoji) {
+          currentSeq++; currIndices.push(pl.line[i]);
+        } else {
+          if(currentSeq > maxSeq) { maxSeq = currentSeq; bestSym = currSym; bestIndices = [...currIndices]; }
+          currSym = gridData[pl.line[i]]; currentSeq = 1; currIndices = [pl.line[i]];
         }
       }
+      if(currentSeq > maxSeq) { maxSeq = currentSeq; bestSym = currSym; bestIndices = [...currIndices]; }
 
-      if(isLineWin) {
-        let symbolData = currentGridData[payline.line[0]];
-        let lineWin = Math.floor(betAmount * symbolData.mult * payline.bonus);
-        totalWin += lineWin;
+      // Jika minimal 3 sejajar
+      if (maxSeq >= 3) {
+        let lengthMult = maxSeq === 5 ? 10 : (maxSeq === 4 ? 3 : 1);
+        let diagPenalty = pl.type === 'D' ? 0.5 : 1;
+        let lineWin = Math.floor(currentBet * bestSym.mult * lengthMult * diagPenalty);
         
-        payline.line.forEach(idx => winningIndices.add(idx));
-
-        // Pemicu Mega Jackpot: Jika menang > 100x bet ATAU dapat simbol Mahkota
-        if (lineWin >= betAmount * 100 || symbolData.emoji === '👑') {
-          isMegaJackpot = true;
-        }
+        totalWin += lineWin;
+        bestIndices.forEach(idx => winningIndices.add(idx));
       }
     });
 
     if (totalWin > 0) {
-      balance += totalWin;
-      updateUI();
-      messageEl.textContent = `🎉 MENANG! +${totalWin.toLocaleString()} 🎉`;
-      messageEl.style.color = "#ff3366";
-      
+      lossStreak = 0;
+      balance += totalWin; updateUI();
       winningIndices.forEach(idx => cards[idx].classList.add('win'));
-
-      if (isMegaJackpot) {
-        triggerMegaJackpot(totalWin);
-      } else {
-        burstConfetti(100);
+      
+      let ratio = totalWin / currentBet;
+      if (ratio >= 100) triggerJackpot('SUPER', totalWin, 'jp-super');
+      else if (ratio >= 50) triggerJackpot('MEGA', totalWin, 'jp-mega');
+      else if (ratio >= 20) triggerJackpot('MINI', totalWin, 'jp-mini');
+      else {
+        msgEl.textContent = `MENANG +${totalWin.toLocaleString()}!`; msgEl.style.color = "#4caf50";
+        burstConfetti(60); setControls(false);
       }
     } else {
-      messageEl.textContent = "Zonk! Coba lagi.";
-      messageEl.style.color = "var(--text-dim)";
+      lossStreak++;
+      msgEl.textContent = "Kalah! Coba lagi."; msgEl.style.color = "var(--text-dim)";
+      
+      // Zonk Bomb Logic (Loss streak >= 4, 30% chance)
+      if (lossStreak >= 4 && Math.random() < 0.3) {
+        setTimeout(triggerZonkBomb, 600);
+      } else {
+        setControls(false);
+      }
     }
-
-    spinBtn.disabled = false;
-    spinBtn.textContent = "ACAK LAGI ✦";
   }
 
-  // ================= ANIMASI JACKPOT & CONFETTI =================
-  function triggerMegaJackpot(amount) {
-    document.getElementById('jackpotAmount').textContent = `+ ${amount.toLocaleString()}`;
-    jackpotOverlay.classList.add('show');
-    
-    let jackpotConfettiInterval = setInterval(() => burstConfetti(50), 300);
-    
-    // Matikan overlay setelah 3 detik
-    setTimeout(() => {
-      jackpotOverlay.classList.remove('show');
-      clearInterval(jackpotConfettiInterval);
-    }, 3500);
+  // ================= JACKPOT ANIMATION (COUNT UP) =================
+  function animateValue(obj, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      // Ease out cubic
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      obj.innerHTML = "+ " + Math.floor(easeProgress * (end - start) + start).toLocaleString();
+      if (progress < 1) window.requestAnimationFrame(step);
+    };
+    window.requestAnimationFrame(step);
   }
 
-  const confettiCanvas = document.getElementById('confettiCanvas');
-  const ctx = confettiCanvas.getContext('2d');
-  let confettiPieces = [];
+  let jpConfettiInterval;
+  function triggerJackpot(type, amount, cssClass) {
+    const modal = document.getElementById('jackpotModal');
+    const title = document.getElementById('jpTitle');
+    const amtEl = document.getElementById('jpAmount');
+    
+    title.className = `jp-title ${cssClass}`;
+    title.textContent = `${type} JACKPOT`;
+    modal.classList.add('show');
+    
+    animateValue(amtEl, 0, amount, 2000);
+    jpConfettiInterval = setInterval(() => burstConfetti(40), 400);
+  }
   
-  function resizeCanvas() {
-    confettiCanvas.width = window.innerWidth;
-    confettiCanvas.height = window.innerHeight;
+  function closeJackpot() {
+    document.getElementById('jackpotModal').classList.remove('show');
+    clearInterval(jpConfettiInterval);
+    setControls(false);
   }
-  window.addEventListener('resize', resizeCanvas);
-  resizeCanvas();
+
+  // ================= ZONK BOMB MINI GAME =================
+  function triggerZonkBomb() {
+    const modal = document.getElementById('zonkModal');
+    const minusEl = document.getElementById('zonkMinus');
+    
+    // Potong 0.1% - 1% dari saldo
+    let penaltyPercent = (Math.random() * 0.009) + 0.001; 
+    let penalty = Math.floor(balance * penaltyPercent);
+    if (penalty < 100) penalty = 100; // minimum
+    
+    balance -= penalty; if(balance < 0) balance = 0;
+    
+    minusEl.textContent = `- ${penalty.toLocaleString()}`;
+    modal.classList.add('show');
+    updateUI();
+    lossStreak = 0; // Reset streak biar gak dihukum terus
+
+    setTimeout(() => { setControls(false); }, 500);
+  }
+
+  // ================= CONFETTI =================
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  let confettis = [];
+  
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resize); resize();
 
   function burstConfetti(count) {
-    const colors = ['#ffd700', '#ff8c00', '#ff3366', '#ffffff', '#00ffcc'];
-    for (let i = 0; i < count; i++) {
-      confettiPieces.push({
-        x: confettiCanvas.width / 2, y: confettiCanvas.height / 2 + (Math.random() * 200),
-        vx: (Math.random() - 0.5) * 35, vy: (Math.random() - 1) * 30 - 10,
-        size: Math.random() * 12 + 6, color: colors[Math.floor(Math.random() * colors.length)],
-        rotation: Math.random() * 360, rotationSpeed: (Math.random() - 0.5) * 20,
-        life: 1
+    const colors = ['#f0d58b', '#ff3366', '#00e5ff', '#ffffff', '#c7a24a'];
+    for(let i=0; i<count; i++) {
+      confettis.push({
+        x: canvas.width / 2, y: canvas.height / 2,
+        vx: (Math.random()-0.5) * 40, vy: (Math.random()-1) * 30,
+        size: Math.random()*10 + 5, color: colors[Math.floor(Math.random()*colors.length)],
+        rot: Math.random()*360, rotSpd: (Math.random()-0.5)*20, life: 1
       });
     }
-    if(confettiPieces.length <= count) animateConfetti();
+    if(confettis.length <= count) runConfetti();
   }
-
-  function animateConfetti() {
-    if (confettiPieces.length === 0) return;
-    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-    
-    confettiPieces.forEach((p, index) => {
-      p.vy += 0.8; // Gravitasi
-      p.x += p.vx; p.y += p.vy; p.rotation += p.rotationSpeed; p.life -= 0.008;
-      
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.rotation * Math.PI) / 180);
+  function runConfetti() {
+    if(confettis.length === 0) return;
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+    confettis.forEach((p, i) => {
+      p.vy += 0.8; p.x += p.vx; p.y += p.vy; p.rot += p.rotSpd; p.life -= 0.01;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot*Math.PI/180);
       ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(p.life, 0);
-      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); ctx.restore();
-      
-      if (p.y > confettiCanvas.height || p.life <= 0) confettiPieces.splice(index, 1);
+      ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size); ctx.restore();
+      if(p.y > canvas.height || p.life <= 0) confettis.splice(i, 1);
     });
-    requestAnimationFrame(animateConfetti);
+    requestAnimationFrame(runConfetti);
   }
 
-  // Mulai Game
   initBoard();
 </script>
 </body>
