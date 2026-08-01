@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fruit Flip Slot Gacha 🎰</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0d0b;
+    --panel: #1b1712;
+    --gold: #c7a24a;
+    --gold-bright: #e4c77a;
+    --rust: #a1543f;
+    --text-main: #ede6d6;
+    --text-dim: #a79c87;
+    --card-back: linear-gradient(135deg, #241f18, #181410);
+    --card-front: #f3ead4;
+    --font-serif: 'Fraunces', serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-mono);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain Effect */
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* HEADER (SALDO) */
+  header {
+    width: 100%; max-width: 500px; padding: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(199, 162, 74, 0.2);
+    margin-bottom: 30px;
+  }
+  .balance-container { display: flex; flex-direction: column; gap: 5px; }
+  .label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; }
+  .balance { font-family: var(--font-serif); font-size: 24px; color: var(--gold-bright); }
+  
+  .edit-balance-btn {
+    background: transparent; border: 1px solid var(--gold); color: var(--gold);
+    padding: 6px 12px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 12px;
+    transition: 0.2s;
+  }
+  .edit-balance-btn:hover { background: var(--gold); color: var(--bg); }
+
+  /* GAME BOARD */
+  .game-board {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+    width: 90%; max-width: 380px; margin-bottom: 30px;
+    perspective: 1000px;
+  }
+
+  /* KARTU */
+  .card {
+    aspect-ratio: 3 / 4; width: 100%; cursor: pointer;
+    position: relative; transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1), box-shadow 0.3s ease;
+  }
+  
+  .card.flipped { transform: rotateY(180deg); }
+  
+  .card-face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    font-size: 3rem; box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+
+  .card-back {
+    background: var(--card-back); border: 2px solid rgba(199, 162, 74, 0.4);
+    color: var(--gold); font-family: var(--font-serif); font-size: 2.5rem;
+    text-shadow: 0 0 10px rgba(199, 162, 74, 0.5);
+  }
+  
+  .card-front {
+    background: var(--card-front); transform: rotateY(180deg);
+    border: 2px solid var(--gold);
+  }
+
+  /* Animasi Kemenangan */
+  .card.win .card-front {
+    animation: winPulse 1s infinite alternate;
+    border-color: #ff3366;
+    box-shadow: 0 0 20px rgba(255, 51, 102, 0.6);
+  }
+  @keyframes winPulse {
+    0% { transform: rotateY(180deg) scale(1); }
+    100% { transform: rotateY(180deg) scale(1.08); }
+  }
+
+  /* CONTROLS (TARUHAN & SPIN) */
+  .controls {
+    width: 100%; max-width: 400px; background: var(--panel);
+    padding: 20px; border-radius: 16px; border: 1px solid rgba(199, 162, 74, 0.2);
+    display: flex; flex-direction: column; gap: 15px; text-align: center;
+    z-index: 10;
+  }
+
+  .bet-control { display: flex; align-items: center; justify-content: space-between; }
+  .bet-control input {
+    background: var(--bg); border: 1px solid var(--gold); color: var(--gold-bright);
+    padding: 10px; border-radius: 8px; font-family: inherit; font-size: 16px; width: 120px;
+    text-align: center;
+  }
+
+  .spin-btn {
+    background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+    color: var(--bg); font-family: var(--font-serif); font-size: 1.2rem;
+    padding: 15px; border: none; border-radius: 10px; cursor: pointer;
+    font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+    box-shadow: 0 10px 20px rgba(199, 162, 74, 0.3); transition: 0.2s;
+  }
+  .spin-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(199, 162, 74, 0.4); }
+  .spin-btn:active { transform: translateY(0); }
+  .spin-btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
+
+  .message { height: 24px; font-size: 14px; color: var(--gold-bright); font-weight: bold; }
+
+  /* CONFETTI CANVAS */
+  #confettiCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 9999; }
+</style>
+</head>
+<body>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <header>
+    <div class="balance-container">
+      <span class="label">Saldo Anda</span>
+      <span class="balance" id="balanceDisplay">💰 10,000</span>
+    </div>
+    <button class="edit-balance-btn" onclick="customSaldo()">Atur Saldo</button>
+  </header>
+
+  <!-- 3x3 Grid -->
+  <div class="game-board" id="board">
+    <!-- Di-generate lewat JS -->
+  </div>
+
+  <div class="controls">
+    <div class="bet-control">
+      <span class="label">Taruhan (Bet):</span>
+      <input type="number" id="betInput" value="500" min="100" step="100">
+    </div>
+    <button class="spin-btn" id="spinBtn" onclick="spin()">TARIK KARTU ✦</button>
+    <div class="message" id="messageBox">Pasang taruhan dan putar!</div>
+  </div>
+
+<script>
+  // ================= DATA GAME =================
+  let balance = 10000;
+  let isSpinning = false;
+
+  // Emoticon, pengali hadiah dasar (multiplier), dan bobot (RNG weight)
+  const SYMBOLS = [
+    { emoji: '🍒', mult: 2, weight: 40 },   // Sering muncul, hadiah kecil
+    { emoji: '🍋', mult: 3, weight: 30 },
+    { emoji: '🍉', mult: 5, weight: 15 },
+    { emoji: '🍇', mult: 8, weight: 10 },
+    { emoji: '⭐', mult: 15, weight: 4 },
+    { emoji: '👑', mult: 50, weight: 1 }    // Jarang muncul, hadiah jackpot
+  ];
+
+  // Paylines (Garis kemenangan pada index array 0-8)
+  const PAYLINES = [
+    // Horizontal (Reward Besar / Normal)
+    { line: [0, 1, 2], type: 'horizontal', bonus: 1.5 },
+    { line: [3, 4, 5], type: 'horizontal', bonus: 1.5 },
+    { line: [6, 7, 8], type: 'horizontal', bonus: 1.5 },
+    // Vertical (Reward Besar / Normal)
+    { line: [0, 3, 6], type: 'vertical', bonus: 1.5 },
+    { line: [1, 4, 7], type: 'vertical', bonus: 1.5 },
+    { line: [2, 5, 8], type: 'vertical', bonus: 1.5 },
+    // Diagonal (Reward Terkecil sesuai permintaan)
+    { line: [0, 4, 8], type: 'diagonal', bonus: 0.5 },
+    { line: [2, 4, 6], type: 'diagonal', bonus: 0.5 }
+  ];
+
+  const boardEl = document.getElementById('board');
+  const balanceEl = document.getElementById('balanceDisplay');
+  const messageEl = document.getElementById('messageBox');
+  const spinBtn = document.getElementById('spinBtn');
+  const betInput = document.getElementById('betInput');
+  let cards = [];
+
+  // ================= SETUP UI =================
+  function initBoard() {
+    boardEl.innerHTML = '';
+    cards = [];
+    for (let i = 0; i < 9; i++) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="card-face card-back">?</div>
+        <div class="card-face card-front"></div>
+      `;
+      boardEl.appendChild(card);
+      cards.push(card);
+    }
+    updateUI();
+  }
+
+  function updateUI() {
+    balanceEl.innerHTML = `💰 ${balance.toLocaleString()}`;
+  }
+
+  function customSaldo() {
+    if (isSpinning) return;
+    let input = prompt("Masukkan jumlah saldo awal (Custom Saldo):", balance);
+    if (input !== null && !isNaN(input) && input > 0) {
+      balance = parseInt(input);
+      updateUI();
+      messageEl.textContent = "Saldo berhasil diubah!";
+      messageEl.style.color = "var(--gold-bright)";
+    }
+  }
+
+  // ================= LOGIKA RNG =================
+  function getRandomSymbol() {
+    const totalWeight = SYMBOLS.reduce((sum, sym) => sum + sym.weight, 0);
+    let randomNum = Math.random() * totalWeight;
+    for (let sym of SYMBOLS) {
+      if (randomNum < sym.weight) return sym;
+      randomNum -= sym.weight;
+    }
+    return SYMBOLS[0];
+  }
+
+  // ================= LOGIKA PERMAINAN =================
+  async function spin() {
+    const bet = parseInt(betInput.value);
+    
+    if (isNaN(bet) || bet <= 0) {
+      alert("Masukkan jumlah taruhan yang valid!"); return;
+    }
+    if (bet > balance) {
+      alert("Saldo tidak cukup! Silakan atur ulang saldo."); return;
+    }
+
+    // Mulai Putaran
+    isSpinning = true;
+    spinBtn.disabled = true;
+    messageEl.textContent = "Mengacak kartu...";
+    messageEl.style.color = "var(--text-dim)";
+    
+    // Potong Saldo
+    balance -= bet;
+    updateUI();
+
+    // 1. Tutup semua kartu yang terbuka
+    cards.forEach(c => {
+      c.classList.remove('flipped', 'win');
+    });
+
+    // Tunggu animasi tutup selesai
+    await new Promise(res => setTimeout(res, 400));
+
+    // 2. Generate Grid Baru
+    let gridResult = [];
+    for (let i = 0; i < 9; i++) {
+      gridResult.push(getRandomSymbol());
+    }
+
+    // 3. Buka Kartu satu per satu (Staggered Animation)
+    for (let i = 0; i < 9; i++) {
+      cards[i].querySelector('.card-front').textContent = gridResult[i].emoji;
+      setTimeout(() => {
+        cards[i].classList.add('flipped');
+      }, i * 150); // Jeda 150ms tiap kartu
+    }
+
+    // Tunggu kartu terakhir selesai dibuka
+    setTimeout(() => evaluateWin(gridResult, bet), 9 * 150 + 400);
+  }
+
+  // ================= CEK KEMENANGAN =================
+  function evaluateWin(grid, bet) {
+    let totalWin = 0;
+    let winningLines = [];
+
+    // Cek setiap garis kemenangan
+    PAYLINES.forEach(payline => {
+      const [a, b, c] = payline.line;
+      // Jika 3 simbol sama (bukan undefined)
+      if (grid[a].emoji === grid[b].emoji && grid[b].emoji === grid[c].emoji) {
+        let symbolConfig = grid[a];
+        // Rumus: Taruhan x Pengali Simbol x Bonus Garis
+        let lineWin = Math.floor(bet * symbolConfig.mult * payline.bonus);
+        totalWin += lineWin;
+        winningLines.push({ line: payline.line, winAmount: lineWin, type: payline.type });
+      }
+    });
+
+    if (totalWin > 0) {
+      // Efek Menang
+      balance += totalWin;
+      updateUI();
+      messageEl.textContent = `🎉 MENANG! +${totalWin.toLocaleString()} 🎉`;
+      messageEl.style.color = "#ff3366";
+      
+      // Animasi Glowing di kartu yang menang
+      let winningIndices = new Set();
+      winningLines.forEach(w => w.line.forEach(i => winningIndices.add(i)));
+      winningIndices.forEach(idx => cards[idx].classList.add('win'));
+
+      // Tembakkan Confetti
+      burstConfetti();
+    } else {
+      // Kalah
+      messageEl.textContent = "Kalah, coba tarik lagi!";
+      messageEl.style.color = "var(--text-dim)";
+    }
+
+    // Reset tombol
+    isSpinning = false;
+    spinBtn.disabled = false;
+  }
+
+  // ================= EFEK CONFETTI =================
+  const confettiCanvas = document.getElementById('confettiCanvas');
+  const ctx = confettiCanvas.getContext('2d');
+  let confettiPieces = [];
+  
+  function resize() {
+    confettiCanvas.width = window.innerWidth;
+    confettiCanvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function burstConfetti() {
+    const colors = ['#c7a24a', '#e4c77a', '#ff3366', '#ffffff'];
+    for (let i = 0; i < 100; i++) {
+      confettiPieces.push({
+        x: confettiCanvas.width / 2, y: confettiCanvas.height / 2 + 100, // Mulai dari tengah bawah
+        vx: (Math.random() - 0.5) * 20, vy: (Math.random() - 1) * 20 - 5,
+        size: Math.random() * 8 + 4, color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360, rotationSpeed: (Math.random() - 0.5) * 10,
+        life: 1
+      });
+    }
+    animateConfetti();
+  }
+
+  function animateConfetti() {
+    if (confettiPieces.length === 0) return;
+    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    
+    confettiPieces.forEach((p, index) => {
+      p.vy += 0.5; // gravitasi
+      p.x += p.vx; p.y += p.vy; p.rotation += p.rotationSpeed; p.life -= 0.01;
+      
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate((p.rotation * Math.PI) / 180);
+      ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(p.life, 0);
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size); ctx.restore();
+      
+      if (p.y > confettiCanvas.height || p.life <= 0) confettiPieces.splice(index, 1);
+    });
+    requestAnimationFrame(animateConfetti);
+  }
+
+  // Inisialisasi awal
+  initBoard();
+</script>
+</body>
+</html>
