@@ -87,7 +87,7 @@
     width: 100%; max-width: 500px; background: var(--panel);
     padding: 20px; border-top: 1px solid var(--gold-dim);
     border-radius: 24px 24px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.8);
-    display: flex; flex-direction: column; gap: 15px; z-index: 10;
+    display: flex; flex-direction: column; gap: 12px; z-index: 10;
   }
 
   .bet-controls {
@@ -105,21 +105,31 @@
 
   .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .btn-spin {
-    padding: 14px 10px; border: none; border-radius: 10px; font-family: var(--font-mono);
-    font-weight: 800; font-size: 14px; text-transform: uppercase; cursor: pointer;
+    padding: 12px 6px; border: none; border-radius: 10px; font-family: var(--font-mono);
+    font-weight: 800; font-size: 13px; text-transform: uppercase; cursor: pointer;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
     transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
   }
   .btn-spin:active { transform: translateY(2px); }
   .btn-spin:disabled { opacity: 0.5; pointer-events: none; }
   
-  .btn-manual { background: #2a241d; color: var(--gold-bright); border: 1px solid var(--gold-dim); grid-column: 1 / -1; }
+  .btn-manual { background: #2a241d; color: var(--gold-bright); border: 1px solid var(--gold-dim); }
   .btn-auto-norm { background: linear-gradient(135deg, #1b5e20, #2e7d32); color: #fff; }
-  .btn-auto-fast { background: linear-gradient(135deg, #b71c1c, #d32f2f); color: #fff; }
+  .btn-auto-fast { background: linear-gradient(135deg, #f57c00, #e65100); color: #fff; }
   
-  .btn-subtitle { font-size: 9px; opacity: 0.7; font-weight: 500; }
+  /* AUTO SPIN INFINITY BUTTON */
+  .btn-auto-loop { background: linear-gradient(135deg, #4a148c, #7b1fa2); color: #fff; }
+  .btn-auto-loop.active { 
+    background: linear-gradient(135deg, #b71c1c, #d32f2f); 
+    animation: pulseAlert 0.8s infinite alternate; 
+  }
+  
+  .btn-subtitle { font-size: 9.5px; opacity: 0.7; font-weight: 500; letter-spacing: 0.5px;}
 
-  .message-board { text-align: center; font-size: 12px; color: var(--gold-bright); font-weight: bold; height: 16px; }
+  .loop-icon { display: inline-block; font-size: 14px; margin-right: 4px; }
+  .spin-anim { animation: spinLogo 1s linear infinite; }
+
+  .message-board { text-align: center; font-size: 12px; color: var(--gold-bright); font-weight: bold; height: 16px; margin-bottom: 2px;}
 
   /* OVERLAYS (MODAL, JACKPOT, ZONK) */
   .overlay {
@@ -163,6 +173,8 @@
   @keyframes textPulse { 0% { transform: scale(1); } 100% { transform: scale(1.05); } }
   @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
   @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.1); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes spinLogo { 100% { transform: rotate(360deg); } }
+  @keyframes pulseAlert { 100% { box-shadow: 0 0 25px #ff1744; } }
   @keyframes shakeBomb {
     0% { transform: translate(2px, 1px) rotate(0deg); }
     25% { transform: translate(-2px, -2px) rotate(-5deg); }
@@ -201,7 +213,7 @@
       <button class="bet-btn bet-max" onclick="maxBet()">MAX</button>
     </div>
     
-    <div class="message-board" id="messageBox">Pilih metode buka kartu.</div>
+    <div class="message-board" id="messageBox">Pilih metode putaran.</div>
 
     <div class="action-buttons">
       <button class="btn-spin btn-manual" id="btnManual" onclick="startSpin('manual')">
@@ -209,12 +221,21 @@
         <span class="btn-subtitle">Usap kartu di layar</span>
       </button>
       <button class="btn-spin btn-auto-norm" id="btnAutoNorm" onclick="startSpin('normal')">
-        AUTO NORMAL
-        <span class="btn-subtitle">Buka satu per satu</span>
+        AUTO (1x)
+        <span class="btn-subtitle">Santai & Normal</span>
       </button>
       <button class="btn-spin btn-auto-fast" id="btnAutoFast" onclick="startSpin('fast')">
-        AUTO FAST
+        KILAT (1x)
         <span class="btn-subtitle">Buka secepat kilat</span>
+      </button>
+      
+      <!-- TOMBOL AUTO SPIN UNLIMITED -->
+      <button class="btn-spin btn-auto-loop" id="btnAutoLoop" onclick="toggleAutoSpin()">
+        <div style="display:flex; align-items:center; gap:4px;">
+            <span id="loopIcon" class="loop-icon">↻</span> 
+            <span id="loopText">AUTO SPIN</span>
+        </div>
+        <span class="btn-subtitle" id="loopSub">Berputar (∞) terus</span>
       </button>
     </div>
   </div>
@@ -250,7 +271,7 @@
   </div>
 
   <!-- MODAL: ZONK BOMB -->
-  <div class="overlay" id="zonkModal" onclick="this.classList.remove('show')">
+  <div class="overlay" id="zonkModal" onclick="closeZonk()">
     <div class="zonk-content">
       <div class="zonk-emoji">💣</div>
       <div class="zonk-text">ZONK BOMB!</div>
@@ -270,8 +291,11 @@
   let gridData = [];
   let cards = [];
   let isSpinning = false;
+  let isAutoSpinning = false; // Status mode tak terbatas
+  
+  let autoCloseTimer = null; // Timer untuk nutup jackpot/zonk otomatis saat AFK
 
-  const betSteps = [100, 500, 1000, 2500, 5000, 10000, 25000, 50000];
+  const betSteps = [100, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000];
 
   const SYMBOLS = [
     { emoji: '🍒', mult: 1, weight: 50 },
@@ -297,8 +321,7 @@
   const balanceEl = document.getElementById('balanceDisplay');
   const betEl = document.getElementById('betDisplay');
   const msgEl = document.getElementById('messageBox');
-  const buttons = document.querySelectorAll('.btn-spin, .bet-btn');
-
+  
   // ================= UI SETUP =================
   function updateUI() {
     balanceEl.textContent = balance.toLocaleString();
@@ -312,10 +335,12 @@
     idx += dir;
     if (idx >= 0 && idx < betSteps.length) { currentBet = betSteps[idx]; updateUI(); }
   }
+  
   function maxBet() {
     if (isSpinning) return;
     currentBet = betSteps[betSteps.length - 1]; updateUI();
   }
+  
   function showPaytable() { document.getElementById('paytableModal').classList.add('show'); }
 
   function initBoard() {
@@ -345,23 +370,94 @@
     return SYMBOLS[0];
   }
 
-  // ================= SPIN MECHANICS =================
+  // ================= SPIN & AUTO LOOP MECHANICS =================
   function setControls(disabled) {
     isSpinning = disabled;
-    buttons.forEach(b => b.disabled = disabled);
+    
+    document.querySelectorAll('.bet-btn, .btn-manual, .btn-auto-norm, .btn-auto-fast').forEach(b => {
+      b.disabled = disabled;
+    });
+
+    const btnLoop = document.getElementById('btnAutoLoop');
+    // Jika sedang auto spin, tombol ini HARUS BISA DITEKAN untuk Stop.
+    if (isAutoSpinning) {
+      btnLoop.disabled = false;
+    } else {
+      btnLoop.disabled = disabled;
+    }
+  }
+
+  function toggleAutoSpin() {
+    if (isAutoSpinning) {
+      // Perintah Stop
+      isAutoSpinning = false;
+      updateAutoLoopUI();
+      msgEl.textContent = "Berhenti setelah putaran ini selesai...";
+    } else {
+      // Perintah Start Auto
+      if (currentBet > balance) { 
+          msgEl.textContent = "Saldo tidak cukup!"; 
+          msgEl.style.color = "var(--red-alert)"; 
+          return; 
+      }
+      isAutoSpinning = true;
+      updateAutoLoopUI();
+      startSpin('loop');
+    }
+  }
+
+  function updateAutoLoopUI() {
+    const icon = document.getElementById('loopIcon');
+    const text = document.getElementById('loopText');
+    const sub = document.getElementById('loopSub');
+    const btn = document.getElementById('btnAutoLoop');
+    
+    if (isAutoSpinning) {
+      icon.classList.add('spin-anim');
+      text.textContent = 'STOP AUTO ⏹';
+      sub.textContent = 'Tekan untuk stop';
+      btn.classList.add('active');
+    } else {
+      icon.classList.remove('spin-anim');
+      text.textContent = 'AUTO SPIN';
+      sub.textContent = 'Berputar (∞) terus';
+      btn.classList.remove('active');
+    }
+  }
+
+  function checkNextAutoSpin() {
+    if (!isAutoSpinning) {
+      setControls(false);
+      return;
+    }
+    
+    if (currentBet > balance) {
+      isAutoSpinning = false;
+      updateAutoLoopUI();
+      msgEl.textContent = "Auto Spin Berhenti: Saldo Habis!";
+      msgEl.style.color = "var(--red-alert)";
+      setControls(false);
+      return;
+    }
+    
+    // Lanjut muter otomatis
+    startSpin('loop');
   }
 
   async function startSpin(mode) {
-    if (currentBet > balance) { msgEl.textContent = "Saldo tidak cukup!"; msgEl.style.color = "var(--red-alert)"; return; }
+    if (currentBet > balance && !isAutoSpinning) { 
+        msgEl.textContent = "Saldo tidak cukup!"; msgEl.style.color = "var(--red-alert)"; return; 
+    }
     
     setControls(true);
     balance -= currentBet; updateUI();
-    msgEl.textContent = "Mempersiapkan kartu..."; msgEl.style.color = "var(--text-main)";
+    msgEl.textContent = isAutoSpinning ? "Auto Spin (∞) Aktif..." : "Mempersiapkan kartu..."; 
+    msgEl.style.color = "var(--text-main)";
     
     cards.forEach(c => c.classList.remove('flipped', 'win'));
-    await new Promise(r => setTimeout(r, 300)); // Wait close anim
+    await new Promise(r => setTimeout(r, 300)); // Delay tutup kartu
 
-    // Pity system for standardizing hit rate slightly
+    // Pity system for slight balance
     let forceWin = (Math.random() < 0.2); 
     gridData = new Array(25).fill(null);
     
@@ -382,10 +478,9 @@
       canFlip = true;
       msgEl.textContent = "Usap kartu untuk membuka!"; msgEl.style.color = "var(--gold-bright)";
     } else if (mode === 'normal') {
-      msgEl.textContent = "Auto Reveal...";
+      msgEl.textContent = "Membuka otomatis...";
       for(let i=0; i<25; i++) { await new Promise(r => setTimeout(r, 120)); flipCardAuto(i); }
-    } else if (mode === 'fast') {
-      msgEl.textContent = "Super Fast Reveal!";
+    } else if (mode === 'fast' || mode === 'loop') {
       for(let i=0; i<25; i++) { await new Promise(r => setTimeout(r, 20)); flipCardAuto(i); }
     }
   }
@@ -407,7 +502,6 @@
     let winningIndices = new Set();
 
     PAYLINES.forEach(pl => {
-      // Cari kemunculan simbol berturut-turut terpanjang dalam baris ini
       let maxSeq = 1; let currentSeq = 1; let bestSym = gridData[pl.line[0]]; let currSym = gridData[pl.line[0]];
       let bestIndices = [pl.line[0]]; let currIndices = [pl.line[0]];
 
@@ -421,7 +515,6 @@
       }
       if(currentSeq > maxSeq) { maxSeq = currentSeq; bestSym = currSym; bestIndices = [...currIndices]; }
 
-      // Jika minimal 3 sejajar
       if (maxSeq >= 3) {
         let lengthMult = maxSeq === 5 ? 10 : (maxSeq === 4 ? 3 : 1);
         let diagPenalty = pl.type === 'D' ? 0.5 : 1;
@@ -443,28 +536,30 @@
       else if (ratio >= 20) triggerJackpot('MINI', totalWin, 'jp-mini');
       else {
         msgEl.textContent = `MENANG +${totalWin.toLocaleString()}!`; msgEl.style.color = "#4caf50";
-        burstConfetti(60); setControls(false);
+        burstConfetti(60); 
+        
+        if (isAutoSpinning) setTimeout(checkNextAutoSpin, 1200);
+        else setControls(false);
       }
     } else {
       lossStreak++;
       msgEl.textContent = "Kalah! Coba lagi."; msgEl.style.color = "var(--text-dim)";
       
-      // Zonk Bomb Logic (Loss streak >= 4, 30% chance)
       if (lossStreak >= 4 && Math.random() < 0.3) {
-        setTimeout(triggerZonkBomb, 600);
+        setTimeout(triggerZonkBomb, 500);
       } else {
-        setControls(false);
+        if (isAutoSpinning) setTimeout(checkNextAutoSpin, 800);
+        else setControls(false);
       }
     }
   }
 
-  // ================= JACKPOT ANIMATION (COUNT UP) =================
+  // ================= JACKPOT & ZONK MODALS =================
   function animateValue(obj, start, end, duration) {
     let startTimestamp = null;
     const step = (timestamp) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-      // Ease out cubic
       const easeProgress = 1 - Math.pow(1 - progress, 3);
       obj.innerHTML = "+ " + Math.floor(easeProgress * (end - start) + start).toLocaleString();
       if (progress < 1) window.requestAnimationFrame(step);
@@ -484,32 +579,49 @@
     
     animateValue(amtEl, 0, amount, 2000);
     jpConfettiInterval = setInterval(() => burstConfetti(40), 400);
+
+    // Auto close jika AFK mode Auto Spin
+    if (isAutoSpinning) {
+      autoCloseTimer = setTimeout(closeJackpot, 3500); 
+    }
   }
   
   function closeJackpot() {
+    clearTimeout(autoCloseTimer);
     document.getElementById('jackpotModal').classList.remove('show');
     clearInterval(jpConfettiInterval);
-    setControls(false);
+    
+    if (isAutoSpinning) setTimeout(checkNextAutoSpin, 500);
+    else setControls(false);
   }
 
-  // ================= ZONK BOMB MINI GAME =================
   function triggerZonkBomb() {
     const modal = document.getElementById('zonkModal');
     const minusEl = document.getElementById('zonkMinus');
     
-    // Potong 0.1% - 1% dari saldo
     let penaltyPercent = (Math.random() * 0.009) + 0.001; 
     let penalty = Math.floor(balance * penaltyPercent);
-    if (penalty < 100) penalty = 100; // minimum
+    if (penalty < 100) penalty = 100;
     
     balance -= penalty; if(balance < 0) balance = 0;
     
     minusEl.textContent = `- ${penalty.toLocaleString()}`;
     modal.classList.add('show');
     updateUI();
-    lossStreak = 0; // Reset streak biar gak dihukum terus
+    lossStreak = 0;
 
-    setTimeout(() => { setControls(false); }, 500);
+    // Auto close jika AFK mode Auto Spin
+    if (isAutoSpinning) {
+      autoCloseTimer = setTimeout(closeZonk, 2500);
+    }
+  }
+
+  function closeZonk() {
+    clearTimeout(autoCloseTimer);
+    document.getElementById('zonkModal').classList.remove('show');
+    
+    if (isAutoSpinning) setTimeout(checkNextAutoSpin, 500);
+    else setControls(false);
   }
 
   // ================= CONFETTI =================
@@ -532,6 +644,7 @@
     }
     if(confettis.length <= count) runConfetti();
   }
+  
   function runConfetti() {
     if(confettis.length === 0) return;
     ctx.clearRect(0,0, canvas.width, canvas.height);
